@@ -1,0 +1,216 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Structured General Purpose Assignment
+% LaTeX Template
+%
+% This template has been downloaded from:
+% http://www.latextemplates.com
+%
+% Original author:
+% Ted Pavlic (http://www.tedpavlic.com)
+%
+% Note:
+% The \lipsum[#] commands throughout this template generate dummy text
+% to fill the template out. These commands should all be removed when 
+% writing assignment content.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern} % load a font with all the characters
+
+\usepackage{fancyhdr} % Required for custom headers
+\usepackage{lastpage} % Required to determine the last page for the footer
+\usepackage{extramarks} % Required for headers and footers
+\usepackage{graphicx} % Required to insert images
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+
+% Margins
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in 
+
+\linespread{1.1} % Line spacing
+
+% Set up the header and footer
+\pagestyle{fancy}
+\lhead{\hmwkAuthorName} % Top left header
+\chead{\hmwkClass\ : \hmwkTitle} % Top center header
+\rhead{\firstxmark} % Top right header
+\lfoot{\lastxmark} % Bottom left footer
+\cfoot{} % Bottom center footer
+\rfoot{Page\ \thepage\ of\ \pageref{LastPage}} % Bottom right footer
+\renewcommand\headrulewidth{0.4pt} % Size of the header rule
+\renewcommand\footrulewidth{0.4pt} % Size of the footer rule
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs
+
+%----------------------------------------------------------------------------------------
+%	NAME AND CLASS SECTION
+%----------------------------------------------------------------------------------------
+
+\newcommand{\hmwkTitle}{Searching the space of word temporal profiles on Le Temps Newspaper } % Assignment title
+\newcommand{\hmwkDueDate}{Tuesday,\ March\ 10,\ 2015} % Due date
+\newcommand{\hmwkClass}{Project plan} % Course/class
+\newcommand{\hmwkClassTime}{} % Class/lecture time
+\newcommand{\hmwkClassInstructor}{} % Teacher/lecturer
+\newcommand{\hmwkAuthorName}{} % Your name
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title{
+\vspace{2in}
+\textmd{\textbf{\hmwkClass:\ \hmwkTitle}}\\
+\normalsize\vspace{0.1in}\small{Due\ on\ \hmwkDueDate}\\
+\vspace{3in}
+}
+
+\author{Sidney Bovet \and Valentin Rutz \and Zhivka Gucevska  \and Mathieu Monney\and Florian Junker\and John Gaspoz\and Joanna Salath\'e\and Ana Manasovska\and Fabien Jolidon}
+\date{} % Insert date here if you want it to appear below your name
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle
+
+%----------------------------------------------------------------------------------------
+%	TABLE OF CONTENTS
+%----------------------------------------------------------------------------------------
+
+%\setcounter{tocdepth}{1} % Uncomment this line if you don't want subsections listed in the ToC
+
+\newpage
+\tableofcontents
+\newpage
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\begin{abstract}
+
+Studies based on the visualization and analyses of temporal profile of word using a so-called “n-gram” approach have been popular in the last years. However, most of the studies so far discuss the case of remarkable words, most of the time found thanks to the researcher’s intuitions for finding “interesting” curves using the n-gram viewer.\\
+The purpose of this project is to investigate how we could invert the problem and automatically explore the space of temporal curves in search for words. For instance, we would be interested in asking the system to retrieve all the curves “similar” to a given one. This implies defining a way of describing temporal profiles and classifying them according to a predefined distance. \\
+Le Temps Newspaper Corpus is a database of 4 million articles covering a period of 200 years and composed of digitized facsimiles of "Le Journal de Genève" and "La Gazette de Lausanne" wherein each article has been OCR'd.
+\end{abstract}
+\newpage
+%----------------------------------------------------------------------------------------
+%	INTRODUCTION
+%----------------------------------------------------------------------------------------
+
+\section{About the project}
+\subsection{Project name}
+"Searching the space of word temporal profiles on Le Temps Newspaper Corpus", a project proposed by the Digital Humanities laboratory.
+\subsection{Team members}
+\begin{enumerate}
+\item Sidney Bovet (leader) 
+\item Valentin Rutz (leader) 
+\item Zhivka Gucevska 
+\item Mathieu Monney 
+\item Florian Junker 
+\item John Gaspoz 
+\item Joanna Salathé 
+\item Ana Manasovska 
+\item Fabien Jolidon
+\end{enumerate}
+%----------------------------------------------------------------------------------------
+%	GOALS
+%----------------------------------------------------------------------------------------
+
+\section{Goals}
+\begin{enumerate}
+\item Given a word, give the words that have the similar temporal profile/curve
+\item Potential add-on: given a curve, give list of words having the same temporal profile
+\item Potential add-on: intersect with other database (countries, artists \dots ) in order to define ontologies (clustering of words)
+\item Potential add-on: define general theme from words with similar curve
+\item Potential add-on: merge all the metrics
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+%	METHODOLOGY & TASKS
+%----------------------------------------------------------------------------------------
+
+\section{Methodology}
+\subsection{Task 1: Creating the 1-grams (2 weeks)}
+ Once we get the data: 
+\begin{enumerate}
+  \item Parse the XML file, extract the words to obtain raw text
+  \item Then, we can just do a word count, and store the output as CSV
+  \item Compute the word temporal profiles 
+\end{enumerate}
+\subsection{Task 2: Clustering of the word temporal profiles (5 weeks)}
+To achieve this, we'll try some of the following techniques:
+\begin{enumerate}
+\item Fourier transform
+\item Machine Learning/Artificial Intelligence
+\item Time series
+\item Smooth the curves (at least for visualization, since it can be tricky for periodic events)
+\item Ways to compare curves
+\begin{enumerate}
+\item exactly the same curve
+\item same pattern (not same year)/ different frequencies
+\item same year difference amplitude
+\item mean
+\end{enumerate}
+\end{enumerate}
+\subsection{Task 3: Create an interface to see the curves/output (2 weeks)}
+\section{Risks for the success of the project}
+\subsection{Risks}
+\begin{itemize}
+\item Lack of mathematical background = don’t think of a better solution compared to the “easy”/brute force ones
+\item Wrong intuition 
+\item Wrong/”not good” result and don’t notice it
+\item Difficulty of evaluating our overall result (can compare two curves visually but for a lot of them \dots)
+\item Getting stuck for lacking of ideas (don’t think of other fitting curves solutions)
+
+\end{itemize}
+\subsection{Avoided risks}
+\begin{itemize}
+\item Data is provided by DHlab
+\item The data is not dirty
+\item Our goals are computable (in some ways if we take the good track)
+\end{itemize}
+\section{Milestones and Deliverables}
+Duration of the project: 9 weeks (without Easter break)
+\begin{enumerate}
+\item now-10.03.2015 (Week 1)\\
+Grab information/research the web
+\item 10.03-23.03.2015 (Week 2-4)\\
+Parsing and computing 1-gram.
+\item 31.03-04.05.2015 (Week 4 to 10) (with sub-milestones) \\
+\begin{itemize}
+\item finding and testing ways to compare the curves 
+\item performance testing 
+\item add-ons
+\end{itemize}
+\item 04.05-12.05.2015 (Week 11) 
+User interface (web) and writing the final report.
+\item 13.05-19.05.2015 (Week 12)
+Preparing the presentation.
+
+
+\end{enumerate}
+
+\section{Work packages and assignation to team}
+\subsection{First milestone}
+\begin{itemize}
+\item \textit{Parsing Data} (Zhivka, Flo) [parsing the data, then continue with research for the 2nd part]
+\item\textit{ MapReduce}: make the 1-Gram and put them in CSV: Word, $\#$occ, $\#$year (Fabien, John)
+\item \textit{Begin research of 2nd part} (Mathieu [Spark testing, Code style] Ana [think of machine learning techniques we could use based on the PCML class she took], Valentin [TBA])
+\item \textit{No research solutions}( Sidney [mean idea], Joanna [exactly same curve])
+\end{itemize}
+\subsection{Second milestone}
+[TBA]
+\subsection{Third milestone}
+[TBA]
+\end{document}
