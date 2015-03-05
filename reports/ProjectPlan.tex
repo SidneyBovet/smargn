@@ -75,8 +75,8 @@
 \vspace{3in}
 }
 
-\author{Sidney Bovet \and Valentin Rutz \and Zhivka Gucevska  \and Mathieu Monney\and Florian Junker\and John Gaspoz\and Joanna Salath\'e\and Ana Manasovska\and Fabien Jolidon}
-\date{} % Insert date here if you want it to appear below your name
+\author{Sidney Bovet \and Valentin Rutz \and Zhivka Gucevska  \and Mathieu Monney\and Florian Junker\and John Gaspoz\and Joanna Salathé\and Ana Manasovska\and Fabien Jolidon}
+\date{\today} % Insert date here if you want it to appear below your name
 
 %----------------------------------------------------------------------------------------
 
@@ -101,7 +101,8 @@
 
 Studies based on the visualization and analyses of temporal profile of word using a so-called “n-gram” approach have been popular in the last years. However, most of the studies so far discuss the case of remarkable words, most of the time found thanks to the researcher’s intuitions for finding “interesting” curves using the n-gram viewer.\\
 The purpose of this project is to investigate how we could invert the problem and automatically explore the space of temporal curves in search for words. For instance, we would be interested in asking the system to retrieve all the curves “similar” to a given one. This implies defining a way of describing temporal profiles and classifying them according to a predefined distance. \\
-Le Temps Newspaper Corpus is a database of 4 million articles covering a period of 200 years and composed of digitized facsimiles of "Le Journal de Genève" and "La Gazette de Lausanne" wherein each article has been OCR'd.
+Le Temps Newspaper Corpus is a database of 4 million articles covering a period of 200 years and composed of digitized facsimiles of "Le Journal de Genève" and "La Gazette de Lausanne" wherein each article has been OCR'd. \\
+
 \end{abstract}
 \newpage
 %----------------------------------------------------------------------------------------
@@ -130,10 +131,11 @@ Le Temps Newspaper Corpus is a database of 4 million articles covering a period 
 \section{Goals}
 \begin{enumerate}
 \item Given a word, give the words that have the similar temporal profile/curve
-\item Potential add-on: given a curve, give list of words having the same temporal profile
-\item Potential add-on: intersect with other database (countries, artists \dots ) in order to define ontologies (clustering of words)
-\item Potential add-on: define general theme from words with similar curve
-\item Potential add-on: merge all the metrics
+\item Given a word, find all the words that have inverse temporal profile
+\item Given a curve, give list of words having the same temporal profile
+\item \textit{Potential add-on}: intersect with other database (countries, artists \dots ) in order to define ontologies (clustering of words)
+\item \textit{Potential add-on}: define general theme from words with similar curve
+\item \textit{Potential add-on}: merge all the metrics
 \end{enumerate}
 
 %----------------------------------------------------------------------------------------
@@ -144,7 +146,7 @@ Le Temps Newspaper Corpus is a database of 4 million articles covering a period 
 \subsection{Task 1: Creating the 1-grams (2 weeks)}
  Once we get the data: 
 \begin{enumerate}
-  \item Parse the XML file, extract the words to obtain raw text
+  \item Parse the XML files, extract the words to obtain raw text
   \item Then, we can just do a word count, and store the output as CSV
   \item Compute the word temporal profiles 
 \end{enumerate}
@@ -159,7 +161,7 @@ To achieve this, we'll try some of the following techniques:
 \begin{enumerate}
 \item exactly the same curve
 \item same pattern (not same year)/ different frequencies
-\item same year difference amplitude
+\item same year different amplitude
 \item mean
 \end{enumerate}
 \end{enumerate}
@@ -170,7 +172,7 @@ To achieve this, we'll try some of the following techniques:
 \item Lack of mathematical background = don’t think of a better solution compared to the “easy”/brute force ones
 \item Wrong intuition 
 \item Wrong/”not good” result and don’t notice it
-\item Difficulty of evaluating our overall result (can compare two curves visually but for a lot of them \dots)
+\item Difficulty of evaluating our overall result (can compare two curves visually, but it's impossible to look at all of them)
 \item Getting stuck for lacking of ideas (don’t think of other fitting curves solutions)
 
 \end{itemize}
