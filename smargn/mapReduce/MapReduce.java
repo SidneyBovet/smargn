@@ -39,11 +39,27 @@ public class MapReduce {
     //                                          Type the Map receive || Type output of Map        
     public static class Map extends Mapper<Text, IntWritable, Text, IntWritable> {
 
-        public void map(Text key, BytesWritable value, Context context) throws IOException, InterruptedException {
+        public void map(Text key, IntWritable value, Context context) throws IOException, InterruptedException {
             context.write(key, value);
         }
     }
-    
+
+
+    public static class MyReducer
+       extends Reducer<Text,IntWritable,Text,IntWritable> {
+    private IntWritable result = new IntWritable();
+
+    public void reduce(Text key, Iterable<IntWritable> values,
+                       Context context
+                       ) throws IOException, InterruptedException {
+      int sum = 0;
+      for (IntWritable val : values) {
+        sum += val.get();
+      }
+      result.set(sum);
+      context.write(key, result);
+    }
+  }    
 
     public static void main(String[] args) throws Exception {
 
@@ -55,25 +71,25 @@ public class MapReduce {
         job.getConfiguration().set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false");
         job.setJarByClass(MapReduce.class);
         job.setMapperClass(Map.class);
-        job.setInputFormatClass(TupleInputFormat.class);
-        job.setOutputFormatClass(GZipFileOutputFormat.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(BytesWritable.class);
-        TupleInputFormat.addInputPath(job, new Path(args[0]));
-        if(fs.exists(new Path(args[1]))){
-            /*If exist delete the output path*/
-            fs.delete(new Path(args[1]),true);
-        }
-        GZipFileOutputFormat.setOutputPath(job, new Path(args[1]));
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        job.setReducerClass(MyReducer.class);
 
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+        job.setInputFormatClass(TupleInputFormat.class);
+        //job.setOutputFormatClass(GZipFileOutputFormat.class);
+
+
+        TupleInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 
     // Name of file and line
     public static class TupleInputFormat extends FileInputFormat<Text, IntWritable> {
 
         @Override
-        public RecordReader<Text, BytesWritable> createRecordReader(InputSplit split, TaskAttemptContext context)
+        public RecordReader<Text, IntWritable> createRecordReader(InputSplit split, TaskAttemptContext context)
                 throws IOException, InterruptedException {
             return new TupleRecordReader();
         }
@@ -90,15 +106,13 @@ public class MapReduce {
         private Text currentKey;
 
         /** Uncompressed file contents */
-        private Text currentValue;
+        private IntWritable currentValue;
 
         /** Used to indicate progress */
         private boolean isFinished = false;
 
-        private InputStreamReader cin = null;
-
         private String year;
-        private final static IntWritable ONE = IntWritable(1);
+        private final static IntWritable ONE = new IntWritable(1);
         private Scanner input;
 
         /**
@@ -153,7 +167,7 @@ public class MapReduce {
          * Returns the current value (contents of the GZ file)
          */
         @Override
-        public BytesWritable getCurrentValue() throws IOException, InterruptedException {
+        public IntWritable getCurrentValue() throws IOException, InterruptedException {
             return currentValue;
         }
 
