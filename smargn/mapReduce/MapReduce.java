@@ -63,12 +63,9 @@ public class MapReduce {
 
     public static void main(String[] args) throws Exception {
 
-
+        // FIRST JOB
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "MapReduce");
-        FileSystem fs = FileSystem.get(conf);
-        // Used to remove the _SUCCESS file in output folder.
-        job.getConfiguration().set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false");
+        Job job = Job.getInstance(conf, "MapReduce1 ");
         job.setJarByClass(MapReduce.class);
         job.setMapperClass(Map.class);
         job.setReducerClass(MyReducer.class);
@@ -83,6 +80,26 @@ public class MapReduce {
         TupleInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+        // SECOND JOB
+        /*
+        Configuration conf2 = new Configuration();
+        Job job2 = Job.getInstance(conf2, "MapReduce2");
+        job2.setJarByClass(MapReduce.class);
+        job2.setMapperClass(Map2.class);
+        job2.setReducerClass(MyReducer2.class);
+
+
+        job2.setOutputKeyClass(Text.class);
+        job2.setOutputValueClass(IntWritable.class);
+        job2.setInputFormatClass(TupleInputFormat.class);
+
+
+        TupleInputFormat.addInputPath(job2, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job2, new Path(args[2]));
+        System.exit(job2.waitForCompletion(true) ? 0 : 1);
+        */
+
     }
 
     // Name of file and line
