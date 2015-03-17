@@ -1,0 +1,11 @@
+This is the first implementation of the NaiveCompare algorithm
+
+To run it: 
+- Put the data.csv into the input directory ($HADOOP_INPUT_DIRECTORY) you have on your cluster
+- Go into SparkScalaNaiveCompare
+- Do sbt package just to be sure you have the last compiled version
+- erase your output directory on your cluster (hadoop fs -rm -r $HADOOP_OUPUT_DIRECTORY)
+- lauch the spark job (spark-submit --class NaiveCompare --master yarn-client ./target/scala-2.10/sparkscalanaivecompare_2.10-1.0.jar $HADOOP_INPUT_DIRECTORY $HADOOP_OUPUT_DIRECTORY)
+- you can check if the output is: "orange /n flower" (
+hadoop fs -cat $HADOOP_OUPUT_DIRECTORY/*)
+
