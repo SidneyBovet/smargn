@@ -3,6 +3,8 @@ project/project
 project/target
 target
 tmp
+input
+output
 .history
 dist
 .idea
