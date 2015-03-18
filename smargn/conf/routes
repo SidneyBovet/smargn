@@ -5,6 +5,7 @@
 # Home page
 GET        /                    controllers.Application.index
 
+GET        /naive               controllers.Application.runNaive
 GET        /test                controllers.Application.test
 GET        /defaulttest         controllers.Application.defaultTest
 
