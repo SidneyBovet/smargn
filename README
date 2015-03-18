@@ -1,2 +1,0 @@
-This branch contains the code for parsing the XML files. The output will be files with space-separated-values per every file of input. The first word of every file will be the year of the article, the words of the article will follow without any supplementary meta data.
-
