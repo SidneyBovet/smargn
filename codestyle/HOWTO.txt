@@ -1,0 +1,2 @@
+
+java -jar scalastyle-batch_2.10.jar --config codestyle/scalastyle_config.xml src/main/scala
