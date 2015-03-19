@@ -8,7 +8,13 @@ import org.apache.hadoop.mapreduce.Reducer;
 public class ArticleReducer extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text key, Iterable<Text> values, Context context)
 			throws IOException, InterruptedException {
-		StringBuilder result = new StringBuilder();
+		
+		int size = 0;
+		for (Text val : values) {
+			size += 1 + val.getLength();
+		}
+		
+		StringBuilder result = new StringBuilder(size);
 		for (Text val : values) {
 			result.append(" " + val.toString());
 		}
