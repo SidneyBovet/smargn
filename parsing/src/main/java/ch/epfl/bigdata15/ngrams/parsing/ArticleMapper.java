@@ -11,41 +11,41 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
-	
-	public void map(Text key, Path value, Context context)
-			throws IOException, InterruptedException {
-		Configuration conf = context.getConfiguration();
-		FileSystem fs = value.getFileSystem(conf);
-		FSDataInputStream in = fs.open(value);
-		Scanner scan = new Scanner(in, "UTF-8");
-		scan.useDelimiter("[\\s+]|[>]");
+
+    public void map(Text key, Path value, Context context)
+            throws IOException, InterruptedException {
+        Configuration conf = context.getConfiguration();
+        FileSystem fs = value.getFileSystem(conf);
+        FSDataInputStream in = fs.open(value);
+        Scanner scan = new Scanner(in, "UTF-8");
+        scan.useDelimiter("[\\s+]|[>]");
 
         String article = readNextArticle(scan);
-        while(article.length() > 0) {
+        while (article.length() > 0) {
             context.write(key, new Text(article));
-        	article = readNextArticle(scan);
+            article = readNextArticle(scan);
         }
         scan.close();
         in.close();
         fs.close();
-	}
-	
-	private String readNextArticle(Scanner scan) {
-		String article = "";
-		String word = "";
-		boolean inArticle = false;
-		
-		while (scan.hasNext()) {
-			word = scan.next();
-			if("<full_text".equals(word)) {
-				inArticle = true;
-			} else if("</full_text".equals(word)) {
-				return article.trim();
-			} else if(inArticle && word.replaceAll("[^\\p{L}']", "").length() > 0) {
-				article += word+" ";
-			}
-		}
-		
-		return article.trim();
-	}
+    }
+
+    private String readNextArticle(Scanner scan) {
+        String article = "";
+        String word = "";
+        boolean inArticle = false;
+
+        while (scan.hasNext()) {
+            word = scan.next();
+            if ("<full_text".equals(word)) {
+                inArticle = true;
+            } else if ("</full_text".equals(word)) {
+                return article.trim();
+            } else if (inArticle && word.replaceAll("[^\\p{L}']", "").length() > 0) {
+                article += word + " ";
+            }
+        }
+
+        return article.trim();
+    }
 }
