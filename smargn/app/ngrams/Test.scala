@@ -5,5 +5,6 @@ package ngrams
  */
 class Test(msg: String) {
   def getMsg = msg
+
   def getDefaultMsg = "Hello World"
 }
