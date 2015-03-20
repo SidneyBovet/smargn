@@ -1,36 +1,20 @@
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.DataOutputStream;
-import java.util.StringTokenizer;
-import java.util.List;
-import java.util.Iterator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.Scanner;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.RecordWriter;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import java.util.Scanner;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class MapReduce {
   // Type the Map receive || Type output of Map
