@@ -1,0 +1,11 @@
+@(results: List[String])
+
+@main("Welcome to Play") {
+
+    <ul id="results">
+        @for(res <- results) {
+            <li>@res</li>
+        }
+    </ul>
+
+}

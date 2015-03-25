@@ -1,6 +1,7 @@
 package controllers
 
 import ngrams.Test
+import techniques.NaiveComparison
 import play.api._
 import play.api.mvc._
 
@@ -20,4 +21,8 @@ object Application extends Controller {
     Ok(views.html.test(v.getDefaultMsg))
   }
 
+  def runNaive = Action {
+    val res = NaiveComparison.run("input/", "output/")
+    Ok(views.html.naive(res))
+  }
 }
