@@ -12,6 +12,10 @@ object Application extends Controller {
 
   def runNaive(word: String) = Action {
     val res = NaiveComparison.run(word, "input/", "output/")
-    Ok(views.html.naive(res))
+    if(res == Nil) {
+      Ok(views.html.notFoundPage(word))
+    } else {
+      Ok(views.html.naive(res))
+    }
   }
 }
