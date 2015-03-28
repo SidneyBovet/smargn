@@ -9,16 +9,16 @@ object Spark {
   private var sc: Option[SparkContext] = None
 
   def ctx: SparkContext = {
-    if (!sc.isDefined) {
+    if (sc.nonEmpty) {
       sc = Some(new SparkContext(new SparkConf().setAppName("naiveCompare").setMaster("local[2]")))
       //                          .setMaster("yarn-client")
     }
     sc.get
   }
 
-  def stop = {
-    if(sc.isDefined) {
-      sc.get.stop
+  def stop(): Unit = {
+    if (sc.isDefined) {
+      sc.get.stop()
       sc = None
     }
   }

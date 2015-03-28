@@ -10,22 +10,16 @@ import scala.concurrent.Future
  */
 object Global extends GlobalSettings {
 
-  override def onError(request: RequestHeader, ex: Throwable) = {
-    Spark.stop
-    Future.successful(InternalServerError(
-      views.html.errorPage(ex)
-    ))
+  override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
+    Spark.stop()
+    Future.successful(InternalServerError(views.html.errorPage(ex)))
   }
 
   override def onStop(app: Application) {
-    Spark.stop
+    Spark.stop()
   }
 
-  override def onHandlerNotFound(request: RequestHeader) = {
-    Future.successful(NotFound(
-      views.html.notFoundPage(request.path)
-    ))
+  override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
+    Future.successful(NotFound(views.html.notFoundPage(request.path)))
   }
-
 }
-

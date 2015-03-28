@@ -4,6 +4,7 @@ import org.scalatest.FunSuite
 
 /**
  * Created by mathieu on 27/03/15.
+ * Code adapted from http://blog.quantifind.com/posts/spark-unit-test/
  */
 object SparkTest extends org.scalatest.Tag("com.bd.test.tags.SparkTest")
 
