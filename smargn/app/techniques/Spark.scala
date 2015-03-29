@@ -9,7 +9,7 @@ object Spark {
   private var sc: Option[SparkContext] = None
 
   def ctx: SparkContext = {
-    if (sc.nonEmpty) {
+    if (sc.isEmpty) {
       sc = Some(new SparkContext(new SparkConf().setAppName("naiveCompare").setMaster("local[2]")))
       //                          .setMaster("yarn-client")
     }
