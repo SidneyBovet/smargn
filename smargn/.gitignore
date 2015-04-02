@@ -5,6 +5,7 @@ target
 tmp
 input
 output
+public/data
 .history
 dist
 .idea

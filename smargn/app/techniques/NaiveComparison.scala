@@ -69,11 +69,10 @@ object NaiveComparison {
       }
       printToFile(new File(outputFile + "data.csv")) {
         p => toPrint.foreach(p.println)
-
-          Logger.info("Found " + similarWordsDivision.count() + " similar words")
-          similaritiesLocal.map(_._1)
       }
-      similaritiesLocal.unzip._1
+
+      Logger.info("Found " + similarWordsDivision.count() + " similar words")
+      similaritiesLocal.map(_._1)
     }
   }
 
