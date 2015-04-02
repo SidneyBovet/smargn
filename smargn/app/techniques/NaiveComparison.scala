@@ -4,6 +4,9 @@ import java.io.{File, PrintWriter}
 
 import org.apache.spark.rdd.RDD
 import play.Logger
+import play.api.libs
+import play.api.libs.json
+import play.api.libs.json.{JsArray, JsObject, Json}
 
 /**
  *
@@ -13,6 +16,7 @@ import play.Logger
 object NaiveComparison {
 
   def run(word: String, inputDir: String, outputFile: String) = {
+    YearCnt.reset
     val spark = Spark.ctx
     Logger.info("Searching for word: " + word)
 
@@ -45,7 +49,7 @@ object NaiveComparison {
       Logger.debug(word + " is not in the data")
       Nil
     } else {
-      val testedWord = listWords.first
+      val testedWord = listWords.first()
 
       //TODO find a way to choose function
       //      val similarWordsDifference = naiveDifference(formattedData, testedWord, acceptedDifferenceNaiveDifference)
@@ -56,15 +60,15 @@ object NaiveComparison {
       similarWordsDivision.map(_._1).saveAsTextFile(outputFile)
 
       val similaritiesLocal = similarWordsDivision.collect().toList
-      val wordOccurrences = testedWord._2
 
+      //TODO finish §display graph
+      val startYear = 2000
+      val firstLine = "Word,Year,Occurrences"
 
-      //TODO finish display graph
-      val firstLine = wordOccurrences.:\("word") {
-        case (_, acc) => acc + "," + YearCnt.getNextYear
-      }
-      val toPrint = firstLine :: (testedWord :: similaritiesLocal).map {
-        case (w, l) => w + l.:\("") { case (o, acc) => acc + "," + o }
+      val toPrint = firstLine :: (testedWord :: similaritiesLocal).flatMap {
+        case (w, o) => o.map(_ => w).zip(startYear until (startYear + o.length)).zip(o).map {
+          case ((ww, y), oo) => ww +","+ y +","+ oo.toInt
+        }
       }
       printToFile(new File(outputFile + "data.csv")) {
         p => toPrint.foreach(p.println)
@@ -135,7 +139,7 @@ object NaiveComparison {
    * @return tuple of word and its average-scaled frequency
    */
   def proportionalScalarAverage(formattedWord: (String, Array[Double])): (String, Array[Double]) = {
-    val average = formattedWord._2.reduceLeft(_ + _)
+    val average = formattedWord._2.sum
     (formattedWord._1, formattedWord._2.map(x => x / average))
   }
 
@@ -148,7 +152,7 @@ object NaiveComparison {
    */
   def naiveDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), acceptedDifference: Double): RDD[(String, Array[Double])] = {
     //add the testedWord values to the arrays and compute difference for future comparison
-    val zipDataTestedWord = data.map(x => (x._1, (testedWord._2).zip(x._2).map(x => math.abs(x._1 - x._2)), x._2))
+    val zipDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => math.abs(x._1 - x._2)), x._2))
     //test similarity criteria between each data word array and the tested word
     val booleanDataTestedWord = zipDataTestedWord.map(x => (x._1, x._2.map(y => y <= acceptedDifference), x._3))
     //filter the arrays that have at least one value that didn't pass the similarity test
@@ -167,8 +171,8 @@ object NaiveComparison {
     val dividedDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => x._1 / x._2), x._2))
     //could be useful for testing purpose
     //val tempDifferenceMaxMin = dividedDataTestedWord.map(x => (x._1, (((findMinAndMax(x._2))._2)- ((findMinAndMax(x._2))._1))))
-    val booleanDataTestedWord = dividedDataTestedWord.map(x => (x._1, ((findMinAndMax(x._2)._2 - findMinAndMax(x._2)._1) < acceptedDifference), x._3))
-    booleanDataTestedWord.filter(x => x._2 == true && x._1 != testedWord._1).map(x => (x._1, x._3))
+    val booleanDataTestedWord = dividedDataTestedWord.map(x => (x._1, (findMinAndMax(x._2)._2 - findMinAndMax(x._2)._1) < acceptedDifference, x._3))
+    booleanDataTestedWord.filter(x => x._2 && x._1 != testedWord._1).map(x => (x._1, x._3))
   }
 }
 
@@ -179,4 +183,6 @@ private object YearCnt {
     year = year + 1
     year
   }
+
+  def reset = year = 1999
 }

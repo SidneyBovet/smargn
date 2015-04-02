@@ -11,7 +11,7 @@ object Application extends Controller {
   }
 
   def runNaive(word: String) = Action {
-    val res = NaiveComparison.run(word, "input/", "output/")
+    val res = NaiveComparison.run(word, "input/", "public/data/")
     if(res == Nil) {
       Ok(views.html.notFoundPage(word))
     } else {

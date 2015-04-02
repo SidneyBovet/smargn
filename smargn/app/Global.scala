@@ -26,6 +26,5 @@ object Global extends GlobalSettings {
       views.html.notFoundPage(request.path)
     ))
   }
-
 }
 
