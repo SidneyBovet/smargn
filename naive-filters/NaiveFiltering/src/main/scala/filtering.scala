@@ -13,8 +13,8 @@ object Filtering {
     val conf = new SparkConf().setAppName("NaiveFiltering")
     val sc = new SparkContext(conf)
 
-    val lines = filenameToKeyValue(args(0),sc).cache
-
+    val kvPairs = filenameToKeyValue(args(0),sc).cache
+    /*
     val kvPairs = lines.mapPartitionsWithIndex(
       (partitionIdx: Int, lines: Iterator[(String,Array[Int])]) => {
         if (partitionIdx == 0) {
@@ -22,16 +22,40 @@ object Filtering {
         }
         lines
       }).cache
+     */
 
-    kvPairs.saveAsTextFile(args(1))
+    var kvPairsNorm = kvPairs.map(t => (t._1, t._2.map(_ / mean(t._2))))
+
+    /* USELESS
+    kvPairsNorm.foreach(t => {
+      print("XXXXXXXXXXXXXXXXXXXX (")
+      print(t._1)
+      print(",[")
+      t._2.foreach(el => print(" "+el))
+      println(" ])")
+    })*/
+
+    kvPairsNorm.saveAsTextFile(args(1))
 
     sc.stop()
   }
 
   def filenameToKeyValue(fileName: String, sc: SparkContext) = {
     sc.textFile(fileName)
-      .map(_.split(","))
+      .map(_.split(" "))
       .keyBy(_.head) // produce (word,[w,f1,f2,...]) tuples
       .map(k => (k._1,k._2.tail.map(_.toInt))) // produce (word, Array[Int])
   }
+
+  def mean(a: Array[Int]): Double = {
+    val sum = a.foldLeft(0)(_+_)
+    sum/a.size
+  }
+
+  def detectPeaks(array: Array[Int], mean: Int, threshold: Int): Boolean = {
+    array.foldLeft(false)((b:Boolean,el:Int) => {
+      (b || ((el-mean)*(el-mean) > threshold))
+    })
+  }
+
 }
