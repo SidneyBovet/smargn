@@ -4,19 +4,14 @@ import java.io.{File, PrintWriter}
 
 import org.apache.spark.rdd.RDD
 import play.Logger
-import play.api.libs
-import play.api.libs.json
-import play.api.libs.json.{JsArray, JsObject, Json}
 
 /**
- *
  * Created by Valentin on 17/03/15.
  * Updated by Joanna (main code) on 26/03/15.
  */
 object NaiveComparison {
 
-  def run(word: String, inputDir: String, outputFile: String) = {
-    YearCnt.reset
+  def run(word: String, inputDir: String, outputFile: String): List[String] = {
     val spark = Spark.ctx
     Logger.info("Searching for word: " + word)
 
@@ -30,7 +25,8 @@ object NaiveComparison {
       deleteFolder(target)
     }
 
-    val formattedData = data.map(line => line.split(" ")).map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble)))
+    val formattedData = data.map(line => line.split(" "))
+      .map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble)))
 
 
     //difference value that is accepted to consider two array values similar
@@ -42,8 +38,7 @@ object NaiveComparison {
 
     //TODO deal with word not find in data
     //get word that we want to have its similar words from run's argument and find it in the data
-    val listWords = formattedData.filter {
-      case (w, o) => w == word
+    val listWords = formattedData.filter { case (w, o) => w == word
     }
     if (listWords.count() == 0) {
       Logger.debug(word + " is not in the data")
@@ -53,44 +48,44 @@ object NaiveComparison {
 
       //TODO find a way to choose function
       //      val similarWordsDifference = naiveDifference(formattedData, testedWord, acceptedDifferenceNaiveDifference)
-      //      val similarWordsDifferenceMax = naiveDifference(formattedData.map(proportionalScalarMax(_)), proportionalScalarMax(testedWord), acceptedDifferenceNaiveDifferenceMaxScale)
-      //      val similarWordsDifferenceAverage = naiveDifference(formattedData.map(proportionalScalarAverage(_)), proportionalScalarAverage(testedWord), acceptedDifferenceNaiveDifferenceAvgScale)
+      //      val similarWordsDifferenceMax = naiveDifference(formattedData.map(proportionalScalarMax(_)),
+      // proportionalScalarMax(testedWord), acceptedDifferenceNaiveDifferenceMaxScale)
+      //      val similarWordsDifferenceAverage = naiveDifference(formattedData.map(proportionalScalarAverage(_)),
+      // proportionalScalarAverage(testedWord), acceptedDifferenceNaiveDifferenceAvgScale)
       val similarWordsDivision = naiveDivision(formattedData, testedWord, acceptedDifferenceNaiveDivision)
 
       similarWordsDivision.map(_._1).saveAsTextFile(outputFile)
 
-      val similaritiesLocal = similarWordsDivision.collect().toList
+      val similaritiesLocal: List[(String, Array[Double])] = similarWordsDivision.collect().toList
 
-      //TODO finish §display graph
+      //TODO finish display graph
       val startYear = 2000
       val firstLine = "Word,Year,Occurrences"
 
       val toPrint = firstLine :: (testedWord :: similaritiesLocal).flatMap {
         case (w, o) => o.map(_ => w).zip(startYear until (startYear + o.length)).zip(o).map {
-          case ((ww, y), oo) => ww +","+ y +","+ oo.toInt
+          case ((ww, y), oo) => ww + "," + y + "," + oo.toInt
         }
       }
       printToFile(new File(outputFile + "data.csv")) {
         p => toPrint.foreach(p.println)
+
+          Logger.info("Found " + similarWordsDivision.count() + " similar words")
+          similaritiesLocal.map(_._1)
       }
-      Logger.info("Found " + similarWordsDivision.count() + " similar words")
-      similaritiesLocal.map(_._1)
+      similaritiesLocal.unzip._1
     }
   }
 
-  def deleteFolder (folder: File): Unit = {
+  def deleteFolder(folder: File): Unit = {
     val files = folder.listFiles
-    files.foreach (f => {
-      if (f.isDirectory) {
-        deleteFolder (f)
-      } else {
-        f.delete
-      }
+    files.foreach(f => {
+      if (f.isDirectory) deleteFolder(f) else f.delete
     })
     folder.delete
   }
 
-  def printToFile(f: File)(op: PrintWriter => Unit) = {
+  def printToFile(f: File)(op: PrintWriter => Unit): Unit = {
     val p = new PrintWriter(f)
     try {
       op(p)
@@ -109,15 +104,7 @@ object NaiveComparison {
     // a non-empty array
     if (array.length != 0) {
       val initial = (array.head, array.head) // a tuple representing min-max
-      array.foldLeft(initial) { (acc, x) =>
-        if (x < acc._1) {
-          (x, acc._2)
-        } else if (x > acc._2) {
-          (acc._1, x)
-        } else {
-          acc
-        }
-      }
+      array.foldLeft(initial) { (acc, x) => if (x < acc._1) (x, acc._2) else if (x > acc._2) (acc._1, x) else acc }
     } else {
       (-1.0, -1.0)
     }
@@ -144,45 +131,41 @@ object NaiveComparison {
   }
 
   /**
-   * Compare a word,frequency tuple with a collection of word, frequency tuples to find similar words by computing array's elements difference
+   * Compare a word,frequency tuple with a collection of word, frequency tuples to find similar words by computing
+   * array's elements difference
    * @param data collection of word, frequency to tuple to look into
    * @param testedWord word that we want to find its similar word
    * @param acceptedDifference difference between two array value that we accept
    * @return words that are similar
    */
-  def naiveDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), acceptedDifference: Double): RDD[(String, Array[Double])] = {
+  def naiveDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                      acceptedDifference: Double): RDD[(String, Array[Double])] = {
     //add the testedWord values to the arrays and compute difference for future comparison
     val zipDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => math.abs(x._1 - x._2)), x._2))
     //test similarity criteria between each data word array and the tested word
     val booleanDataTestedWord = zipDataTestedWord.map(x => (x._1, x._2.map(y => y <= acceptedDifference), x._3))
     //filter the arrays that have at least one value that didn't pass the similarity test
-    booleanDataTestedWord.map(x => (x._1, x._2.filter(_ == false), x._3)).filter(x => x._2.length == 0 && x._1 != testedWord._1).map(x => (x._1, x._3))
+    booleanDataTestedWord.map(x => (x._1, x._2.filter(_ == false), x._3))
+      .filter(x => x._2.length == 0 && x._1 != testedWord._1).map(x => (x._1, x._3))
   }
 
   /**
-   * Compare the ratio of word's frequency with the collection word's frequency to find similar words by computing the ratio line
+   * Compare the ratio of word's frequency with the collection word's frequency to find similar words by computing
+   * the ratio line
    * @param data collection of word, frequency to tuple to look into
    * @param testedWord word that we want to find its similar word
    * @param acceptedDifference straightness of the curve that we accept
    * @return words that are similar
    */
-  def naiveDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), acceptedDifference: Double): RDD[(String, Array[Double])] = {
+  def naiveDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                    acceptedDifference: Double): RDD[(String, Array[Double])] = {
     //add the testedWord values to the arrays and compute division for future comparison
     val dividedDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => x._1 / x._2), x._2))
     //could be useful for testing purpose
-    //val tempDifferenceMaxMin = dividedDataTestedWord.map(x => (x._1, (((findMinAndMax(x._2))._2)- ((findMinAndMax(x._2))._1))))
-    val booleanDataTestedWord = dividedDataTestedWord.map(x => (x._1, (findMinAndMax(x._2)._2 - findMinAndMax(x._2)._1) < acceptedDifference, x._3))
+    //val tempDifferenceMaxMin = dividedDataTestedWord.map(x => (x._1, (((findMinAndMax(x._2))._2)- ((findMinAndMax(x
+    // ._2))._1))))
+    val booleanDataTestedWord = dividedDataTestedWord
+      .map(x => (x._1, findMinAndMax(x._2)._2 - findMinAndMax(x._2)._1 < acceptedDifference, x._3))
     booleanDataTestedWord.filter(x => x._2 && x._1 != testedWord._1).map(x => (x._1, x._3))
   }
-}
-
-private object YearCnt {
-  private var year = 1999
-
-  def getNextYear = {
-    year = year + 1
-    year
-  }
-
-  def reset = year = 1999
 }
