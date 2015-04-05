@@ -14,32 +14,26 @@ object Filtering {
     val sc = new SparkContext(conf)
 
     val kvPairs = filenameToKeyValue(args(0),sc).cache
-    /*
-    val kvPairs = lines.mapPartitionsWithIndex(
-      (partitionIdx: Int, lines: Iterator[(String,Array[Int])]) => {
-        if (partitionIdx == 0) {
-          lines.drop(1)
-        }
-        lines
-      }).cache
-     */
+    val kvPairsNorm = kvPairs.map(t => {
+      val meanValue = mean(t._2)
+      (t._1, t._2.map(_ / meanValue))
+    })
+    val words = kvPairsNorm.flatMap(t => {
+      if(detectPeaks(t._2,1,1)) {
+        List(t._1)
+      } else {
+        List()
+      }
+    })
 
-    var kvPairsNorm = kvPairs.map(t => (t._1, t._2.map(_ / mean(t._2))))
-
-    /* USELESS
-    kvPairsNorm.foreach(t => {
-      print("XXXXXXXXXXXXXXXXXXXX (")
-      print(t._1)
-      print(",[")
-      t._2.foreach(el => print(" "+el))
-      println(" ])")
-    })*/
-
-    kvPairsNorm.saveAsTextFile(args(1))
+    words.saveAsTextFile(args(1))
 
     sc.stop()
   }
 
+  /**
+    * Returns an RDD[String,Array[Int]] from a CSV file using space as delimiters
+    */
   def filenameToKeyValue(fileName: String, sc: SparkContext) = {
     sc.textFile(fileName)
       .map(_.split(" "))
@@ -47,13 +41,19 @@ object Filtering {
       .map(k => (k._1,k._2.tail.map(_.toInt))) // produce (word, Array[Int])
   }
 
+  /**
+    * Returns the mean of array
+    */
   def mean(a: Array[Int]): Double = {
     val sum = a.foldLeft(0)(_+_)
     sum/a.size
   }
 
-  def detectPeaks(array: Array[Int], mean: Int, threshold: Int): Boolean = {
-    array.foldLeft(false)((b:Boolean,el:Int) => {
+  /**
+    * Returns true if any point in array goes too far from the mean
+    */
+  def detectPeaks(array: Array[Double], mean: Double, threshold: Double): Boolean = {
+    array.foldLeft(false)((b:Boolean,el:Double) => {
       (b || ((el-mean)*(el-mean) > threshold))
     })
   }
