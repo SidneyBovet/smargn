@@ -30,4 +30,30 @@ object ComputationUtilities {
     }
   }
 
+  /**
+   *
+   * @param array
+   * @return
+   */
+  def average(array: Array[Double]): Double = {
+    if (array.length == 0) {
+      0
+    } else {
+      array.sum / array.length
+    }
+  }
+
+  /**
+   *
+   * @param array
+   * @return variance of the sample values
+   */
+  def variance(array: Array[Double]): Double = {
+    if (array.length <= 1) {
+      0
+    } else {
+      val mean = average(array)
+      array.map { x => (x - mean) * (x - mean)}.sum / (array.length - 1)
+    }
+  }
 }

@@ -1,39 +1,46 @@
 package techniques
 
 import java.io.File
-
 import org.apache.spark.rdd.RDD
+import utils.ComputationUtilities._
+
 import play.Logger
 
 
 object PeakComparison {
-  def run(word: String, inputDir: String, outputFile: String): List[String] = {
-    //Configs
-    val spark = Spark.ctx
-    Logger.info("Searching for word: " + word)
 
-    val data = spark.textFile(inputDir)
-    val formattedData = data.map(line => line.split(" "))
-      .map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble)))
+  val deltaMinMax = 0
+  val average = 0
+  //call average function
+  val variance = 0
+  //call variance function
+  val deltaSlope = 1
 
-
-    //difference value that is accepted to consider two array values similar
-    val target = new File(outputFile)
-    if (target.exists()) {
-      Logger.info("Deleting previous output folder")
-      deleteFolder(target)
-    }
-
-    val deltaMinMax = 0 //call minmax function
-    val average = 0 //call average function
-    val variance = 0 //call variance function
+  /**
+   *
+   * @param data
+   * @param testedWord
+   * @param parameters The head of the list is the window size
+   * @return
+   */
+  def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    val windowSize = parameters(0)
     val deltaSlope = 1
+    val axisXDeviation = parameters(1)
+    val proportionSimilarities = parameters(2)
+    val peakTestedWord = windowPeakDerivative(testedWord, windowSize.toInt, deltaSlope)
 
+    val peaksOfWords = data.map(x => (x._1, windowPeakDerivative(x, windowSize.toInt, deltaSlope)))
 
-
-
-    List("")
+    val maxIndexesOfWords: RDD[(String, List[Int])] = peaksOfWords.map(x => (x._1, x._2.map(y => y._1)))
+    val maxIndexesOfWord: List[Int] = peakTestedWord.map(x => x._1)
+    //peak x axis
+    val proportionPeakSimilarities = maxIndexesOfWords.map(x => (x._1, x._2.map(y => maxIndexesOfWord.map(z => Math.abs(z - y) < axisXDeviation).count(_ == true) > 0))).map(x => (x._1, x._2.count(_ == true) / maxIndexesOfWord.size))
+    proportionPeakSimilarities.filter(_._2 > proportionSimilarities).map(_._1)
   }
+  
+  //TODO Use windowMaxMin, windowPeakMean
+  //TODO implement in a function peakXaxis and peakYaxis
 
   /**
    *
@@ -52,8 +59,9 @@ object PeakComparison {
       if (lastDerivative > delta && derivative < -delta) {
         result = (i + windowSize, lastDerivative, derivative) :: result
       }
-
-      lastDerivative = derivative
+      if (derivative * lastDerivative > 0) {
+        lastDerivative = derivative
+      }
     }
     result.reverse
   }
@@ -77,20 +85,41 @@ object PeakComparison {
         result = (i + indexOfMax, currentWindow(indexOfMax) - currentLeft.min * 1.0, currentWindow(indexOfMax) - currentRight.min * 1.0) :: result
       }
     }
-    result
+    result.reverse
   }
 
- 
+  private def windowPeakMean(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
+    val frequencies = word._2
+    var result = List[(Int, Double, Double)]()
+
+    var i = 0
+    while (i < frequencies.length) {
+      val ascendingWindow = frequencies.slice(i, findAscendingAverageWindow(frequencies, i, windowSize) + 1)
+      val indexOfMaxAscendingInWindow = ascendingWindow.indexOf(ascendingWindow.max)
+      val indexOfMaxAscending = indexOfMaxAscendingInWindow + i
+      val minAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).min
+      val descendingWindow = frequencies.slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1)
+      val indexOfMinDescending = descendingWindow.indexOf(descendingWindow.min) + indexOfMaxAscending
+      val valueAscending = frequencies(indexOfMaxAscending) - minAscending
+      val valueDescending = frequencies(indexOfMaxAscending) - frequencies(indexOfMinDescending)
+      if (valueAscending > delta && valueDescending > delta) {
+        result = (indexOfMaxAscending, valueAscending * 1.0, valueDescending * 1.0) :: result
+      }
+      i = indexOfMinDescending
+    }
+    result.reverse
+  }
+
   /**
    *
-   * @param window the array we are considering
+   * @param frequencies the array we are considering
    * @param windowSize the number of years we consider in the average
    * @return the position of the last ascending average value
    */
-  private def findAscendingAverageWindow(window: Array[Double], windowSize: Int): Int = {
+  private def findAscendingAverageWindow(frequencies: Array[Double], start: Int, windowSize: Int): Int = {
     var lastAverage = 0.0
-    for (i <- 0 to window.length - windowSize) {
-      val average = window.slice(0, i).sum / (i + 1.0)
+    for (i <- start to frequencies.length - windowSize) {
+      val average = frequencies.slice(0, i).sum / (i + 1.0)
       if (lastAverage <= average) {
         lastAverage = average
       }
@@ -98,19 +127,19 @@ object PeakComparison {
         return i - 1
       }
     }
-    window.length - 1
+    frequencies.length - 1
   }
 
   /**
    *
-   * @param window the array we are considering
+   * @param frequencies the array we are considering
    * @param windowSize the number of years we consider in the average
    * @return the position of the last descending average value
    */
-  private def findDescendingAverageWindow(window: Array[Double], windowSize: Int): Int = {
+  private def findDescendingAverageWindow(frequencies: Array[Double], start: Int, windowSize: Int): Int = {
     var lastAverage = 0.0
-    for (i <- 0 to window.length - windowSize) {
-      val average = window.slice(0, i).sum / (i + 1.0)
+    for (i <- start to frequencies.length - windowSize) {
+      val average = frequencies.slice(0, i).sum / (i + 1.0)
       if (lastAverage >= average) {
         lastAverage = average
       }
@@ -118,7 +147,7 @@ object PeakComparison {
         return i - 1
       }
     }
-    window.length - 1
+    frequencies.length - 1
   }
 
   /**

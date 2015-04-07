@@ -24,7 +24,7 @@ object Scaling {
    * @return tuple of word and its average-scaled frequency
    */
   def proportionalScalarAverage(formattedWord: (String, Array[Double])): (String, Array[Double]) = {
-    val average = formattedWord._2.sum
-    (formattedWord._1, formattedWord._2.map(x => x / average))
+    val sum = formattedWord._2.sum
+    (formattedWord._1, formattedWord._2.map(x => x / sum))
   }
 }
