@@ -1,3 +1,4 @@
+
 package techniques
 
 import java.io.{File, PrintWriter}
@@ -9,7 +10,7 @@ import play.Logger
  * Created by johngaspoz on 08.04.15.
  */
 
-object NaiveReverseComparison {
+object NaiveShiftComparison {
 
   def run(word: String, inputDir: String, outputFile: String): List[String] = {
     val spark = Spark.ctx
@@ -26,7 +27,7 @@ object NaiveReverseComparison {
     }
 
     val formattedData = data.map(line => line.split(" "))
-      .map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble))).map(x => (x._1, x._2.reverse))
+      .map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble)))
 
 
     //difference value that is accepted to consider two array values similar
@@ -38,12 +39,12 @@ object NaiveReverseComparison {
 
     //TODO deal with word not find in data
     //get word that we want to have its similar words from run's argument and find it in the data
-    val listWords = formattedData.filter { case (w, o) => w == word}
+    val listWords = formattedData.filter { case (w, o) => w == word
+    }
     if (listWords.count() == 0) {
       Logger.debug(word + " is not in the data")
       Nil
-    }
-    else {
+    } else {
       val testedWord = listWords.first()
 
       //TODO find a way to choose function
