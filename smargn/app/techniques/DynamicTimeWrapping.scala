@@ -18,11 +18,11 @@ object DynamicTimeWrapping {
     compare(data1.first()._2, data2.first()._2, threshold)
   }
 
-  def compare(word1: Array[Double], word2: Array[Double], threshold: Int = 5): Double = {
+  def compare(word1: Array[Double], word2: Array[Double], threshold: Int): Double = {
     val dtw = Array.ofDim[Double](word1.length, word2.length)
 
     dtw(0)(0) = distance(word1(0), word2(0))
-    
+
     for (j <- 1 to Math.min(threshold, word2.length - 1)) {
       dtw(0)(j) = dtw(0)(j - 1) + distance(word1(0), word2(j))
     }
@@ -32,8 +32,14 @@ object DynamicTimeWrapping {
     }
 
     for (i <- 1 until word1.length) {
-      for (j <- Math.max(0, i - threshold) to Math.min(word2.length - 1, i + threshold)) {
-        dtw(i)(j) = distance(word1(i), word2(j)) + Math.min(Math.min(dtw(i - 1)(j), dtw(i - 1)(j - 1)), dtw(i)(j - 1))
+      for (j <- Math.max(1, i - threshold) to Math.min(word2.length - 1, i + threshold)) {
+        if (j <= i - threshold) {
+          dtw(i)(j) = distance(word1(i), word2(j)) + Math.min(dtw(i - 1)(j), dtw(i - 1)(j - 1))
+        } else if (j >= i + threshold) {
+          dtw(i)(j) = distance(word1(i), word2(j)) + Math.min(dtw(i - 1)(j - 1), dtw(i)(j - 1))
+        } else {
+          dtw(i)(j) = distance(word1(i), word2(j)) + Math.min(Math.min(dtw(i - 1)(j), dtw(i - 1)(j - 1)), dtw(i)(j - 1))
+        }
       }
     }
     dtw(word1.length - 1)(word2.length - 1)
@@ -49,7 +55,6 @@ object DynamicTimeWrapping {
   }
 
   /**
-   *
    * @param p1 first point
    * @param p2 second point
    * @return absolute distance between the two points
