@@ -15,18 +15,21 @@ object DynamicTimeWrapping {
    * @return distance between the two temporal profiles
    */
   def compare(data1: RDD[(String, Array[Double])], data2: RDD[(String, Array[Double])], threshold: Int = 5): Double = {
-    val word1 = data1.first()._2
-    val word2 = data2.first()._2
+    compare(data1.first()._2, data2.first()._2, threshold)
+  }
+
+  def compare(word1: Array[Double], word2: Array[Double], threshold: Int = 5): Double = {
     val dtw = Array.ofDim[Double](word1.length, word2.length)
 
     dtw(0)(0) = distance(word1(0), word2(0))
+    
     for (j <- 1 to Math.min(threshold, word2.length - 1)) {
       dtw(0)(j) = dtw(0)(j - 1) + distance(word1(0), word2(j))
     }
+
     for (i <- 1 to Math.min(threshold, word1.length - 1)) {
       dtw(i)(0) = dtw(i - 1)(0) + distance(word1(i), word2(0))
     }
-
 
     for (i <- 1 until word1.length) {
       for (j <- Math.max(0, i - threshold) to Math.min(word2.length - 1, i + threshold)) {
