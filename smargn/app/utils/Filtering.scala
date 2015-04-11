@@ -4,7 +4,10 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 /**
- * Created by sidney on 05.04.15.
+ * Created with love by sidney.
+ *
+ * Useful methods to detect interesting temporal profiles.
+ * Look at the 'interestingWords' method for a complete example.
  */
 object Filtering {
   /**
@@ -13,20 +16,15 @@ object Filtering {
    * @param sc The SparkContext to run in
    * @return an RDD[String,Array[Int] ] (word,[occInYear0,occInYear1,...])
    */
-  def filenameToKeyValue(fileName: String, sc: SparkContext) = sc.textFile(fileName)
-    .map(_.split(" "))
-    .keyBy(_.head) // produce (word,[w,f1,f2,...]) tuples
-    .map(k => (k._1,k._2.tail.map(_.toInt)))
+  def filenameToKeyValue(fileName: String, sc: SparkContext) = sc.textFile(fileName).map(_.split(" ")).keyBy(_.head) // produce (word,[w,f1,f2,...]) tuples
+    .map(k => (k._1, k._2.tail.map(_.toInt)))
 
   /**
    *
    * @param a The array to compute the mean of
    * @return The mean of the array a
    */
-  def mean(a: Array[Int]): Double = {
-    val sum = a.foldLeft(0)(_+_)
-    sum/a.size
-  }
+  def mean(a: Array[Int]): Double = a.sum / a.length
 
   /**
    *
@@ -36,8 +34,8 @@ object Filtering {
    * @return true if any point in array goes too far from the mean
    */
   def detectPeaks(array: Array[Double], mean: Double, threshold: Double): Boolean = {
-    array.foldLeft(false)((b:Boolean,el:Double) => {
-      (b || ((el-mean)*(el-mean) > threshold))
+    array.foldLeft(false)((b: Boolean, el: Double) => {
+      b || ((el - mean) * (el - mean) > threshold)
     })
   }
 
@@ -49,13 +47,13 @@ object Filtering {
    * @return A list of words having unusually small or big values during one or more year(s).
    */
   def interestingWords(inputFile: String, sc: SparkContext, threshold: Double): RDD[String] = {
-    val kvPairs = filenameToKeyValue(inputFile,sc).cache
+    val kvPairs = filenameToKeyValue(inputFile, sc).cache()
     val kvPairsNorm = kvPairs.map(t => {
       val meanValue = mean(t._2)
       (t._1, t._2.map(_ / meanValue))
     })
     kvPairsNorm.flatMap(t => {
-      if(detectPeaks(t._2,1,1)) {
+      if (detectPeaks(t._2, 1, 1)) {
         List(t._1)
       } else {
         List()
