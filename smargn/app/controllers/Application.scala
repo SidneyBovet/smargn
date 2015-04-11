@@ -1,7 +1,6 @@
 package controllers
 
-import techniques.NaiveComparison
-import techniques._
+import techniques.NaiveComparisons
 import utils._
 import play.api.mvc._
 
