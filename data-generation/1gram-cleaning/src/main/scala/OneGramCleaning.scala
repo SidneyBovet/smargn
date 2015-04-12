@@ -25,14 +25,9 @@ object OneGramCleaning {
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
     val out = fs.create(new Path(args(1)))
-    val writer = new PrintWriter(out)
-    try {
-      filteredLines.foreach(writer.write)
-    } finally {
-      writer.close()
-      out.close()
-      fs.close()
-    }
+    filteredLines.foreach(str => out.write(str.getBytes("UTF-8")))
+    out.close()
+    fs.close()
 
     sc.stop()
   }
