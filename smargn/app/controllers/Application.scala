@@ -1,23 +1,25 @@
 package controllers
 
-import ngrams.Test
-import play.api._
+import techniques.NaiveComparisons
+import utils._
 import play.api.mvc._
 
 object Application extends Controller {
 
-  def index = Action {
-    Ok(views.html.index("Hello world"))
+  def index: Action[AnyContent] = {
+    Action {
+      Ok(views.html.index("Hello world"))
+    }
   }
 
-  def test = Action {
-    val v = new Test("I <3 Ngrams")
-    Ok(views.html.test(v.getMsg))
+  def runNaive(word: String) = Action {
+    val res = Launcher.run(word, "input/", "public/data/", List(0.2), NaiveComparisons.naiveDifferenceScalingMax)
+    if (res == List()) {
+      Ok(views.html.notSimilarWords(word))
+    } else if (res(0) == "ERROR404") {
+      Ok(views.html.notFoundPage(word))
+    } else {
+      Ok(views.html.naive(res))
+    }
   }
-
-  def defaultTest = Action {
-    val v = new Test("dont care")
-    Ok(views.html.test(v.getDefaultMsg))
-  }
-
 }
