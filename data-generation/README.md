@@ -26,7 +26,7 @@ hadoop jar target/parsing-0.0.1-SNAPSHOT.jar ParseDriver <input dir> <output dir
 ```
 
 ### 1gram generation _aka MapReduce_
-_Note: raw data are read from the 'input' folder on hdfs._
+_TO BE CORRECTED BY OWNERS_
 ```bash
 cd 1gram-generation
 ./jar.sh
