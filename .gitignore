@@ -1,6 +1,3 @@
-#Mac users
-.DS_Store
-
 # bins
 *.class
 *.log
