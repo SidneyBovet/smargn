@@ -26,7 +26,7 @@ hadoop jar target/parsing-0.0.1-SNAPSHOT.jar ParseDriver <input dir> <output dir
 ```
 
 ### 1gram generation _aka MapReduce_
-_Note: raw data are read from the 'input' folder on hdfs._
+_Note: The first jar must be run twice (once for each newspaper). Then the 2 output folders must be merged into an input folder for the second jar._
 ```bash
 cd 1gram-generation
 ./jar.sh
