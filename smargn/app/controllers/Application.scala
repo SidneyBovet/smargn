@@ -1,6 +1,6 @@
 package controllers
 
-import techniques.{NaiveInverseComparisons, NaiveComparisons}
+import techniques.{NaiveShiftComparison, NaiveInverseComparisons, NaiveComparisons}
 import utils._
 import play.api.mvc._
 
@@ -25,6 +25,17 @@ object Application extends Controller {
 
   def runNaiveInverse(word: String) = Action {
     val res = Launcher.run(word, "input/", "public/data/", List(0.2), NaiveInverseComparisons.naiveInverseDifference)
+    if (res == List()) {
+      Ok(views.html.notSimilarWords(word))
+    } else if (res(0) == "ERROR404") {
+      Ok(views.html.notFoundPage(word))
+    } else {
+      Ok(views.html.naive(res))
+    }
+  }
+
+  def runNaiveShift(word: String) = Action {
+    val res = Launcher.run(word, "input/", "public/data/", List(0.2, 5), NaiveShiftComparison.naiveDifferenceScalingMax)
     if (res == List()) {
       Ok(views.html.notSimilarWords(word))
     } else if (res(0) == "ERROR404") {
