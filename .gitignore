@@ -20,6 +20,9 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 
+# Eclipse specific
+.metadata
+
 #Tex generated files on compilation
 *.log
 *.aux

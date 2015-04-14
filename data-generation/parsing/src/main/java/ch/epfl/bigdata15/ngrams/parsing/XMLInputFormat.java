@@ -42,7 +42,7 @@ public class XMLInputFormat extends FileInputFormat<Text, Path> {
 
         @Override
         public float getProgress() throws IOException, InterruptedException {
-            return files == null ? 0 : files.length > 0 ? ((float) nextId) / files.length : 1;
+            return files == null ? 1 : files.length > 0 ? ((float) nextId) / files.length : 1;
         }
 
         @Override
