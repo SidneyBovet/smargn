@@ -1,6 +1,7 @@
 package ch.epfl.bigdata15.ngrams.parsing;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Scanner;
 
 import org.apache.hadoop.conf.Configuration;
@@ -43,9 +44,9 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
             } else if ("</full_text".equals(word)) {
                 return article.trim();
             } else if (inArticle) {
-            	word = word.replaceAll("^\\w'", "").replaceAll("[^\\p{L}']", "");
+            	word = word.replaceAll("^\\w'", "").replaceAll("[^\\p{L}'-]", "");
             	if(word.length() > 1) {
-            		article += word + " ";
+            		article += word.toLowerCase(Locale.FRENCH) + " ";
             	} 
             }
         }
