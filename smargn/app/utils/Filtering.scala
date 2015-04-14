@@ -10,14 +10,6 @@ import org.apache.spark.rdd.RDD
  * Look at the 'interestingWords' method for a complete example.
  */
 object Filtering {
-  /**
-   *
-   * @param fileName The path to the CSV file using space as delimiters to be parsed
-   * @param sc The SparkContext to run in
-   * @return an RDD[String,Array[Int] ] (word,[occInYear0,occInYear1,...])
-   */
-  def filenameToKeyValue(fileName: String, sc: SparkContext): RDD[(String, Array[Double])] = sc.textFile(fileName).map(_.split(" ")).keyBy(_.head) // produce (word,[w,f1,f2,...]) tuples
-    .map(k => (k._1, k._2.tail.map(_.toDouble)))
 
   /**
    *
@@ -33,33 +25,45 @@ object Filtering {
   }
 
   /**
-   *
+   * Return whether the array has (any) interesting points
    * @param array the temporal profile of a word
-   * @param mean the mean value of the array, 1 if the array was previously divided by its mean
    * @param threshold the threshold value to discriminate normal points
    * @return true if any point in array goes too far from the mean
    */
-  def detectPeaks(array: Array[Double], mean: Double, threshold: Double): Boolean = {
+  def isNotFlat(array: Array[Double], threshold: Double): Boolean = {
+    val meanVal = mean(array)
     array.foldLeft(false)((b: Boolean, el: Double) => {
-      b || ((el - mean) * (el - mean) > threshold)
+      b || ((el - meanVal) * (el - meanVal) > threshold)
     })
   }
 
   /**
-   *
+   * Return the number of years in which the array has interesting points
+   * @param array the temporal profile of a word
+   * @param threshold the threshold value to discriminate normal points
+   * @return true if any point in array goes too far from the mean
+   */
+  def countNotFlat(array: Array[Double], threshold: Double): Int = array.foldLeft(0)((acc: Int, el: Double) => {
+    val meanVal = mean(array)
+    if ((el - meanVal) * (el - meanVal) > threshold) {
+      acc + 1
+    } else {
+      acc
+    }
+  })
+
+  /**
+   * Example function to show how to discriminate flat profiles
    * @param inputFile File to read the profiles from.
    * @param sc SparkContext attached to the application.
    * @param threshold A positive threshold value. The lower the more words are output.
    * @return A list of words having unusually small or big values during one or more year(s).
    */
   def interestingWords(inputFile: String, sc: SparkContext, threshold: Double): RDD[String] = {
-    val kvPairs = filenameToKeyValue(inputFile, sc).cache()
-    val kvPairsNorm = kvPairs.map(t => {
-      val meanValue = mean(t._2)
-      (t._1, t._2.map(_ / meanValue))
-    })
+    val kvPairs = Formatting.dataFormatter(sc.textFile(inputFile)).cache()
+    val kvPairsNorm = kvPairs.map(Scaling.proportionalScalarAverage)
     kvPairsNorm.flatMap(t => {
-      if (detectPeaks(t._2, 1, 1)) {
+      if (isNotFlat(t._2, 1)) {
         List(t._1)
       } else {
         List()
