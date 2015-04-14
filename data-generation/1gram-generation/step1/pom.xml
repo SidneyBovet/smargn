@@ -2,12 +2,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>mapred</groupId>
-	<artifactId>1gram-step1</artifactId>
+	<groupId>onegramgeneration</groupId>
+	<artifactId>part1</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>parsing</name>
+	<name>part1</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -28,7 +28,6 @@
 		</dependency>
 
 	</dependencies>
-    
     <build>
         <pluginManagement>
             <plugins>

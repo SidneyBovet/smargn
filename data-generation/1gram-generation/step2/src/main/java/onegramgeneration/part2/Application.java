@@ -1,4 +1,4 @@
-package mapred;
+package onegramgeneration.part2;
 
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
@@ -12,7 +12,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class MapReduce2 {
+public class Application {
   // Type the Map receive || Type output of Map
   public static class Map extends Mapper<Object, Text, Text, Text> {
 
@@ -42,8 +42,8 @@ public class MapReduce2 {
       Collections.sort(yearCounter);
       ArrayList<String> listFinal = new ArrayList<String>();
 
-      int base = 1800;
-      int rootYear = 1800;
+      int base = 1840;
+      int rootYear = 1840;
       int lastyear = 2000;
       for (int i = 0; i < yearCounter.size(); i++) {
         int existingYear = Integer.parseInt(yearCounter.get(i).split("_")[0]);
@@ -80,7 +80,7 @@ public class MapReduce2 {
 
     Configuration conf = new Configuration();
     Job job = Job.getInstance(conf, "MapReduce2");
-    job.setJarByClass(MapReduce2.class);
+    job.setJarByClass(Application.class);
     job.setMapperClass(Map.class);
     job.setReducerClass(MyReducer.class);
 

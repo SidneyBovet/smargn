@@ -1,4 +1,4 @@
-package mapred;
+package onegramgeneration.part1;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -18,7 +18,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class MapReduce {
+public class Application {
   // Type the Map receive || Type output of Map
   public static class Map extends Mapper<Text, IntWritable, Text, IntWritable> {
 
@@ -45,7 +45,7 @@ public class MapReduce {
 
     Configuration conf = new Configuration();
     Job job = Job.getInstance(conf, "MapReduce1 ");
-    job.setJarByClass(MapReduce.class);
+    job.setJarByClass(Application.class);
     job.setMapperClass(Map.class);
     job.setReducerClass(MyReducer.class);
 
