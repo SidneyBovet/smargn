@@ -1,7 +1,6 @@
 package utils
 
 import org.apache.spark.rdd.RDD
-import play.Logger
 
 /**
  * Created by Joanna on 4/7/15.
