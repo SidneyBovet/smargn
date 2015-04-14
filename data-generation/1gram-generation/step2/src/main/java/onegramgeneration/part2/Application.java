@@ -79,7 +79,7 @@ public class Application {
   public static void main(String[] args) throws Exception {
 
     Configuration conf = new Configuration();
-    Job job = Job.getInstance(conf, "MapReduce2");
+    Job job = Job.getInstance(conf, "1-gram generation part 2");
     job.setJarByClass(Application.class);
     job.setMapperClass(Map.class);
     job.setReducerClass(MyReducer.class);
