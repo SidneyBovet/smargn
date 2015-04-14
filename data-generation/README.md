@@ -45,5 +45,5 @@ spark-submit --class OneGramCleaning --master yarn-client --num-executors <numEx
 
 ### All projects
 ```bash
-./run-all.sh
+./run-all.sh clean #the clean is optional, if you want to clean the build paths
 ```
