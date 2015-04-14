@@ -31,3 +31,6 @@ project/plugins/project/
 *.aux
 *.gz
 *.toc
+
+#LibreOffice stuff
+.~*
