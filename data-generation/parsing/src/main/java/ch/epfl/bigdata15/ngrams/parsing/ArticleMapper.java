@@ -14,6 +14,7 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
 
     public void map(Text key, Path value, Context context)
             throws IOException, InterruptedException {
+
         Configuration conf = context.getConfiguration();
         FileSystem fs = value.getFileSystem(conf);
         FSDataInputStream in = fs.open(value);
@@ -41,8 +42,11 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
                 inArticle = true;
             } else if ("</full_text".equals(word)) {
                 return article.trim();
-            } else if (inArticle && word.replaceAll("[^\\p{L}']", "").length() > 0) {
-                article += word + " ";
+            } else if (inArticle) {
+            	word = word.replaceAll("^\\w'", "").replaceAll("[^\\p{L}']", "");
+            	if(word.length() > 1) {
+            		article += word + " ";
+            	} 
             }
         }
 
