@@ -16,15 +16,15 @@ object Filtering {
    * @param sc The SparkContext to run in
    * @return an RDD[String,Array[Int] ] (word,[occInYear0,occInYear1,...])
    */
-  def filenameToKeyValue(fileName: String, sc: SparkContext) = sc.textFile(fileName).map(_.split(" ")).keyBy(_.head) // produce (word,[w,f1,f2,...]) tuples
-    .map(k => (k._1, k._2.tail.map(_.toInt)))
+  def filenameToKeyValue(fileName: String, sc: SparkContext): RDD[(String, Array[Double])] = sc.textFile(fileName).map(_.split(" ")).keyBy(_.head) // produce (word,[w,f1,f2,...]) tuples
+    .map(k => (k._1, k._2.tail.map(_.toDouble)))
 
   /**
    *
    * @param a The array to compute the mean of
-   * @return The mean of the array a
+   * @return The mean of the array a, or 0 if a is empty
    */
-  def mean(a: Array[Int]): Double = {
+  def mean(a: Array[Double]): Double = {
     if (a.length == 0) {
       0
     } else {
