@@ -24,7 +24,13 @@ object Filtering {
    * @param a The array to compute the mean of
    * @return The mean of the array a
    */
-  def mean(a: Array[Int]): Double = a.sum / a.length
+  def mean(a: Array[Int]): Double = {
+    if (a.length == 0) {
+      0
+    } else {
+      a.sum / a.length
+    }
+  }
 
   /**
    *
