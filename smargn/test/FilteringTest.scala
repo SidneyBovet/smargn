@@ -5,27 +5,6 @@ import org.scalatest._
  */
 class FilteringTest extends SparkTestUtils with ShouldMatchers {
 
-  /* sample spark test to be used for a broader testing of the filtering
-  sparkTest("spark filter test") {
-    val data = sc.parallelize(1 to 1e6.toInt)
-    data.filter {
-      _ % 2 == 0
-    }.count should be(5e5.toInt)
-  }
-  */
-  val sampleData =
-    """
-      |turing 1 2 4 8 16 32
-      |lovelace 100 10 100 10 100 10
-      |dijsktra 101 95 109 98 110 103
-      |lamport 100 90 80 70 60 50
-      |wozniak 65 56 65 56 65 65
-      |brin 29 32 33 32 34 36
-      |page 43 42 41 40 41 42
-      |jobs 23 34 45 56 67 178
-      |gates 12 18 39 38 17 10
-    """.stripMargin
-
   /* Mean testing */
   test("std mean test") {
     val a: Array[Double] = Array(0, 1, 2, 3, 4)
@@ -43,4 +22,14 @@ class FilteringTest extends SparkTestUtils with ShouldMatchers {
   }
 
   /* Peak detection */
+  test("flat profile test") {
+    val data: Array[Double] = Array(1, 1, 1, 1)
+    utils.Filtering.isNotFlat(data, 0.1) should be(false)
+    utils.Filtering.countNotFlat(data, 0.1) should be(0)
+  }
+  test("nonflat profile test") {
+    val data: Array[Double] = Array(1, 1, 1, 10)
+    utils.Filtering.isNotFlat(data, 0.1) should be(true)
+    utils.Filtering.countNotFlat(data, 0.1) should be(1)
+  }
 }
