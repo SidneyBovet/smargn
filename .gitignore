@@ -22,6 +22,9 @@ project/plugins/project/
 
 # Eclipse specific
 .metadata
+.classpath
+.project
+.settings
 
 #Tex generated files on compilation
 *.log
