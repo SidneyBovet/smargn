@@ -5,7 +5,8 @@
 ## parsing ##
 cd parsing
 mvn package &&
-hadoop jar target/parsing-0.0.1-SNAPSHOT.jar ParseDriver <input dir> <output dir> &&
+hadoop fs -rm -r /projects/temporal-profiles/parsing/output &&
+hadoop jar target/parsing-0.0.1-SNAPSHOT.jar ch.epfl.bigdata15.ngrams.parsing.ParseDriver /projects/temporal-profiles/parsing/input /projects/temporal-profiles/parsing/output &&
 cd .. &&
 
 ## 1gram generation aka MapReduce ##

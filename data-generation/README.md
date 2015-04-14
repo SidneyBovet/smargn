@@ -22,7 +22,7 @@ The owners of the sub-projects are:
 ```bash
 cd parsing
 mvn package
-hadoop jar target/parsing-0.0.1-SNAPSHOT.jar ParseDriver <input dir> <output dir>
+hadoop jar target/parsing-0.0.1-SNAPSHOT.jar ch.epfl.bigdata15.ngrams.parsing.ParseDriver <input dir> <output dir>
 ```
 
 ### 1gram generation _aka MapReduce_
