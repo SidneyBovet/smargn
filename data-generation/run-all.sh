@@ -13,11 +13,11 @@ cd .. &&
 cd 1gram-generation/step1
 mvn package &&
 hadoop fs -rm -r /projects/temporal-profiles/data-generation/1gram-generation/step1 &&
-hadoop jar target/1gram-step1-0.0.1-SNAPSHOT.jar mapred.MapReduce /projects/temporal-profiles/data-generation/parsing /projects/temporal-profiles/data-generation/1gram-generation/step1 &&
+hadoop jar target/part1-0.0.1-SNAPSHOT.jar mapred.MapReduce /projects/temporal-profiles/data-generation/parsing /projects/temporal-profiles/data-generation/1gram-generation/step1 &&
 cd ../step2 &&
 mvn package &&
 hadoop fs -rm -r /projects/temporal-profiles/data-generation/1gram-generation/step2 ;
-hadoop jar target/1gram-step2-0.0.1-SNAPSHOT.jar mapred.MapReduce2 /projects/temporal-profiles/data-generation/1gram-generation/step1 /projects/temporal-profiles/data-generation/1gram-generation/step2 &&
+hadoop jar target/part2-0.0.1-SNAPSHOT.jar mapred.MapReduce2 /projects/temporal-profiles/data-generation/1gram-generation/step1 /projects/temporal-profiles/data-generation/1gram-generation/step2 &&
 cd ../.. &&
 
 ## 1gram-cleaning ##
