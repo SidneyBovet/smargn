@@ -1,10 +1,10 @@
 package utils
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
+import controllers.Spark
 import org.apache.spark.rdd.RDD
 import play.Logger
-import techniques.Spark
 import utils.Formatting._
 
 /**
@@ -13,7 +13,15 @@ import utils.Formatting._
  */
 object Launcher {
 
-  def run(word: String, inputDir: String, outputFile: String, parameters: List[Double], similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)]): List[String] = {
+  def runList(words: List[String], inputDir: String, outputFile: String, parameters: List[Double],
+              similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[
+                (String)]): Map[String, List[String]] = {
+    words.map(w => w -> run(w, inputDir, outputFile, parameters, similarityTechnique)).toMap
+  }
+
+  def run(word: String, inputDir: String, outputFile: String, parameters: List[Double],
+          similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)
+            ]): List[String] = {
     val spark = Spark.ctx
     Logger.info("Searching for word: " + word)
 
@@ -31,7 +39,7 @@ object Launcher {
 
     if (testedWords.count == 0) {
       Logger.debug(word + " was not found previously in the data")
-      return List("ERROR404")
+      List("ERROR404")
     } else {
       val testedWord = testedWords.first()
 
@@ -41,21 +49,15 @@ object Launcher {
       similarWords.saveAsTextFile(outputFile)
 
       //Graph displaying part
-      val similaritiesLocal: List[(String, Array[Double])] = searchWordFormatter(formattedData, similarWords.collect().toList).collect.toList
+      val similaritiesLocal: List[(String, Array[Double])] =
+        searchWordFormatter(formattedData, similarWords.collect().toList).collect().toList
 
-      //TODO finish display graph
-      val startYear = 2000
-      val firstLine = "Word,Year,Occurrences"
+      val toPrint = Grapher.formatForDisplay(2000, testedWord, similaritiesLocal)
 
-      val toPrint = firstLine :: (testedWord :: similaritiesLocal).flatMap { case (w, o) => o.map(_ => w).zip(startYear until (startYear + o.length)).zip(o).map { case ((ww, y), oo) => ww + "," + y + "," + oo.toInt
-      }
-      }
-      printToFile(new File(outputFile + "data.csv")) { p => toPrint.foreach(p.println)
-      }
+      printToFile(new File(outputFile + "data.csv")) { p => toPrint.foreach(p.println) }
 
       Logger.info("Found " + similarWords.count() + " similar words")
-      return similaritiesLocal.map(_._1)
-
+      similaritiesLocal.map(_._1)
     }
   }
 

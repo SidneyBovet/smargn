@@ -53,7 +53,7 @@ object ComputationUtilities {
       0
     } else {
       val mean = average(array)
-      array.map { x => (x - mean) * (x - mean)}.sum / (array.length - 1)
+      array.map { x => (x - mean) * (x - mean) }.sum / (array.length - 1)
     }
   }
 }

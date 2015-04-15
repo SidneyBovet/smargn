@@ -1,10 +1,6 @@
 package techniques
 
-import java.io.File
 import org.apache.spark.rdd.RDD
-import utils.ComputationUtilities._
-
-import play.Logger
 
 
 object PeakComparison {
@@ -25,8 +21,9 @@ object PeakComparison {
    * @param parameters L(0) contains the window between 2 points which discrete derivative we calculate
    * @return words that are similar
    */
-  def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val windowSize = parameters(0)
+  def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                                   parameters: List[Double]): RDD[(String)] = {
+    val windowSize = parameters.head
     val deltaSlope = 1
     val axisXDeviation = parameters(1)
     val proportionSimilarities = parameters(2)
@@ -37,14 +34,16 @@ object PeakComparison {
     val maxIndexesOfWords: RDD[(String, List[Int])] = peaksOfWords.map(x => (x._1, x._2.map(y => y._1)))
     val maxIndexesOfWord: List[Int] = peakTestedWord.map(x => x._1)
     //peak x axis
-    val proportionPeakSimilarities = maxIndexesOfWords.map(x => (x._1, x._2.map(y => maxIndexesOfWord.map(z => Math.abs(z - y) < axisXDeviation).count(_ == true) > 0))).map(x => (x._1, x._2.count(_ == true) / maxIndexesOfWord.size))
+    val proportionPeakSimilarities = maxIndexesOfWords
+      .map(x => (x._1, x._2.map(y => maxIndexesOfWord.map(z => Math.abs(z - y) < axisXDeviation).count(_ == true) > 0)))
+      .map(x => (x._1, x._2.count(_ == true) / maxIndexesOfWord.size))
     proportionPeakSimilarities.filter(_._2 > proportionSimilarities).map(_._1)
   }
 
   //TODO Use windowMaxMin, windowPeakMean
   //TODO implement in a function peakXaxis and peakYaxis
-  //TODO implement a method with discrete derivative using the findAscending window and findDescending window: like that we can compare how the function grows with time
-
+  //TODO implement a method with discrete derivative using the findAscending window and findDescending window: like
+  // that we can compare how the function grows with time
   /**
    * For a given word detects the peaks based on discrete derivative
    *
@@ -53,7 +52,8 @@ object PeakComparison {
    * @param delta the threshold: should be a slope i.e. 1 is for angle of 45degrees
    * @return List((year, ascending slope, descending slope))
    */
-  private def windowPeakDerivative(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
+  private def windowPeakDerivative(word: (String, Array[Double]), windowSize: Int,
+                                   delta: Double): List[(Int, Double, Double)] = {
     val frequencies = word._2
     var result = List[(Int, Double, Double)]()
     var lastDerivative = 0.0
@@ -71,8 +71,10 @@ object PeakComparison {
   }
 
   /**
-   * For a given word detects the peaks based on looking at all the windows of given size, and the maximum of that window.
-   * Then it looks on the right and left side of the maximum and compares the minimums against the maximum. If the difference
+   * For a given word detects the peaks based on looking at all the windows of given size, and the maximum of that
+   * window.
+   * Then it looks on the right and left side of the maximum and compares the minimums against the maximum. If the
+   * difference
    * is larger than the given threshold (delta)
    *
    * @param word who's list we will analyse for peaks
@@ -80,7 +82,8 @@ object PeakComparison {
    * @param delta the threshold: should be the difference on y axis of the words
    * @return List((year, ascending slope, descending slope))
    */
-  private def windowPeakMinMax(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
+  private def windowPeakMinMax(word: (String, Array[Double]), windowSize: Int,
+                               delta: Double): List[(Int, Double, Double)] = {
     val frequencies = word._2
     var result = List[(Int, Double, Double)]()
     for (i <- 0 to (frequencies.length - windowSize)) {
@@ -89,16 +92,21 @@ object PeakComparison {
       val currentLeft = currentWindow.slice(i, indexOfMax)
       val currentRight = currentWindow.slice(indexOfMax, i + windowSize)
       if (currentWindow(indexOfMax) - currentLeft.min > delta && currentWindow(indexOfMax) - currentRight.min > delta) {
-        result = (i + indexOfMax, currentWindow(indexOfMax) - currentLeft.min * 1.0, currentWindow(indexOfMax) - currentRight.min * 1.0) :: result
+        result = (i + indexOfMax, currentWindow(indexOfMax) - currentLeft.min * 1.0, currentWindow(indexOfMax) -
+          currentRight.min * 1.0) :: result
       }
     }
-    result.reverse.distinct //TODO ensure that each year is present only once in the list with the max slopes encountered
+    result.reverse
+      .distinct //TODO ensure that each year is present only once in the list with the max slopes encountered
   }
 
   /**
-   * For a given word detects the peaks based on finding the largest ascending window (with some smoothing based on mean), takes
-   * the maximum in that window, compares it against the minimum in the ascending window, and then finds the largest descending
-   * window starting from the maximum, and once again compares the maximum to the minimum in the window. If the respective
+   * For a given word detects the peaks based on finding the largest ascending window (with some smoothing based on
+   * mean), takes
+   * the maximum in that window, compares it against the minimum in the ascending window, and then finds the largest
+   * descending
+   * window starting from the maximum, and once again compares the maximum to the minimum in the window. If the
+   * respective
    * differences satisfy the threshold, the maximum is detected as a peak
    *
    * @param word The word which peaks are to be analyzed
@@ -106,7 +114,8 @@ object PeakComparison {
    * @param delta the threshold for difference between the minimums and the maximum
    * @return List((year, ascending difference of min and max, descending difference of min and max))
    */
-  private def windowPeakMean(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
+  private def windowPeakMean(word: (String, Array[Double]), windowSize: Int,
+                             delta: Double): List[(Int, Double, Double)] = {
     val frequencies = word._2
     var result = List[(Int, Double, Double)]()
 
@@ -116,7 +125,8 @@ object PeakComparison {
       val indexOfMaxAscendingInWindow = ascendingWindow.indexOf(ascendingWindow.max)
       val indexOfMaxAscending = indexOfMaxAscendingInWindow + i
       val minAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).min
-      val descendingWindow = frequencies.slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1)
+      val descendingWindow = frequencies
+        .slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1)
       val indexOfMinDescending = descendingWindow.indexOf(descendingWindow.min) + indexOfMaxAscending
       val valueAscending = frequencies(indexOfMaxAscending) - minAscending
       val valueDescending = frequencies(indexOfMaxAscending) - frequencies(indexOfMinDescending)
@@ -129,7 +139,8 @@ object PeakComparison {
   }
 
   /**
-   * Finds the maximum index such that the average of the points in a given window size is increasing. Returns that index
+   * Finds the maximum index such that the average of the points in a given window size is increasing. Returns that
+   * index
    *
    * @param frequencies the array we are considering
    * @param windowSize the number of years we consider in the average
@@ -141,8 +152,7 @@ object PeakComparison {
       val average = frequencies.slice(0, i).sum / (i + 1.0)
       if (lastAverage <= average) {
         lastAverage = average
-      }
-      else {
+      } else {
         return i - 1
       }
     }
@@ -150,7 +160,8 @@ object PeakComparison {
   }
 
   /**
-   * Finds the maximum index such that the average of the points in a given window size is decreasing. Returns that index
+   * Finds the maximum index such that the average of the points in a given window size is decreasing. Returns that
+   * index
    *
    * @param frequencies the array we are considering
    * @param windowSize the number of years we consider in the average
@@ -162,8 +173,7 @@ object PeakComparison {
       val average = frequencies.slice(0, i).sum / (i + 1.0)
       if (lastAverage >= average) {
         lastAverage = average
-      }
-      else {
+      } else {
         return i - 1
       }
     }
@@ -188,7 +198,7 @@ object PeakComparison {
   /**
    * Finds the maximum index such that the points in the window are strictly decreasing
    *
-   * @param window
+   * @param window array we are considering
    * @return the position of the last descending value
    */
   private def findDescendingWindow(window: Array[Double]): Int = {
@@ -199,5 +209,5 @@ object PeakComparison {
     }
     window.length - 1
   }
-  
+
 }

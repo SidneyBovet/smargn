@@ -16,8 +16,10 @@ object Filtering {
    * @param sc The SparkContext to run in
    * @return an RDD[String,Array[Int] ] (word,[occInYear0,occInYear1,...])
    */
-  def filenameToKeyValue(fileName: String, sc: SparkContext) = sc.textFile(fileName).map(_.split(" ")).keyBy(_.head) // produce (word,[w,f1,f2,...]) tuples
-    .map(k => (k._1, k._2.tail.map(_.toInt)))
+  def filenameToKeyValue(fileName: String, sc: SparkContext) = {
+    sc.textFile(fileName).map(_.split(" ")).keyBy(_.head) // produce (word,[w,f1,f2,...]) tuples
+      .map(k => (k._1, k._2.tail.map(_.toInt)))
+  }
 
   /**
    *

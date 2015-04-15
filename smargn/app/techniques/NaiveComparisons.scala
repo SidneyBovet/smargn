@@ -19,15 +19,17 @@ object NaiveComparisons {
    * @param parameters L(0) contains the accepted difference between two array value that we accept
    * @return words that are similar
    */
-  def naiveDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+  def naiveDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                      parameters: List[Double]): RDD[(String)] = {
 
-    val acceptedDifference = parameters(0)
+    val acceptedDifference = parameters.head
     //add the testedWord values to the arrays and compute difference for future comparison
     val zipDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => math.abs(x._1 - x._2)), x._2))
     //test similarity criteria between each data word array and the tested word
     val booleanDataTestedWord = zipDataTestedWord.map(x => (x._1, x._2.map(y => y <= acceptedDifference)))
     //filter the arrays that have at least one value that didn't pass the similarity test
-    booleanDataTestedWord.map(x => (x._1, x._2.filter(_ == false))).filter(x => x._2.length == 0 && x._1 != testedWord._1).map(x => (x._1))
+    booleanDataTestedWord.map(x => (x._1, x._2.filter(_ == false)))
+      .filter(x => x._2.length == 0 && x._1 != testedWord._1).map(_._1)
   }
 
   /**
@@ -38,8 +40,9 @@ object NaiveComparisons {
    * @param parameters L(0) contains the straightness of the curve that we accept
    * @return words that are similar
    */
-  def naiveDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val acceptedDifference = parameters(0)
+  def naiveDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                    parameters: List[Double]): RDD[(String)] = {
+    val acceptedDifference = parameters.head
     //add the testedWord values to the arrays and compute division for future comparison
     val dividedDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => x._1 / x._2), x._2))
     //could be useful for testing purpose
@@ -59,8 +62,9 @@ object NaiveComparisons {
    * @param parameters L(0) contains the accepted difference between two array value that we accept
    * @return words that are similar
    */
-  def naiveDifferenceScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDifference(data.map(proportionalScalarMax(_)), proportionalScalarMax(testedWord), parameters)
+  def naiveDifferenceScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                                parameters: List[Double]): RDD[(String)] = {
+    naiveDifference(data.map(proportionalScalarMax), proportionalScalarMax(testedWord), parameters)
   }
 
   /**
@@ -70,8 +74,9 @@ object NaiveComparisons {
    * @param parameters L(0) contains the accepted difference between two array value that we accept
    * @return words that are similar
    */
-  def naiveDifferenceScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDifference(data.map(proportionalScalarAverage(_)), proportionalScalarAverage(testedWord), parameters)
+  def naiveDifferenceScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                                    parameters: List[Double]): RDD[(String)] = {
+    naiveDifference(data.map(proportionalScalarAverage), proportionalScalarAverage(testedWord), parameters)
   }
 
   /**
@@ -82,8 +87,9 @@ object NaiveComparisons {
    * @param parameters L(0) contains the straightness of the curve that we accept
    * @return words that are similar
    */
-  def naiveDivisionScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDivision(data.map(proportionalScalarMax(_)), proportionalScalarMax(testedWord), parameters)
+  def naiveDivisionScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                              parameters: List[Double]): RDD[(String)] = {
+    naiveDivision(data.map(proportionalScalarMax), proportionalScalarMax(testedWord), parameters)
   }
 
   /**
@@ -94,8 +100,9 @@ object NaiveComparisons {
    * @param parameters L(0) contains the straightness of the curve that we accept
    * @return words that are similar
    */
-  def naiveDivisionScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDivision(data.map(proportionalScalarAverage(_)), proportionalScalarAverage(testedWord), parameters)
+  def naiveDivisionScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                                  parameters: List[Double]): RDD[(String)] = {
+    naiveDivision(data.map(proportionalScalarAverage), proportionalScalarAverage(testedWord), parameters)
   }
 
 }
