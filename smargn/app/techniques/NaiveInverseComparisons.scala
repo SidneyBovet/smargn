@@ -1,7 +1,6 @@
 package techniques
 
 import org.apache.spark.rdd.RDD
-import utils.Scaling._
 
 /**
  * Created by John and Fabien on 13.4.15.
@@ -9,28 +8,18 @@ import utils.Scaling._
  */
 object NaiveInverseComparisons {
 
+  import utils.SubTechniques._
+
   /**
-   * Given a word, find words which curve is the inverse of the tested one
+   * Given a word, find words which curve is the inverse using the NaiveInverse technique
    * @param data collection of word, frequency to tuple to look into
    * @param testedWord word that we want to find its similar word
    * @param parameters L(0) contains the accepted difference between two array value that we accept
    * @return words that have inversed curve.
    */
-  def naiveInverseDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val testWordsReversed = (testedWord._1, testedWord._2.reverse);
-    NaiveComparisons.naiveDifferenceScalingMax(data, testWordsReversed, parameters)
+  def naiveInverseDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                             parameters: List[Double]): RDD[(String)] = {
+    NaiveComparisons.naiveDifference(data, inverse(testedWord), parameters)
   }
 
-  /**
-   * Compare the ratio of word's frequency with the collection word's frequency to find similar words by computing
-   * the ratio line
-   * @param data collection of word, frequency to tuple to look into
-   * @param testedWord word that we want to find its similar word
-   * @param parameters L(0) contains the straightness of the curve that we accept
-   * @return words that are similar
-   */
-  def naiveInverseDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val testWordsReversed = (testedWord._1, testedWord._2.reverse)
-    NaiveComparisons.naiveDifference(data, testWordsReversed, parameters)
-  }
 }
