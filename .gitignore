@@ -1,3 +1,4 @@
+# bins
 *.class
 *.log
 
@@ -19,8 +20,17 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 
+# Eclipse specific
+.metadata
+.classpath
+.project
+.settings
+
 #Tex generated files on compilation
 *.log
 *.aux
 *.gz
 *.toc
+
+#LibreOffice stuff
+.~*
