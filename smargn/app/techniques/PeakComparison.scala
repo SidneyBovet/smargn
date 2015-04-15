@@ -1,11 +1,6 @@
 package techniques
 
-import java.io.File
 import org.apache.spark.rdd.RDD
-import utils.ComputationUtilities._
-
-import play.Logger
-
 
 object PeakComparison {
 
@@ -44,7 +39,6 @@ object PeakComparison {
   //TODO Use windowMaxMin, windowPeakMean
   //TODO implement in a function peakXaxis and peakYaxis
   //TODO implement a method with discrete derivative using the findAscending window and findDescending window: like that we can compare how the function grows with time
-
   /**
    * For a given word detects the peaks based on discrete derivative
    *
@@ -141,8 +135,7 @@ object PeakComparison {
       val average = frequencies.slice(0, i).sum / (i + 1.0)
       if (lastAverage <= average) {
         lastAverage = average
-      }
-      else {
+      } else {
         return i - 1
       }
     }
@@ -162,8 +155,7 @@ object PeakComparison {
       val average = frequencies.slice(0, i).sum / (i + 1.0)
       if (lastAverage >= average) {
         lastAverage = average
-      }
-      else {
+      } else {
         return i - 1
       }
     }
@@ -199,5 +191,5 @@ object PeakComparison {
     }
     window.length - 1
   }
-  
+
 }
