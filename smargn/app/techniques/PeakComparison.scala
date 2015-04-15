@@ -1,15 +1,9 @@
 package techniques
 
 import org.apache.spark.rdd.RDD
+import utils.ComputationUtilities._
 
 object PeakComparison {
-
-  val deltaMinMax = 0
-  val average = 0
-  //call average function
-  val variance = 0
-  //call variance function
-  val deltaSlope = 1
 
   /**
    * Compare the given word against the data based on the peaks. Here peak is defined as having a slope larger than 1.
@@ -21,6 +15,7 @@ object PeakComparison {
    * @return words that are similar
    */
   def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    //TODO @Joanna needds to use the peakMetrics (below) instead
     val windowSize = parameters(0)
     val deltaSlope = 1
     val axisXDeviation = parameters(1)
@@ -32,8 +27,120 @@ object PeakComparison {
     val maxIndexesOfWords: RDD[(String, List[Int])] = peaksOfWords.map(x => (x._1, x._2.map(y => y._1)))
     val maxIndexesOfWord: List[Int] = peakTestedWord.map(x => x._1)
     //peak x axis
-    val proportionPeakSimilarities = maxIndexesOfWords.map(x => (x._1, x._2.map(y => maxIndexesOfWord.map(z => Math.abs(z - y) < axisXDeviation).count(_ == true) > 0))).map(x => (x._1, x._2.count(_ == true) / maxIndexesOfWord.size))
+    val proportionPeakSimilarities = maxIndexesOfWords.map(x =>
+      (x._1, x._2.map(y =>
+        maxIndexesOfWord.map(z =>
+          Math.abs(z - y) < axisXDeviation).count(_ == true) > 0))).map(x =>
+      (x._1, x._2.count(_ == true) / maxIndexesOfWord.size))
     proportionPeakSimilarities.filter(_._2 > proportionSimilarities).map(_._1)
+  }
+
+  /** *******************************************************************************************************
+    * Metrics
+    * ******************************************************************************************************* */
+  /**
+   * Compares two words and outputs the percent of similarity. Uses windowPeakDerivative as peak defintion
+   *
+   * @param word1 word to be compared
+   * @param word2 word to be compared
+   * @param windowSize size of the window
+   * @param axisDeviation shift tolerated on the x axis
+   * @param deltaSlope the threshold for the slope
+   * @param similarityOfSlopes
+   * @return
+   */
+  def peakDerivativeMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 10, axisDeviation: Int = 2, deltaSlope: Int = 1, similarityOfSlopes: Double = 0.5): Double = {
+    val distinctPeaks1 = filterDuplicateYears(windowPeakDerivative(word1, windowSize, deltaSlope))
+    val distinctPeaks2 = filterDuplicateYears(windowPeakDerivative(word2, windowSize, deltaSlope))
+
+    if (distinctPeaks1.size == 0 || distinctPeaks2.size == 0) {
+      return 0.0
+    }
+
+    val numberOfSimilarPeaks = distinctPeaks1.map { w1 =>
+      distinctPeaks2.map { w2 =>
+        Math.abs(w1._1 - w2._1) < axisDeviation /* && compare the slopes maybe*/
+      }.count(_ == true) > 0
+    }.count(_ == true)
+
+    Math.min(numberOfSimilarPeaks * 1.0 / distinctPeaks1.size, numberOfSimilarPeaks * 1.0 / distinctPeaks2.size)
+
+  }
+
+  /**
+   * Compares 2 words and outputs the percent of similarity. Uses windowPeakMinMax as definition for the peaks
+   *
+   * @param word1 word to be compared
+   * @param word2 word to be compared
+   * @param windowSize size of the window
+   * @param axisDeviation shift tolerated on the x axis
+   * @param delta tolerated difference between min and max
+   * @return
+   */
+  def peakMaxMinMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 10, axisDeviation: Int = 2, delta: Double = -1): Double = {
+    peakMMetric(windowPeakMinMax, word1, word2, windowSize, axisDeviation, delta)
+  }
+
+  /**
+   * Compares 2 words and outputs the percent of similarity. Uses windowPeakMean as definition for the peaks
+   *
+   * @param word1
+   * @param word2
+   * @param windowSize
+   * @param axisDeviation
+   * @param delta
+   * @return
+   */
+  def peakMeanMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 10, axisDeviation: Int = 2, delta: Double = -1): Double = {
+    peakMMetric(windowPeakMean, word1, word2, windowSize, axisDeviation, delta)
+  }
+
+  /**
+   *
+   * @param peakDef
+   * @param word1
+   * @param word2
+   * @param windowSize
+   * @param axisDeviation
+   * @param delta
+   * @return
+   */
+  private def peakMMetric(peakDef: ((String, Array[Double]), Int, Double) => List[(Int, Double, Double)], word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 10, axisDeviation: Int = 2, delta: Double = -1): Double = {
+    val deltaUsed = if (delta < 0) {
+      Math.max(variance(word1._2), variance(word2._2))
+    } else {
+      delta
+    }
+
+    val distinctPeaks1 = filterDuplicateYears(peakDef(word1, windowSize, deltaUsed))
+    val distinctPeaks2 = filterDuplicateYears(peakDef(word2, windowSize, deltaUsed))
+
+    if (distinctPeaks1.size == 0 || distinctPeaks2.size == 0) {
+      return 0.0
+    }
+
+
+    val numberOfSimilarPeaks = distinctPeaks1.map { w1 =>
+      distinctPeaks2.map { w2 =>
+        Math.abs(w1._1 - w2._1) < axisDeviation /* && compare the slopes maybe*/
+      }.count(_ == true) > 0
+    }.count(_ == true)
+
+    Math.min(numberOfSimilarPeaks * 1.0 / distinctPeaks1.size, numberOfSimilarPeaks * 1.0 / distinctPeaks2.size)
+  }
+
+  /**
+   * Filters out the duplicate years, by keeping for each peak the maximum delta/slope detected
+   * @param l
+   * @return
+   */
+  private def filterDuplicateYears(l: List[(Int, Double, Double)]): List[(Int, Double, Double)] = {
+    l.groupBy(x => x._1).toList.map { t =>
+      val left = t._2.map(x => x._2).max
+      val right = t._2.map(x => Math.abs(x._3)).max
+
+      (t._1, left, right)
+    }
   }
 
   //TODO Use windowMaxMin, windowPeakMean
@@ -72,7 +179,7 @@ object PeakComparison {
    * @param word who's list we will analyse for peaks
    * @param windowSize the window of years to consider
    * @param delta the threshold: should be the difference on y axis of the words
-   * @return List((year, ascending slope, descending slope))
+   * @return List((year, ascending delta, descending delta))
    */
   private def windowPeakMinMax(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
     val frequencies = word._2
@@ -86,7 +193,7 @@ object PeakComparison {
         result = (i + indexOfMax, currentWindow(indexOfMax) - currentLeft.min * 1.0, currentWindow(indexOfMax) - currentRight.min * 1.0) :: result
       }
     }
-    result.reverse.distinct //TODO ensure that each year is present only once in the list with the max slopes encountered
+    result.reverse
   }
 
   /**
