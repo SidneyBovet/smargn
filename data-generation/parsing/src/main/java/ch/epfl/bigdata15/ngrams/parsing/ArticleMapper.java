@@ -20,7 +20,7 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
         FileSystem fs = value.getFileSystem(conf);
         FSDataInputStream in = fs.open(value);
         Scanner scan = new Scanner(in, "UTF-8");
-        scan.useDelimiter("[\\s+]|[>]");
+        scan.useDelimiter("[\\s+>]");
 
         String article = readNextArticle(scan);
         while (article.length() > 0) {
@@ -44,7 +44,7 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
             } else if ("</full_text".equals(word)) {
                 return article.trim();
             } else if (inArticle) {
-            	word = word.replaceAll("^\\w'", "").replaceAll("[^\\p{L}'-]", "");
+            	word = cleanWord(word);
             	if(word.length() > 1) {
             		article += word.toLowerCase(Locale.FRENCH) + " ";
             	} 
@@ -52,5 +52,30 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
         }
 
         return article.trim();
+    }
+
+    
+    /**
+     * This method clean word
+     * @param word is the string to be clean
+     * @return the clean word
+     */
+    private String cleanWord(String word) {
+    	/* All this method should be possible to implement with the following replaceAll however,
+    	 * for a reason I did discovered, this doesn't work. (This works outside a Map Reduce)
+    	 * word.replaceAll("^['-]*", "").replaceAll("['-]*$", "").replaceAll("[^\\p{L}'-]", "");
+    	 */
+    	int newBegin = 0;
+    	int newEnd = word.length();
+    	word = word.replaceAll("[^\\p{L}']", "");
+    	while(newBegin < newEnd && (word.charAt(newBegin) == '\'' || word.charAt(newBegin) == '-')) {
+    		newBegin++;
+    	}
+    	newEnd--;
+    	while(newEnd > newBegin && (word.charAt(newEnd) == '\'' || word.charAt(newEnd) == '-')) {
+    		newEnd--;
+    	}
+    	
+    	return word.substring(newBegin, newEnd+1);
     }
 }
