@@ -1,3 +1,4 @@
+import filters.CorsFilter
 import play.api._
 import play.api.mvc.Results._
 import play.api.mvc._
@@ -8,7 +9,7 @@ import scala.concurrent.Future
 /**
  * Created by Valentin on 26/03/15.
  */
-object Global extends GlobalSettings {
+object Global extends WithFilters(new CorsFilter) with GlobalSettings {
 
   override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
     Spark.stop()
