@@ -65,9 +65,9 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
     	 * for a reason I did discovered, this doesn't work. (This works outside a Map Reduce)
     	 * word.replaceAll("^['-]*", "").replaceAll("['-]*$", "").replaceAll("[^\\p{L}'-]", "");
     	 */
+    	word = word.replaceAll("[^\\p{L}']", "");
     	int newBegin = 0;
     	int newEnd = word.length();
-    	word = word.replaceAll("[^\\p{L}']", "");
     	while(newBegin < newEnd && (word.charAt(newBegin) == '\'' || word.charAt(newBegin) == '-')) {
     		newBegin++;
     	}
