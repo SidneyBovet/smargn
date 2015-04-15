@@ -1,4 +1,4 @@
-import org.apache.log4j.{Logger, Level}
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.scalatest.FunSuite
 

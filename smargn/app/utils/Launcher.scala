@@ -1,10 +1,10 @@
 package utils
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
+import controllers.Spark
 import org.apache.spark.rdd.RDD
 import play.Logger
-import techniques.Spark
 import utils.Formatting._
 
 /**
@@ -14,12 +14,14 @@ import utils.Formatting._
 object Launcher {
 
   def runList(words: List[String], inputDir: String, outputFile: String, parameters: List[Double],
-          similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)])
-  : Map[String, List[String]] = {
+              similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[
+                (String)]): Map[String, List[String]] = {
     words.map(w => w -> run(w, inputDir, outputFile, parameters, similarityTechnique)).toMap
   }
 
-  def run(word: String, inputDir: String, outputFile: String, parameters: List[Double], similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)]): List[String] = {
+  def run(word: String, inputDir: String, outputFile: String, parameters: List[Double],
+          similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)
+            ]): List[String] = {
     val spark = Spark.ctx
     Logger.info("Searching for word: " + word)
 

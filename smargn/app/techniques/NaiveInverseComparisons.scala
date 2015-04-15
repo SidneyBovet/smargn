@@ -1,7 +1,6 @@
 package techniques
 
 import org.apache.spark.rdd.RDD
-import utils.Scaling._
 
 /**
  * Created by John and Fabien on 13.4.15.
@@ -16,8 +15,9 @@ object NaiveInverseComparisons {
    * @param parameters L(0) contains the accepted difference between two array value that we accept
    * @return words that have inversed curve.
    */
-  def naiveInverseDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val testWordsReversed = (testedWord._1, testedWord._2.reverse);
+  def naiveInverseDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                             parameters: List[Double]): RDD[(String)] = {
+    val testWordsReversed = (testedWord._1, testedWord._2.reverse)
     NaiveComparisons.naiveDifferenceScalingMax(data, testWordsReversed, parameters)
   }
 
@@ -29,7 +29,8 @@ object NaiveInverseComparisons {
    * @param parameters L(0) contains the straightness of the curve that we accept
    * @return words that are similar
    */
-  def naiveInverseDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+  def naiveInverseDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                           parameters: List[Double]): RDD[(String)] = {
     val testWordsReversed = (testedWord._1, testedWord._2.reverse)
     NaiveComparisons.naiveDifference(data, testWordsReversed, parameters)
   }

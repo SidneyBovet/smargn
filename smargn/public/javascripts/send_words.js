@@ -3,9 +3,9 @@
  */
 function send_words() {
     var words = [];
-    for(var i = 0; i < $(".input-group").length; i++) {
+    for (var i = 0; i < $(".input-group").length; i++) {
         var word = $("#word" + (i + 1)).val();
-        if(word != undefined && word != "") {
+        if (word != undefined && word != "") {
             words.push(word);
         }
     }
@@ -19,29 +19,29 @@ function send_words() {
         success: function (data) {
             var alerts = $("#errormsg");
             alerts.empty();
-            if(data.notindata.length != 0) {
-                data.notindata.forEach(function(w) {
+            if (data.notindata.length != 0) {
+                data.notindata.forEach(function (w) {
                     alerts.append(
-                        "<div class=\"alert alert-danger\" role=\"alert\">"+
+                        "<div class=\"alert alert-danger\" role=\"alert\">" +
                         w + " was not in the data."
-                        +"</div>");
+                        + "</div>");
                 });
             }
-            if(data.nosimilarwords.length != 0) {
-                data.nosimilarwords.forEach(function(w) {
+            if (data.nosimilarwords.length != 0) {
+                data.nosimilarwords.forEach(function (w) {
                     alerts.append(
-                        "<div class=\"alert alert-info\" role=\"alert\">"+
+                        "<div class=\"alert alert-info\" role=\"alert\">" +
                         w + " has no similar words."
-                        +"</div>");
+                        + "</div>");
                 });
             }
-            if(data.results != undefined) {
+            if (data.results != undefined) {
                 var resList = $("#results");
                 resList.empty();
-                for(var key in data.results) {
+                for (var key in data.results) {
                     if (data.results.hasOwnProperty(key)) {
-                        resList.append("<li class=\"list-group-item list-group-item-success\">"+key+"</li>");
-                        data.results[key].forEach(function(res) {
+                        resList.append("<li class=\"list-group-item list-group-item-success\">" + key + "</li>");
+                        data.results[key].forEach(function (res) {
                             resList.append("<li class=\"list-group-item\">" + res + "</li>");
                         });
                     }

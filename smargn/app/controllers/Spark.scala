@@ -1,6 +1,6 @@
-package techniques
+package controllers
 
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
  * Created by Valentin on 26/03/15.

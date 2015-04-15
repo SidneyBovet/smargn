@@ -1,7 +1,6 @@
 package utils
 
 import org.apache.spark.rdd.RDD
-import play.Logger
 
 /**
  * Created by Joanna on 4/7/15.
@@ -15,7 +14,7 @@ object Formatting {
    * @return the formatted representation (word, freq) of the data
    */
   def dataFormatter(data: RDD[(String)]): RDD[(String, Array[Double])] = {
-    return data.map(line => line.split(" ")).map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble)))
+    data.map(line => line.split(" ")).map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble)))
   }
 
   /**
@@ -24,8 +23,9 @@ object Formatting {
    * @param words the list of words we want to find the frequency
    * @return the complete representation (word, freq) of the list of words
    */
-  def searchWordFormatter(formattedData: RDD[(String, Array[Double])], words: List[String]): RDD[(String, Array[Double])] = {
-    return formattedData.filter { case (w, o) => words.contains(w)
+  def searchWordFormatter(formattedData: RDD[(String, Array[Double])],
+                          words: List[String]): RDD[(String, Array[Double])] = {
+    formattedData.filter { case (w, o) => words.contains(w)
     }
   }
 

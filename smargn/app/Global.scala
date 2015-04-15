@@ -1,8 +1,8 @@
+import controllers.Spark
 import filters.CorsFilter
 import play.api._
 import play.api.mvc.Results._
 import play.api.mvc._
-import techniques.Spark
 
 import scala.concurrent.Future
 

@@ -5,7 +5,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="word1"  id="word1">
+                <input type="text" class="form-control" placeholder="word1" id="word1">
             </div>
 
             <div class="input-group">
@@ -24,8 +24,8 @@
             <div id="errormsg"></div>
         </div>
 
-        <div class="row">
-            <ul class="list-group" id="results">
+        <div class="row" id="results">
+            <ul class="list-group">
             @for(res <- results) {
                 <li class="list-group-item">@res</li>
             }
