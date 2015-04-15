@@ -75,7 +75,6 @@ object Application extends Controller {
 
         // Send result to browser
         Ok(resultsToJson(results))
-
     }
   }
 

@@ -1,6 +1,7 @@
 @(results: List[String])
 
 @main("BD15-Smargn") {
+    <script src="@routes.Assets.at("javascripts/send_words.js")" type ="text/javascript"></script>
     <div class="container-fluid">
         <div class="row">
             <div class="input-group">
@@ -21,59 +22,6 @@
 
             <button onclick="send_words()" type="button" class="btn btn-default" id="search">Smargn 'em all!</button>
             <div id="errormsg"></div>
-            <script>
-                function send_words() {
-                    var word1 = $("#word1").val();
-                    var word2 = $("#word2").val();
-                    var word3 = $("#word3").val();
-                    var word4 = $("#word4").val();
-
-                    $.ajax({
-                        type: "POST",
-                        url: "/naive",
-                        data: JSON.stringify({
-                            "words": JSON.stringify([word1, word2, word3, word4])
-                        }),
-                        success: function (data) {
-                            var alerts = $("#errormsg");
-                            alerts.empty();
-                            if(data.notindata.length != 0) {
-                                data.notindata.forEach(function(w) {
-                                    alerts.append(
-                                        "<div class=\"alert alert-danger\" role=\"alert\">"+
-                                        w + " was not in the data."
-                                        +"</div>");
-                                });
-                            }
-                            if(data.nosimilarwords.length != 0) {
-                                data.nosimilarwords.forEach(function(w) {
-                                    alerts.append(
-                                        "<div class=\"alert alert-info\" role=\"alert\">"+
-                                        w + " has no similar words."
-                                        +"</div>");
-                                });
-                            }
-                            if(data.results != undefined) {
-                                console.log(data.results);
-                                var resList = $("#results");
-                                resList.empty();
-                                for(var key in data.results) {
-                                    if (data.results.hasOwnProperty(key)) {
-                                        resList.append("<li class=\"list-group-item list-group-item-success\">"+key+"</li>");
-                                        data.results[key].forEach(function(res) {
-                                            resList.append("<li class=\"list-group-item\">" + res + "</li>");
-                                        });
-                                    }
-                                }
-                            }
-                        },
-                        error: function (xhr) {
-                            console.log(xhr);
-                        },
-                        contentType: "application/json; charset=utf-8"
-                    });
-                }
-            </script>
         </div>
 
         <div class="row">
