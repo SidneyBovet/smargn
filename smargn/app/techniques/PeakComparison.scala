@@ -134,7 +134,7 @@ object PeakComparison {
    * @param l
    * @return
    */
-  private def filterDuplicateYears(l: List[(Int, Double, Double)]): List[(Int, Double, Double)] = {
+  def filterDuplicateYears(l: List[(Int, Double, Double)]): List[(Int, Double, Double)] = {
     l.groupBy(x => x._1).toList.map { t =>
       val left = t._2.map(x => x._2).max
       val right = t._2.map(x => Math.abs(x._3)).max
@@ -154,7 +154,7 @@ object PeakComparison {
    * @param delta the threshold: should be a slope i.e. 1 is for angle of 45degrees
    * @return List((year, ascending slope, descending slope))
    */
-  private def windowPeakDerivative(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
+  def windowPeakDerivative(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
     val frequencies = word._2
     var result = List[(Int, Double, Double)]()
     var lastDerivative = 0.0
@@ -164,9 +164,9 @@ object PeakComparison {
       if (lastDerivative > delta && derivative < -delta) {
         result = (i + windowSize, lastDerivative, derivative) :: result
       }
-      if (derivative * lastDerivative > 0) {
-        lastDerivative = derivative
-      }
+
+      lastDerivative = derivative
+
     }
     result.reverse
   }
@@ -181,16 +181,18 @@ object PeakComparison {
    * @param delta the threshold: should be the difference on y axis of the words
    * @return List((year, ascending delta, descending delta))
    */
-  private def windowPeakMinMax(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
+  def windowPeakMinMax(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
     val frequencies = word._2
     var result = List[(Int, Double, Double)]()
     for (i <- 0 to (frequencies.length - windowSize)) {
       val currentWindow = frequencies.slice(i, windowSize)
-      val indexOfMax = currentWindow.indexOf(currentWindow.max)
-      val currentLeft = currentWindow.slice(i, indexOfMax)
-      val currentRight = currentWindow.slice(indexOfMax, i + windowSize)
-      if (currentWindow(indexOfMax) - currentLeft.min > delta && currentWindow(indexOfMax) - currentRight.min > delta) {
-        result = (i + indexOfMax, currentWindow(indexOfMax) - currentLeft.min * 1.0, currentWindow(indexOfMax) - currentRight.min * 1.0) :: result
+      if (currentWindow.nonEmpty) {
+        val indexOfMax = currentWindow.indexOf(currentWindow.max)
+        val currentLeft = currentWindow.slice(i, indexOfMax)
+        val currentRight = currentWindow.slice(indexOfMax, i + windowSize)
+        if (currentLeft.nonEmpty && currentRight.nonEmpty && currentWindow(indexOfMax) - currentLeft.min > delta && currentWindow(indexOfMax) - currentRight.min > delta) {
+          result = (i + indexOfMax, currentWindow(indexOfMax) - currentLeft.min * 1.0, currentWindow(indexOfMax) - currentRight.min * 1.0) :: result
+        }
       }
     }
     result.reverse
@@ -207,24 +209,36 @@ object PeakComparison {
    * @param delta the threshold for difference between the minimums and the maximum
    * @return List((year, ascending difference of min and max, descending difference of min and max))
    */
-  private def windowPeakMean(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
+  def windowPeakMean(word: (String, Array[Double]), windowSize: Int, delta: Double): List[(Int, Double, Double)] = {
     val frequencies = word._2
     var result = List[(Int, Double, Double)]()
 
     var i = 0
     while (i < frequencies.length) {
       val ascendingWindow = frequencies.slice(i, findAscendingAverageWindow(frequencies, i, windowSize) + 1)
-      val indexOfMaxAscendingInWindow = ascendingWindow.indexOf(ascendingWindow.max)
-      val indexOfMaxAscending = indexOfMaxAscendingInWindow + i
-      val minAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).min
-      val descendingWindow = frequencies.slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1)
-      val indexOfMinDescending = descendingWindow.indexOf(descendingWindow.min) + indexOfMaxAscending
-      val valueAscending = frequencies(indexOfMaxAscending) - minAscending
-      val valueDescending = frequencies(indexOfMaxAscending) - frequencies(indexOfMinDescending)
-      if (valueAscending > delta && valueDescending > delta) {
-        result = (indexOfMaxAscending, valueAscending * 1.0, valueDescending * 1.0) :: result
+      if (ascendingWindow.nonEmpty) {
+        val indexOfMaxAscendingInWindow = ascendingWindow.indexOf(ascendingWindow.max)
+        val indexOfMaxAscending = indexOfMaxAscendingInWindow + i
+        val minAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).min
+        if (minAscending != frequencies(indexOfMaxAscending)) {
+          val descendingWindow = frequencies.slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1)
+          if (descendingWindow.nonEmpty) {
+            val indexOfMinDescending = descendingWindow.indexOf(descendingWindow.min) + indexOfMaxAscending
+            val valueAscending = frequencies(indexOfMaxAscending) - minAscending
+            val valueDescending = frequencies(indexOfMaxAscending) - frequencies(indexOfMinDescending)
+            if (valueAscending > delta && valueDescending > delta) {
+              result = (indexOfMaxAscending, valueAscending * 1.0, valueDescending * 1.0) :: result
+            }
+            i = indexOfMinDescending
+          } else {
+            i += 1
+          }
+        } else {
+          i += 1
+        }
+      } else {
+        i += 1
       }
-      i = indexOfMinDescending
     }
     result.reverse
   }
