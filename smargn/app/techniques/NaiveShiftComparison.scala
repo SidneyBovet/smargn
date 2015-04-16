@@ -24,7 +24,7 @@ object NaiveShiftComparison {
     //TODO
     //when we have a parameters list of Any, we could have 2 distinct lists of parameters, one for the technique
     //and one for the parameters of the shift itself (len and step)
-    shift(data, testedWord, parameters, NaiveComparisons.naiveDifference, 3, 1)
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDifferenceScalingMax, 5, 1)
   }
 
 }

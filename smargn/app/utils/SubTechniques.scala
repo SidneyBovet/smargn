@@ -43,10 +43,10 @@ object SubTechniques {
 
     //word to the right, data to the left
     for (i <- 0 until shiftLen by shiftStep) {
-      testedWordReduced = (testedWord._1, testedWord._2.dropRight(shiftStep))
-      dataReduced = data.map(x => (x._1, x._2.drop(shiftStep)))
+      testedWordReduced = (testedWord._1, testedWordReduced._2.dropRight(shiftStep))
+      dataReduced = dataReduced.map(x => (x._1, x._2.drop(shiftStep)))
 
-      unionWord = unionWord.union(similarityTechnique(dataReduced, testedWordReduced, parameters))
+      unionWord = unionWord.union(similarityTechnique(dataReduced, testedWordReduced, parameters)).distinct()
     }
 
     testedWordReduced = testedWord
@@ -54,10 +54,10 @@ object SubTechniques {
 
     //word to the left, data to the right
     for (i <- 0 until shiftLen by shiftStep) {
-      testedWordReduced = (testedWord._1, testedWord._2.drop(shiftStep))
-      dataReduced = data.map(x => (x._1, x._2.dropRight(shiftStep)))
+      testedWordReduced = (testedWord._1, testedWordReduced._2.drop(shiftStep))
+      dataReduced = dataReduced.map(x => (x._1, x._2.dropRight(shiftStep)))
 
-      unionWord = unionWord.union(similarityTechnique(dataReduced, testedWordReduced, parameters))
+      unionWord = unionWord.union(similarityTechnique(dataReduced, testedWordReduced, parameters)).distinct()
     }
 
 
