@@ -302,7 +302,7 @@ object PeakComparison {
   private def findAscendingAverageWindow(frequencies: Array[Double], start: Int, windowSize: Int): Int = {
     var lastAverage = 0.0
     for (i <- start to frequencies.length - windowSize) {
-      val average = frequencies.slice(0, i).sum / (i + 1.0)
+      val average = frequencies.slice(start, i).sum / (if ((i-start) !=0) i-start else 1)
       if (lastAverage <= average) {
         lastAverage = average
       } else {
@@ -322,7 +322,7 @@ object PeakComparison {
   private def findDescendingAverageWindow(frequencies: Array[Double], start: Int, windowSize: Int): Int = {
     var lastAverage = 0.0
     for (i <- start to frequencies.length - windowSize) {
-      val average = frequencies.slice(0, i).sum / (i + 1.0)
+      val average = frequencies.slice(start, i).sum / (if ((i-start) !=0) i-start else 1)
       if (lastAverage >= average) {
         lastAverage = average
       } else {
