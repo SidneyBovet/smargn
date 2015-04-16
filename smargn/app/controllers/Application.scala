@@ -55,7 +55,7 @@ object Application extends Controller {
 
   def runNaiveShift(word: String): Action[AnyContent] = {
     Action {
-      val res = run(word, "input/", "public/data/", List(0.2, 5.0), NaiveShiftComparison.naiveDifferenceScalingMax)
+      val res = run(word, "input/", "public/data/", List(0.2), NaiveShiftComparison.naiveDifferenceShift)
       if (res == List()) {
         Ok(views.html.notSimilarWords(word))
       } else if (res.head == "ERROR404") {
