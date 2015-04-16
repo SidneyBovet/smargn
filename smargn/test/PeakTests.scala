@@ -41,7 +41,9 @@ class PeakTests extends SparkTestUtils with ShouldMatchers {
     val word1 = Array[Double](2, 4, 5, 199, 1, 3, 2, 3, 2, 2, 2, 2, 3, 2, 3, 2, 3, 2, 2, 3, 2, 3, 2, 3, 2, 3, 2)
     println(word1(24))
     println(word1.length)
-    windowPeakMean(("whatever", word1), 1, 0) should be(1.0)
+    windowPeakMean(("whatever", word1), 1, 0) should be(List(3,197,198))
   }
+
+
 
 }

@@ -270,7 +270,7 @@ object PeakComparison {
         val indexOfMaxAscending = indexOfMaxAscendingInWindow + i
         val minAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).min
         if (minAscending != frequencies(indexOfMaxAscending)) {
-          val descendingWindow = frequencies.slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1)
+          val descendingWindow = frequencies.slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1 + indexOfMaxAscending)
           if (descendingWindow.nonEmpty) {
             val indexOfMinDescending = descendingWindow.indexOf(descendingWindow.min) + indexOfMaxAscending
             val valueAscending = frequencies(indexOfMaxAscending) - minAscending
