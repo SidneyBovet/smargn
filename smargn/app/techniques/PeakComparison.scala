@@ -14,7 +14,7 @@ object PeakComparison {
    * @param parameters L(0) contains the window between 2 points which discrete derivative we calculate
    * @return words that are similar
    */
-  def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+  /*def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
     //TODO @Joanna needds to use the peakMetrics (below) instead
     val windowSize = parameters(0)
     val deltaSlope = 1
@@ -33,6 +33,51 @@ object PeakComparison {
           Math.abs(z - y) < axisXDeviation).count(_ == true) > 0))).map(x =>
       (x._1, x._2.count(_ == true) / maxIndexesOfWord.size))
     proportionPeakSimilarities.filter(_._2 > proportionSimilarities).map(_._1)
+  }*/
+
+  /**
+   * Compute the similar words using the derivative peak metric
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the threshold of considering two words similar L(1) contains the windows size, L(2) contains the axisXDeviation, L(3) contains the deltaSlope
+   * @return
+   */
+  def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    val proportionSimilarities = parameters.head
+    val windowSize = parameters(1).toInt
+    val axisXDeviation = parameters(2).toInt
+    val deltaSlope = parameters(3).toInt
+    data.map(x=> (testedWord, x)).map(y=>(y._2._1, peakDerivativeMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
+  }
+
+  /**
+   * Compute the similar words using the derivative peak metric
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the threshold of considering two words similar L(1) contains the windows size, L(2) contains the axisXDeviation, L(3) contains the deltaMinMax
+   * @return
+   */
+  def peakComparisonWithMaxMin(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    val proportionSimilarities = parameters.head
+    val windowSize = parameters(1).toInt
+    val axisXDeviation = parameters(2).toInt
+    val deltaSlope = parameters(3).toInt
+    data.map(x=> (testedWord, x)).map(y=>(y._2._1, peakMaxMinMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
+  }
+
+  /**
+   * Compute the similar words using the derivative peak metric
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the threshold of considering two words similar L(1) contains the windows size, L(2) contains the axisXDeviation, L(3) contains the deltaMean
+   * @return
+   */
+  def peakComparisonWitMean(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    val proportionSimilarities = parameters.head
+    val windowSize = parameters(1).toInt
+    val axisXDeviation = parameters(2).toInt
+    val deltaSlope = parameters(3).toInt
+    data.map(x=> (testedWord, x)).map(y=>(y._2._1, peakMeanMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
   }
 
   /** *******************************************************************************************************
@@ -143,6 +188,10 @@ object PeakComparison {
     }
   }
 
+
+  /** *******************************************************************************************************
+    * Peak definitions
+    * ******************************************************************************************************* */
   //TODO Use windowMaxMin, windowPeakMean
   //TODO implement in a function peakXaxis and peakYaxis
   //TODO implement a method with discrete derivative using the findAscending window and findDescending window: like that we can compare how the function grows with time
