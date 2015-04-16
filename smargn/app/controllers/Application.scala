@@ -5,15 +5,17 @@ import play.api.libs.json._
 import play.api.mvc._
 import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
 import utils._
+import utils.Launcher._
 
 object Application extends Controller {
 
   // Enables CORS
-  val headers = List("Access-Control-Allow-Origin" -> "*", "Access-Control-Allow-Methods" -> "GET, POST, OPTIONS",
-    "Access-Control-Max-Age" -> "3600", "Access-Control-Allow-Headers" -> "Origin, Content-Type, Accept, Authorization",
+  val headers: List[(String, String)] = List("Access-Control-Allow-Origin" -> "*",
+    "Access-Control-Allow-Methods" -> "GET, POST, OPTIONS", "Access-Control-Max-Age" -> "3600",
+    "Access-Control-Allow-Headers" -> "Origin, Content-Type, Accept, Authorization",
     "Access-Control-Allow-Credentials" -> "true")
 
-  def options(url: String) = {
+  def options(url: String): Action[AnyContent] = {
     Action { request =>
       NoContent.withHeaders(headers: _*)
     }
@@ -25,9 +27,9 @@ object Application extends Controller {
     }
   }
 
-  def runNaive(word: String) = {
+  def runNaive(word: String): Action[AnyContent] = {
     Action {
-      val res = Launcher.run(word, "input/", "public/data/", List(0.2), NaiveComparisons.naiveDifferenceScalingMax)
+      val res = run(word, "input/", "public/data/", List(0.2), NaiveComparisons.naiveDifferenceScalingMax)
       if (res == List()) {
         Ok(views.html.notSimilarWords(word))
       } else if (res.head == "ERROR404") {
@@ -38,7 +40,7 @@ object Application extends Controller {
     }
   }
 
-  def runNaiveInverse(word: String) = {
+  def runNaiveInverse(word: String): Action[AnyContent] = {
     Action {
       val res = Launcher.run(word, "input/", "public/data/", List(0.2), NaiveInverseComparisons.naiveInverseDifference)
       if (res == List()) {
@@ -51,10 +53,9 @@ object Application extends Controller {
     }
   }
 
-  def runNaiveShift(word: String) = {
+  def runNaiveShift(word: String): Action[AnyContent] = {
     Action {
-      val res = Launcher
-        .run(word, "input/", "public/data/", List(0.2, 5.0), NaiveShiftComparison.naiveDifferenceScalingMax)
+      val res = run(word, "input/", "public/data/", List(0.2, 5.0), NaiveShiftComparison.naiveDifferenceScalingMax)
       if (res == List()) {
         Ok(views.html.notSimilarWords(word))
       } else if (res.head == "ERROR404") {
@@ -65,13 +66,13 @@ object Application extends Controller {
     }
   }
 
-  def blankNaive = {
+  def blankNaive: Action[AnyContent] = {
     Action {
       Ok(views.html.naive(Nil))
     }
   }
 
-  def naive = {
+  def naive: Action[JsValue] = {
     Action(parse.json) { req =>
       bodyToJson(req.body) match {
         case Nil =>
@@ -79,8 +80,7 @@ object Application extends Controller {
           BadRequest("Expected Json")
         case words =>
           // Get results from technique
-          val results = Launcher
-            .runList(words, "input/", "public/data/", List(0.2), NaiveComparisons.naiveDifferenceScalingMax)
+          val results = runList(words, "input/", "public/data/", List(0.2), NaiveComparisons.naiveDifferenceScalingMax)
 
           // Send result to browser
           Ok(resultsToJson(results))

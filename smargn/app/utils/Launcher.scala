@@ -15,13 +15,14 @@ object Launcher {
 
   def runList(words: List[String], inputDir: String, outputFile: String, parameters: List[Double],
               similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[
-                (String)]): Map[String, List[String]] = {
-    words.map(w => w -> run(w, inputDir, outputFile, parameters, similarityTechnique)).toMap
+                (String)],
+              range: Range = 2000 to 2004): Map[String, List[String]] = {
+    words.map(w => w -> run(w, inputDir, outputFile, parameters, similarityTechnique, range)).toMap
   }
 
   def run(word: String, inputDir: String, outputFile: String, parameters: List[Double],
-          similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)
-            ]): List[String] = {
+          similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)],
+          range: Range = 2000 to 2004): List[String] = {
     val spark = Spark.ctx
     Logger.info("Searching for word: " + word)
 
@@ -52,7 +53,7 @@ object Launcher {
       val similaritiesLocal: List[(String, Array[Double])] =
         searchWordFormatter(formattedData, similarWords.collect().toList).collect().toList
 
-      val toPrint = Grapher.formatForDisplay(2000, testedWord, similaritiesLocal)
+      val toPrint = Grapher.formatForDisplay(range, testedWord, similaritiesLocal)
 
       printToFile(new File(outputFile + "data.csv")) { p => toPrint.foreach(p.println) }
 

@@ -4,9 +4,22 @@ import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CorsFilter extends EssentialFilter {
+/**
+ *
+ */
+class CORSFilter extends EssentialFilter {
+  /**
+   *
+   * @param next
+   * @return
+   */
   def apply(next: EssentialAction) = {
     new EssentialAction {
+      /**
+       *
+       * @param requestHeader
+       * @return
+       */
       def apply(requestHeader: RequestHeader) = {
         next(requestHeader).map { result =>
           result.withHeaders("Access-Control-Allow-Origin" -> "*",

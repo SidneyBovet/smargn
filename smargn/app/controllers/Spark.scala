@@ -12,6 +12,7 @@ object Spark {
     if (sc.isEmpty) {
       sc = Some(new SparkContext(new SparkConf().setAppName("naiveCompare").setMaster("local[2]")))
       //                          .setMaster("yarn-client")
+      //                          .setMaster("spark://icdataprotal2:.../...")))
     }
     sc.get
   }
