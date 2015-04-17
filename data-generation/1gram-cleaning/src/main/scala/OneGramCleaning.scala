@@ -27,6 +27,16 @@ object OneGramCleaning {
     val out = fs.create(new Path(args(1)))
     filteredLines.foreach(str => out.write(str.getBytes("UTF-8")))
     out.close()
+
+    //Compute and write samples
+    if(args.length >= 5) {
+      val sampleList = sc.textFile(args(3)).flatMap(_.split("\\s+")).collect
+      val samples = filteredLines.filter(x => sampleList.contains(x.split("\\s+").head))
+      val out = fs.create(new Path(args(4)))
+      samples.foreach(str => out.write(str.getBytes("UTF-8")))
+      out.close()
+    }
+
     fs.close()
 
     sc.stop()
