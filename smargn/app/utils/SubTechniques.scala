@@ -63,4 +63,54 @@ object SubTechniques {
 
     unionWord
   }
+
+  /**
+   * Tries to match the given word by shifting it before applying the given technique.
+   * The function will try to shift the data to the right and to the left to match the given word.
+   * The total number of times the technique is applied will be (2 * shiftLen) + 1
+   * (The function will always start by trying to match the word as-is, without shifting it, even if shiftLen=0)
+   * @param arr array of false of true value
+   * @return the number of false value found in the array starting for the end
+   */
+  def numOfFalseFromEnd(arr: Array[Boolean]): Int = {
+    var notExcepted = 0
+    val limit = 3
+    var counterOfFalse = 0
+    for (i <- (arr.length - 1) to 0 by -1) {
+      if (!arr(i)) {
+        counterOfFalse = counterOfFalse + 1
+      }
+      else {
+        notExcepted = notExcepted + 1
+        if (notExcepted >= limit) {
+          return counterOfFalse
+        }
+      }
+    }
+    counterOfFalse
+  }
+
+  /**
+   * The function is used to found words that are similar up to a time t and then diverge
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters parameters applicable to the given technique
+   * @param similarityTechnique the function that implements the technique we want to use
+   * @return words that are similar up to a time t and then diverge
+   */
+  def divergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double],
+                 similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)]): RDD[(String)] = {
+    val acceptedDifference = parameters.head
+    val miniOfDivergence = parameters(1)
+    //add the testedWord values to the arrays and compute difference for future comparison
+    val zipDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => math.abs(x._1 - x._2)), x._2))
+    //test similarity criteria between each data word array and the tested word
+    val booleanDataTestedWord = zipDataTestedWord.map(x => (x._1, x._2.map(y => y <= acceptedDifference)))
+    //filter the arrays that have at least one value that didn't pass the similarity test
+
+    //TODO REMVOE THE 25 Value TO A DYNAMIC ONE
+    booleanDataTestedWord.map(x => (x._1, x._2.filter(_ == false)))
+      .filter(x => x._2.length <= 25 && x._1 != testedWord._1 && numOfFalseFromEnd(x._2) >= miniOfDivergence).map(_._1)
+
+  }
 }
