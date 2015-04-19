@@ -44,7 +44,7 @@ object Launcher {
     } else {
       val testedWord = testedWords.first()
 
-      //apply the similarity techique
+      //apply the similarity technique
       val similarWords = similarityTechnique(formattedData, testedWord, parameters)
 
       similarWords.saveAsTextFile(outputFile)

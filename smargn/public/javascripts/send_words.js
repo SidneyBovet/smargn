@@ -12,7 +12,7 @@ function send_words() {
 
     var technique = $("#technique_selector").val();
     var parameters = [];
-    for (i = 1; i <= $("#parameters > .input-group").length; i++) {
+    for (i = 1; i <= $("#input_params > .input-group").length; i++) {
         var param = $("#parameter" + i).val();
         if (param != undefined && param != "") {
             parameters.push(param);
