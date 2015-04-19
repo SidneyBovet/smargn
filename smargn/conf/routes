@@ -11,9 +11,9 @@ GET            /                           controllers.Application.index
 GET            /naive/:word                controllers.Application.runNaive(word)
 
 # Blank search page
-GET            /naive                      controllers.Application.blankNaive
+GET            /smargn                     controllers.Application.blank
 # Search for words
-POST           /naive                      controllers.Application.naive
+POST           /smargn                     controllers.Application.smargn
 
 GET            /naive/inverse/:word        controllers.Application.runNaiveInverse(word)
 

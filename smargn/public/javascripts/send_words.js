@@ -3,18 +3,29 @@
  */
 function send_words() {
     var words = [];
-    for (var i = 0; i < $(".input-group").length; i++) {
-        var word = $("#word" + (i + 1)).val();
+    for (var i = 1; i <= $("#words > .input-group").length; i++) {
+        var word = $("#word" + i).val();
         if (word != undefined && word != "") {
             words.push(word);
         }
     }
 
+    var technique = $("#technique_selector").val();
+    var parameters = [];
+    for (i = 1; i <= $("#parameters > .input-group").length; i++) {
+        var param = $("#parameter" + i).val();
+        if (param != undefined && param != "") {
+            parameters.push(param);
+        }
+    }
+
     $.ajax({
         type: "POST",
-        url: "/naive",
+        url: "/smargn",
         data: JSON.stringify({
-            "words": JSON.stringify(words)
+            "words": words,
+            "technique": technique,
+            "parameters": parameters
         }),
         success: function (data) {
             var alerts = $("#errormsg");
@@ -49,7 +60,7 @@ function send_words() {
             }
         },
         error: function (xhr) {
-            console.log(xhr);
+            $("body").html(xhr.responseText);
         },
         contentType: "application/json; charset=utf-8"
     });
