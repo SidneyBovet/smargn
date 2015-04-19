@@ -4,6 +4,10 @@
 function adapt_params(selector) {
     var nb_params = 0;
     switch($(selector).val()) {
+    // Add the case for your technique T here. Example:
+    //  case T.name:
+    //      nb_params = 73;
+    //      break;
         case "Naive":
         case "Inverse":
         case "Shift":

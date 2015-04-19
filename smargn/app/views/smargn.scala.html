@@ -1,7 +1,7 @@
 @main("BD15-Smargn") {
     <script src="@routes.Assets.at("javascripts/send_words.js")" type ="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/adapt_params.js")" type ="text/javascript"></script>
-    <div class="container-fluid">
+    <div class="row container-fluid">
         <div class="col-md-4 text-center" id="words">
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="word1" id="word1">
@@ -32,6 +32,10 @@
             <form role="form">
                 <div class="form-group">
                     <select class="form-control" id="technique_selector" onchange="adapt_params(this)">
+                        <!-- Add your technique T here -->
+                        <!-- Example:
+                        <option>T.name</option>
+                        -->
                         <option>Naive</option>
                         <option>Inverse</option>
                         <option>Shift</option>

@@ -88,6 +88,8 @@ object Application extends Controller {
       case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params))) =>
         // Apply desired technique and get results
         val results = name match {
+      //  Add the case for your technique T here. Example:
+      //  case T.name    => runList(words, <input dir>, <output dir>, parameters, <code for T>)
           case "Naive"   => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
           case "Inverse" => runList(words, INPUT, OUTPUT, params, NaiveInverseComparisons.naiveInverseDifference)
           case "Shift"   => runList(words, INPUT, OUTPUT, params, NaiveShiftComparison.naiveDifferenceShift)
