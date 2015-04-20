@@ -6,36 +6,6 @@ import utils.ComputationUtilities._
 object PeakComparison {
 
   /**
-   * Compare the given word against the data based on the peaks. Here peak is defined as having a slope larger than 1.
-   * The slope is calculated with discrete derivative between 2 points separated by a given window of time
-   *
-   * @param data collection of word, frequency to tuple to look into
-   * @param testedWord word that we want to find its similar word
-   * @param parameters L(0) contains the window between 2 points which discrete derivative we calculate
-   * @return words that are similar
-   */
-  /*def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    //TODO @Joanna needds to use the peakMetrics (below) instead
-    val windowSize = parameters(0)
-    val deltaSlope = 1
-    val axisXDeviation = parameters(1)
-    val proportionSimilarities = parameters(2)
-    val peakTestedWord = windowPeakDerivative(testedWord, windowSize.toInt, deltaSlope)
-
-    val peaksOfWords = data.map(x => (x._1, windowPeakDerivative(x, windowSize.toInt, deltaSlope)))
-
-    val maxIndexesOfWords: RDD[(String, List[Int])] = peaksOfWords.map(x => (x._1, x._2.map(y => y._1)))
-    val maxIndexesOfWord: List[Int] = peakTestedWord.map(x => x._1)
-    //peak x axis
-    val proportionPeakSimilarities = maxIndexesOfWords.map(x =>
-      (x._1, x._2.map(y =>
-        maxIndexesOfWord.map(z =>
-          Math.abs(z - y) < axisXDeviation).count(_ == true) > 0))).map(x =>
-      (x._1, x._2.count(_ == true) / maxIndexesOfWord.size))
-    proportionPeakSimilarities.filter(_._2 > proportionSimilarities).map(_._1)
-  }*/
-
-  /**
    * Compute the similar words using the derivative peak metric
    * @param data collection of word, frequency to tuple to look into
    * @param testedWord word that we want to find its similar word
@@ -47,7 +17,7 @@ object PeakComparison {
     val windowSize = parameters(1).toInt
     val axisXDeviation = parameters(2).toInt
     val deltaSlope = parameters(3).toInt
-    data.map(x=> (testedWord, x)).map(y=>(y._2._1, peakDerivativeMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
+    data.map(x => (testedWord, x)).map(y => (y._2._1, peakDerivativeMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
   }
 
   /**
@@ -62,7 +32,7 @@ object PeakComparison {
     val windowSize = parameters(1).toInt
     val axisXDeviation = parameters(2).toInt
     val deltaSlope = parameters(3).toInt
-    data.map(x=> (testedWord, x)).map(y=>(y._2._1, peakMaxMinMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
+    data.map(x => (testedWord, x)).map(y => (y._2._1, peakMaxMinMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
   }
 
   /**
@@ -77,7 +47,7 @@ object PeakComparison {
     val windowSize = parameters(1).toInt
     val axisXDeviation = parameters(2).toInt
     val deltaSlope = parameters(3).toInt
-    data.map(x=> (testedWord, x)).map(y=>(y._2._1, peakMeanMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
+    data.map(x => (testedWord, x)).map(y => (y._2._1, peakMeanMetric(y._1, y._2, windowSize, axisXDeviation))).filter(_._2 > proportionSimilarities).map(_._1)
   }
 
   /** *******************************************************************************************************
@@ -188,7 +158,6 @@ object PeakComparison {
     }
   }
 
-
   /** *******************************************************************************************************
     * Peak definitions
     * ******************************************************************************************************* */
@@ -293,6 +262,48 @@ object PeakComparison {
   }
 
   /**
+   *
+   * @param word
+   * @param windowSize
+   * @param deltaSlope
+   * @return
+   */
+  def windowPeakMeanSlope(word: (String, Array[Double]), windowSize: Int, deltaSlope: Double = 1): List[(Int, Double, Double)] = {
+    val frequencies = word._2
+    var result = List[(Int, Double, Double)]()
+
+    var i = 0
+    while (i < frequencies.length) {
+      val ascendingWindow = frequencies.slice(i, findAscendingAverageWindow(frequencies, i, windowSize) + 1)
+      if (ascendingWindow.nonEmpty) {
+        val indexOfMaxAscendingInWindow = ascendingWindow.indexOf(ascendingWindow.max)
+        val indexOfMaxAscending = indexOfMaxAscendingInWindow + i
+        val minAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).min
+        val indexOfMinAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).indexOf(minAscending)
+        if (minAscending != frequencies(indexOfMaxAscending)) {
+          val descendingWindow = frequencies.slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1 + indexOfMaxAscending)
+          if (descendingWindow.nonEmpty) {
+            val indexOfMinDescending = descendingWindow.indexOf(descendingWindow.min) + indexOfMaxAscending
+            val slopeAscending = (frequencies(indexOfMaxAscending) - minAscending) * 1.0 / (indexOfMaxAscendingInWindow - indexOfMinAscending * 1.0)
+            val slopeDescending = (frequencies(indexOfMaxAscending) - frequencies(indexOfMinDescending)) * 1.0 / (indexOfMinDescending - indexOfMaxAscending)
+            if (slopeAscending > deltaSlope && slopeDescending < -deltaSlope) {
+              result = (indexOfMaxAscending, slopeAscending, slopeDescending) :: result
+            }
+            i = indexOfMinDescending
+          } else {
+            i += 1
+          }
+        } else {
+          i += 1
+        }
+      } else {
+        i += 1
+      }
+    }
+    result.reverse
+  }
+
+  /**
    * Finds the maximum index such that the average of the points in a given window size is increasing. Returns that index
    *
    * @param frequencies the array we are considering
@@ -302,7 +313,11 @@ object PeakComparison {
   private def findAscendingAverageWindow(frequencies: Array[Double], start: Int, windowSize: Int): Int = {
     var lastAverage = 0.0
     for (i <- start to frequencies.length - windowSize) {
-      val average = frequencies.slice(start, i).sum / (if ((i-start) !=0) i-start else 1)
+      val average = frequencies.slice(start, i).sum / (if ((i - start) != 0) {
+        i - start
+      } else {
+        1
+      })
       if (lastAverage <= average) {
         lastAverage = average
       } else {
@@ -322,7 +337,11 @@ object PeakComparison {
   private def findDescendingAverageWindow(frequencies: Array[Double], start: Int, windowSize: Int): Int = {
     var lastAverage = 0.0
     for (i <- start to frequencies.length - windowSize) {
-      val average = frequencies.slice(start, i).sum / (if ((i-start) !=0) i-start else 1)
+      val average = frequencies.slice(start, i).sum / (if ((i - start) != 0) {
+        i - start
+      } else {
+        1
+      })
       if (lastAverage >= average) {
         lastAverage = average
       } else {
