@@ -6,22 +6,28 @@ import techniques.Spark
 
 
 class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
+  //TODO change in Spark class direclty with approval of Valentin
+  //val spark = Spark.ctx
+  val conf = new SparkConf().setAppName("naiveCompare").setMaster("local[4]").set("spark.driver.allowMultipleContexts", "true")
+  val spark = new SparkContext(conf)
+
+
   test("testMetricDifference1") {
     val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
     val word2 = ("green", Array(5.0, 3.0, 2.0, 5.0, 5.0))
-    naiveDifferenceMetric(word1, word2, 1, 1) should be(7.0)
+    naiveDifferenceMetric(word1, word2, 1, 0.2) should be(7.0)
   }
 
   test("testMetricDifference2") {
     val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
     val word2 = ("green", Array(0.0, 3.0, 2.0, 5.0, 5.0))
-    naiveDifferenceMetric(word1, word2, 1, 1) should be(5.0)
+    naiveDifferenceMetric(word1, word2, 1, 0.2) should be(5.0)
   }
 
   test("testMetricDifference3") {
     val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
     val word2 = ("green", Array(0.0, 3.0, 2.0, 10.0, 5.0))
-    naiveDifferenceMetric(word1, word2, 1, 1) should be(Double.MaxValue)
+    naiveDifferenceMetric(word1, word2, 1, 0.2) should be(Double.MaxValue)
   }
 
   test("testMetricDifference4") {
@@ -45,10 +51,6 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
 
 
   test("testNaiveDifference") {
-    //TODO change in Spark class direclty with approval of Valentin
-    //val spark = Spark.ctx
-    val conf = new SparkConf().setAppName("naiveCompare").setMaster("local[4]").set("spark.driver.allowMultipleContexts", "true")
-    val spark = new SparkContext(conf)
     val testedWord = ("parrot", Array(2.0, 3.0, 4.0, 12.0, 3.0))
     val dataRaw = Array(("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0)), ("yellow", Array(3.0, 4.0, 3.0, 6.0, 5.0)), ("flower", Array(4.0, 5.0, 6.0, 14.0, 5.0)), ("orange", Array(1.0, 5.0, 6.0, 13.0, 2.0)), ("dummy", Array(20.0, 30.0, 4.0, 2.0, 3.0)), ("parrot", Array(2.0, 3.0, 4.0, 12.0, 3.0)))
     val data = spark.parallelize(dataRaw)
@@ -57,14 +59,18 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
   }
 
   test("testNaiveDifference2") {
-    //TODO change in Spark class direclty with approval of Valentin
-    //val spark = Spark.ctx
-    val conf = new SparkConf().setAppName("naiveCompare").setMaster("local[4]").set("spark.driver.allowMultipleContexts", "true")
-    val spark = new SparkContext(conf)
     val testedWord = ("parrot", Array(2.0, 3.0, 4.0, 12.0, 3.0))
     val dataRaw = Array(("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0)), ("yellow", Array(3.0, 4.0, 3.0, 6.0, 5.0)), ("flower", Array(4.0, 5.0, 6.0, 14.0, 5.0)), ("orange", Array(1.0, 5.0, 6.0, 13.0, 2.0)), ("dummy", Array(20.0, 30.0, 4.0, 2.0, 3.0)), ("parrot", Array(2.0, 3.0, 4.0, 12.0, 3.0)))
     val data = spark.parallelize(dataRaw)
-    naiveDifference(data, testedWord, List(3.0, 1.0)).collect().sortWith(_ < _) should be(Array("blue", "yellow", "orange", "flower").sortWith(_ < _))
+    naiveDifference(data, testedWord, List(3.0, 0.2)).collect().sortWith(_ < _) should be(Array("blue", "yellow", "orange", "flower").sortWith(_ < _))
+  }
+
+
+  test("testNaiveDivision") {
+    val testedWord = ("parrot", Array(2.0, 3.0, 4.0, 12.0, 3.0))
+    val dataRaw = Array(("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0)), ("yellow", Array(3.0, 4.0, 3.0, 6.0, 5.0)), ("flower", Array(4.0, 5.0, 6.0, 14.0, 5.0)), ("orange", Array(1.0, 5.0, 6.0, 13.0, 2.0)), ("dummy", Array(20.0, 30.0, 4.0, 2.0, 3.0)), ("parrot", Array(2.0, 3.0, 4.0, 12.0, 3.0)))
+    val data = spark.parallelize(dataRaw)
+    naiveDivision(data, testedWord, List(0.8)).collect().sortWith(_ < _) should be(Array("flower").sortWith(_ < _))
   }
 
 
