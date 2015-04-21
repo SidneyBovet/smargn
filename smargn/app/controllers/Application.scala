@@ -46,7 +46,7 @@ object Application extends Controller {
 
   def runNaiveInverse(word: String): Action[AnyContent] = {
     Action {
-      val res = Launcher.run(word, INPUT, OUTPUT, List(0.2), NaiveInverseComparisons.naiveInverseDifference)
+      val res = Launcher.run(word, INPUT, OUTPUT, List(4.0), NaiveInverseComparisons.naiveInverseDifference)
       if (res == List()) {
         Ok(views.html.notSimilarWords(word))
       } else if (res.head == "ERROR404") {
@@ -74,7 +74,9 @@ object Application extends Controller {
    * Loads the default page
    * @return HTTP Ok with default html page
    */
-  def blank: Action[AnyContent] = Action { Ok(views.html.smargn()) }
+  def blank: Action[AnyContent] = Action {
+    Ok(views.html.smargn())
+  }
 
   /**
    * Parses the request as a Json and launches the right technique with the parameters on the words
@@ -88,11 +90,11 @@ object Application extends Controller {
       case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params))) =>
         // Apply desired technique and get results
         val results = name match {
-      //  Add the case for your technique T here. Example:
-      //  case T.name    => runList(words, <input dir>, <output dir>, parameters, <code for T>)
-          case "Naive"   => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
+          //  Add the case for your technique T here. Example:
+          //  case T.name    => runList(words, <input dir>, <output dir>, parameters, <code for T>)
+          case "Naive" => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
           case "Inverse" => runList(words, INPUT, OUTPUT, params, NaiveInverseComparisons.naiveInverseDifference)
-          case "Shift"   => runList(words, INPUT, OUTPUT, params, NaiveShiftComparison.naiveDifferenceShift)
+          case "Shift" => runList(words, INPUT, OUTPUT, params, NaiveShiftComparison.naiveDifferenceShift)
           case _ => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
         }
 
@@ -108,13 +110,13 @@ object Application extends Controller {
    */
   private def bodyToJson(body: JsValue): List[(String, Result)] = {
     body match {
-      case JsObject(Seq(("words",      JsArray(words)),
-                        ("technique",  JsString(technique)),
-                        ("parameters", JsArray(params: Seq[JsString])))) =>
+      case JsObject(Seq(("words", JsArray(words)),
+      ("technique", JsString(technique)),
+      ("parameters", JsArray(params: Seq[JsString])))) =>
         // parsing array to list of words, technique name and parameters
-        List(("words",      Words(words)),
-             ("technique",  Name(technique)),
-             ("parameters", Parameters(params)))
+        List(("words", Words(words)),
+          ("technique", Name(technique)),
+          ("parameters", Parameters(params)))
       case _ => Nil
     }
   }
@@ -129,15 +131,14 @@ object Application extends Controller {
    */
   private def resultsToJson(results: Map[String, List[String]]): JsValue = {
     // Compute words with no result, words not in the data and results for each words
-    val (nsw, nid, res) = results.foldLeft((List[String](), List[String](), Map[String, List[String]]()))
-    {
+    val (nsw, nid, res) = results.foldLeft((List[String](), List[String](), Map[String, List[String]]())) {
       case ((lNSW, lNID, lRES), (w, Nil)) => (w :: lNSW, lNID, lRES)
       case ((lNSW, lNID, lRES), (w, "ERROR404" :: Nil)) => (lNSW, w :: lNID, lRES)
       case ((lNSW, lNID, lRES), (w, result)) => (lNSW, lNID, lRES + (w -> result))
     }
 
     Json.obj("nosimilarwords" -> Json.toJson(nsw),
-             "notindata"      -> Json.toJson(nid),
-             "results"        -> Json.toJson(res))
+      "notindata" -> Json.toJson(nid),
+      "results" -> Json.toJson(res))
   }
 }

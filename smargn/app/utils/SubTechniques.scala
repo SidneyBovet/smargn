@@ -72,9 +72,8 @@ object SubTechniques {
    * @param arr array of false of true value
    * @return the number of false value found in the array starting for the end
    */
-  def numOfFalseFromEnd(arr: Array[Boolean]): Int = {
+  def numOfFalseFromEnd(arr: Array[Boolean], limit: Double): Int = {
     var notExcepted = 0
-    val limit = 3
     var counterOfFalse = 0
     for (i <- (arr.length - 1) to 0 by -1) {
       if (!arr(i)) {
@@ -102,15 +101,17 @@ object SubTechniques {
                  similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)]): RDD[(String)] = {
     val acceptedDifference = parameters.head
     val miniOfDivergence = parameters(1)
+    val falseVariation = parameters(2)
     //add the testedWord values to the arrays and compute difference for future comparison
     val zipDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => math.abs(x._1 - x._2)), x._2))
     //test similarity criteria between each data word array and the tested word
     val booleanDataTestedWord = zipDataTestedWord.map(x => (x._1, x._2.map(y => y <= acceptedDifference)))
     //filter the arrays that have at least one value that didn't pass the similarity test
 
-    //TODO REMVOE THE 25 Value TO A DYNAMIC ONE
+    //TODO REMVOE THE numb of False values accepted Value TO A DYNAMIC ONE
+    // if numOfFalseFromEnd(x._2, falseVariation) >= miniOfDivergence is fasle then the curve do not really diverge
     booleanDataTestedWord.map(x => (x._1, x._2.filter(_ == false)))
-      .filter(x => x._2.length <= 25 && x._1 != testedWord._1 && numOfFalseFromEnd(x._2) >= miniOfDivergence).map(_._1)
+      .filter(x => x._2.length <= 2 * miniOfDivergence && x._1 != testedWord._1 && numOfFalseFromEnd(x._2, falseVariation) >= miniOfDivergence).map(_._1)
 
   }
 }

@@ -12,17 +12,19 @@ import utils.Formatting._
  * Main launcher of the program
  */
 object Launcher {
+  val startYear = 1840
+  val endYear = 2000
 
   def runList(words: List[String], inputDir: String, outputFile: String, parameters: List[Double],
               similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[
                 (String)],
-              range: Range = 2000 to 2004): Map[String, List[String]] = {
+              range: Range = startYear to endYear): Map[String, List[String]] = {
     words.map(w => w -> run(w, inputDir, outputFile, parameters, similarityTechnique, range)).toMap
   }
 
   def run(word: String, inputDir: String, outputFile: String, parameters: List[Double],
           similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)],
-          range: Range = 2000 to 2004): List[String] = {
+          range: Range = startYear to endYear): List[String] = {
     val spark = Spark.ctx
     Logger.info("Searching for word: " + word)
 
@@ -55,7 +57,7 @@ object Launcher {
 
       val toPrint = Grapher.formatForDisplay(range, testedWord, similaritiesLocal)
 
-      printToFile(new File(outputFile + "data.csv")) { p => toPrint.foreach(p.println) }
+      printToFile(new File(outputFile + "data.csv")) { p => toPrint.foreach(p.println)}
 
       Logger.info("Found " + similarWords.count() + " similar words")
       similaritiesLocal.map(_._1)
