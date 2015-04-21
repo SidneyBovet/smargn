@@ -44,7 +44,7 @@ public class Application {
 
       int base = 1840;
       int rootYear = 1840;
-      int lastyear = 1998;
+      int lastyear = 1999;
       for (int i = 0; i < yearCounter.size(); i++) {
         int existingYear = Integer.parseInt(yearCounter.get(i).split("_")[0]);
         int missingNumYear = existingYear - rootYear;
