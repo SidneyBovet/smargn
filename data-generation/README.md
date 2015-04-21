@@ -40,7 +40,7 @@ hadoop jar target/1gram-step2-0.0.1-SNAPSHOT.jar mapred.MapReduce2 <input dir> <
 ```bash
 cd 1gram-cleaning
 sbt package
-spark-submit --class OneGramCleaning --master yarn-client --num-executors <numExecutors> target/scala-2.10/onegramcleaning_2.10-1.0.jar <input dir> <output dir>
+spark-submit --class OneGramCleaning --master yarn-client --num-executors <numExecutors> target/scala-2.10/onegramcleaning_2.10-1.0.jar <input dir> <output dir> <sample input dir> <sample output dir> <threshold>
 ```
 
 ### All projects
