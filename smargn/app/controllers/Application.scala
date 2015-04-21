@@ -1,5 +1,6 @@
 package controllers
 
+import com.decodified.scalassh.SSH
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
@@ -74,32 +75,42 @@ object Application extends Controller {
    * Loads the default page
    * @return HTTP Ok with default html page
    */
-  def blank: Action[AnyContent] = Action {
-    Ok(views.html.smargn())
+  def blank: Action[AnyContent] = {
+    Action {
+      Ok(views.html.smargn())
+    }
   }
 
   /**
    * Parses the request as a Json and launches the right technique with the parameters on the words
    * @return HTTP Ok with results in a Json
    */
-  def smargn: Action[JsValue] = Action(BodyParsers.parse.json) { req =>
-    bodyToJson(req.body) match {
-      case Nil =>
-        Logger.error(Json.prettyPrint(req.body))
-        BadRequest("Json is not in the required format")
-      case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params))) =>
-        // Apply desired technique and get results
-        val results = name match {
-          //  Add the case for your technique T here. Example:
-          //  case T.name    => runList(words, <input dir>, <output dir>, parameters, <code for T>)
-          case "Naive" => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
-          case "Inverse" => runList(words, INPUT, OUTPUT, params, NaiveInverseComparisons.naiveInverseDifference)
-          case "Shift" => runList(words, INPUT, OUTPUT, params, NaiveShiftComparison.naiveDifferenceShift)
-          case _ => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
-        }
+  def smargn: Action[JsValue] = {
+    Action(BodyParsers.parse.json) { req =>
+      bodyToJson(req.body) match {
+        case Nil =>
+          Logger.error(Json.prettyPrint(req.body))
+          BadRequest("Json is not in the required format")
+        case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params))) =>
+          // Apply desired technique and get results
+          SSH("icdataportal2") { client =>
+            client.exec("bash")
+            client.exec(s"spark-submit --class Main --master yarn-client SparkCommander.jar -w ${
+              words.mkString(" ")
+            } -t ${name} -p ${params.mkString(" ")}")
+          }
+          val results = name match {
+            //  Add the case for your technique T here. Example:
+            //  case T.name    => runList(words, <input dir>, <output dir>, parameters, <code for T>)
+            case "Naive" => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
+            case "Inverse" => runList(words, INPUT, OUTPUT, params, NaiveInverseComparisons.naiveInverseDifference)
+            case "Shift" => runList(words, INPUT, OUTPUT, params, NaiveShiftComparison.naiveDifferenceShift)
+            case _ => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
+          }
 
-        // Send result to browser
-        Ok(resultsToJson(results))
+          // Send result to browser
+          Ok(resultsToJson(results))
+      }
     }
   }
 
@@ -110,13 +121,10 @@ object Application extends Controller {
    */
   private def bodyToJson(body: JsValue): List[(String, Result)] = {
     body match {
-      case JsObject(Seq(("words", JsArray(words)),
-      ("technique", JsString(technique)),
+      case JsObject(Seq(("words", JsArray(words)), ("technique", JsString(technique)),
       ("parameters", JsArray(params: Seq[JsString])))) =>
         // parsing array to list of words, technique name and parameters
-        List(("words", Words(words)),
-          ("technique", Name(technique)),
-          ("parameters", Parameters(params)))
+        List(("words", Words(words)), ("technique", Name(technique)), ("parameters", Parameters(params)))
       case _ => Nil
     }
   }
@@ -131,14 +139,12 @@ object Application extends Controller {
    */
   private def resultsToJson(results: Map[String, List[String]]): JsValue = {
     // Compute words with no result, words not in the data and results for each words
-    val (nsw, nid, res) = results.foldLeft((List[String](), List[String](), Map[String, List[String]]())) {
-      case ((lNSW, lNID, lRES), (w, Nil)) => (w :: lNSW, lNID, lRES)
-      case ((lNSW, lNID, lRES), (w, "ERROR404" :: Nil)) => (lNSW, w :: lNID, lRES)
-      case ((lNSW, lNID, lRES), (w, result)) => (lNSW, lNID, lRES + (w -> result))
+    val (nsw, nid, res) = results.foldLeft((List[String](), List[String](), Map[String, List[String]]()))
+    { case ((lNSW, lNID, lRES), (w, Nil)) => (w :: lNSW, lNID, lRES)
+    case ((lNSW, lNID, lRES), (w, "ERROR404" :: Nil)) => (lNSW, w :: lNID, lRES)
+    case ((lNSW, lNID, lRES), (w, result)) => (lNSW, lNID, lRES + (w -> result))
     }
 
-    Json.obj("nosimilarwords" -> Json.toJson(nsw),
-      "notindata" -> Json.toJson(nid),
-      "results" -> Json.toJson(res))
+    Json.obj("nosimilarwords" -> Json.toJson(nsw), "notindata" -> Json.toJson(nid), "results" -> Json.toJson(res))
   }
 }
