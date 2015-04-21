@@ -14,7 +14,7 @@ object OneGramCleaning {
   		System.exit(1)
   	}
     // threshold value for words
-  	val minOcc = if(args.length > 2) args(2).toInt else 50 
+  	val minOcc = if(args.length >= 5) args(4).toInt else 50 
     val sc = new SparkContext(new SparkConf().setAppName("OneGramCleaning"))
     val lines = sc.textFile(args(0))
     val sumAndLine = lines.map(line => (line.split("\\s+").tail.map(_.toInt).sum, line))
@@ -29,10 +29,10 @@ object OneGramCleaning {
     out.close()
 
     //Compute and write samples
-    if(args.length >= 5) {
-      val sampleList = sc.textFile(args(3)).flatMap(_.split("\\s+")).collect
+    if(args.length >= 4) {
+      val sampleList = sc.textFile(args(2)).flatMap(_.split("\\s+")).collect
       val samples = filteredLines.filter(x => sampleList.contains(x.split("\\s+").head))
-      val out = fs.create(new Path(args(4)))
+      val out = fs.create(new Path(args(3)))
       samples.foreach(str => out.write(str.getBytes("UTF-8")))
       out.close()
     }

@@ -24,7 +24,8 @@ cd ../.. &&
 cd 1gram-cleaning &&
 sbt $1 package &&
 hadoop fs -rm /projects/temporal-profiles/data-generation/clean-1gram ;
-spark-submit --class OneGramCleaning --master yarn-client --num-executors 20 target/scala-2.10/onegramcleaning_2.10-1.0.jar "hdfs:///projects/temporal-profiles/data-generation/1gram-generation/step2" "hdfs:///projects/temporal-profiles/data-generation/clean-1gram" &&
+hadoop fs -rm /projects/temporal-profiles/data-generation/sample/samples ;
+spark-submit --class OneGramCleaning --master yarn-client --num-executors 20 target/scala-2.10/onegramcleaning_2.10-1.0.jar "hdfs:///projects/temporal-profiles/data-generation/1gram-generation/step2" "hdfs:///projects/temporal-profiles/data-generation/clean-1gram" "hdfs:///projects/temporal-profiles/data-generation/sample/sampleList" "hdfs:///projects/temporal-profiles/data-generation/sample/samples" &&
 echo "------------------------------" &&
 echo "Pipeline successfully achieved" &&
 echo "------------------------------"
