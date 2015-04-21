@@ -9,7 +9,7 @@ import utils.Launcher._
  */
 object Main {
 
-  private val INPUT = "hdfs://projects/temporal-profiles/data-generation/clean-1gram"
+  private val INPUT = "hdfs:///projects/temporal-profiles/data-generation/clean-1gram"
 
   private def createOutput(words: Seq[String], technique: String, params: Seq[Double]): String =
     s"hdfs://projects/temporal-profiles/results/${words.mkString("-")}${

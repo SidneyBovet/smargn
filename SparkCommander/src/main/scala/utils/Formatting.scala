@@ -24,11 +24,6 @@ object Formatting {
    * @return the complete representation (word, freq) of the list of words
    */
   def searchWordFormatter(formattedData: RDD[(String, Array[Double])],
-                          words: List[String]): RDD[(String, Array[Double])] = {
-    formattedData.filter { case (w, o) => words.contains(w)
-    }.mapPartitions(it => {
-      it.toArray.sorted.take(10).iterator
-    }, preservesPartitioning = true)
-  }
-
+                          words: List[String]): RDD[(String, Array[Double])] =
+    formattedData.filter { case (w, o) => words.contains(w) }
 }

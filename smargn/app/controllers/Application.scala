@@ -8,8 +8,9 @@ import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparis
 import utils._
 import utils.Launcher._
 import utils.Result
+import utils.ResultParser
 
-object Application extends Controller {
+object Application extends Controller with ResultParser {
 
   private val INPUT = "input/"
   private val OUTPUT = "public/data/"
@@ -93,11 +94,27 @@ object Application extends Controller {
           BadRequest("Json is not in the required format")
         case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params))) =>
           // Apply desired technique and get results
+          // Create SSH connection to icdataportal2. Uses ~/.scala-ssh/icdataportal2 for authentication
+          // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put in it.
           SSH("icdataportal2") { client =>
+            // Go to bash
             client.exec("bash")
-            client.exec(s"spark-submit --class Main --master yarn-client SparkCommander.jar -w ${
-              words.mkString(" ")
-            } -t ${name} -p ${params.mkString(" ")}")
+            // Send the job to YARN with the correct arguments
+            client.exec("spark-submit --class Main --master yarn-client SparkCommander.jar" +
+              s"-w ${words.mkString(" ")}" +
+              s"-t ${name}" +
+              s"${
+                if (params.nonEmpty) {
+                  s"-p"
+                } else {
+                  ""
+                }
+              }").right.map { result => Logger.debug("Result:" + result.stdOutAsString())
+              Logger.debug(stdOutToMap(result.stdOutAsString()).toString)
+              Logger.debug(Json.prettyPrint(resultsToJson(stdOutToMap(result.stdOutAsString()))))
+              // Transform that string to a Map[String, List[String]] and then into a Json and send to the browser
+              Ok(resultsToJson(stdOutToMap(result.stdOutAsString())))
+            }
           }
           val results = name match {
             //  Add the case for your technique T here. Example:
@@ -117,7 +134,8 @@ object Application extends Controller {
   /**
    *
    * @param body the JSON body from the request
-   * @return a map to the list of words that the user wants searched, the technique to use and its parameters
+   * @return a map to the list of words that the user wants searched, the technique to use and its
+   *         parameters
    */
   private def bodyToJson(body: JsValue): List[(String, Result)] = {
     body match {
@@ -126,6 +144,13 @@ object Application extends Controller {
         // parsing array to list of words, technique name and parameters
         List(("words", Words(words)), ("technique", Name(technique)), ("parameters", Parameters(params)))
       case _ => Nil
+    }
+  }
+
+  private def stdOutToMap(results: String): Map[String, List[String]] = {
+    parse(result, results) match {
+      case Success(map) => map
+      case Failure() => Map()
     }
   }
 
@@ -140,11 +165,12 @@ object Application extends Controller {
   private def resultsToJson(results: Map[String, List[String]]): JsValue = {
     // Compute words with no result, words not in the data and results for each words
     val (nsw, nid, res) = results.foldLeft((List[String](), List[String](), Map[String, List[String]]()))
-    { case ((lNSW, lNID, lRES), (w, Nil)) => (w :: lNSW, lNID, lRES)
-    case ((lNSW, lNID, lRES), (w, "ERROR404" :: Nil)) => (lNSW, w :: lNID, lRES)
+    { case ((lNSW, lNID, lRES), (w, List(NSW))) => (w :: lNSW, lNID, lRES)
+    case ((lNSW, lNID, lRES), (w, List(NOTFOUND))) => (lNSW, w :: lNID, lRES)
     case ((lNSW, lNID, lRES), (w, result)) => (lNSW, lNID, lRES + (w -> result))
     }
 
-    Json.obj("nosimilarwords" -> Json.toJson(nsw), "notindata" -> Json.toJson(nid), "results" -> Json.toJson(res))
+    Json.obj("nosimilarwords" -> Json.toJson(nsw), "notindata" -> Json.toJson(nid), "results" ->
+      Json.toJson(res))
   }
 }

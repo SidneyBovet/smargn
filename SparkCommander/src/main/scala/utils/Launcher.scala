@@ -1,10 +1,13 @@
 package utils
 
-import java.io.{File, PrintWriter}
+import java.io.{PrintWriter, File}
 
+import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import utils.Formatting._
+import utils.Grapher._
+
 
 /**
  * Created by Joanna on 4/7/15.
@@ -24,56 +27,49 @@ object Launcher {
 
   def run(word: String, inputDir: String, outputFile: String, parameters: List[Double], similarityTechnique: Technique,
           spark: SparkContext, range: Range = startYear to endYear): List[String] = {
-
+    val hdfs = new HDFSHandler(spark.hadoopConfiguration)
     val data = spark.textFile(inputDir)
 
-    val target = new File(outputFile)
-    if (target.exists()) {
-      deleteFolder(target)
-    }
 
     //Formatting part
-    val formattedData = dataFormatter(data)
-    val testedWords = searchWordFormatter(formattedData, List(word)).cache()
+    val formattedData = dataFormatter(data).cache()
+    // testedWords is the line with the words we look for and its occurrences
+    val testedWords = searchWordFormatter(formattedData, List(word))
 
     if (testedWords.count == 0) {
       List("ERROR404")
     } else {
+      hdfs.createFolder(outputFile)
       val testedWord = testedWords.first()
 
       //apply the similarity technique
       val similarWords = similarityTechnique(formattedData, testedWord, parameters).cache()
 
-      //Take 10 words only
-      val similarWordOcc = testedWords
+      // Get similar words with its occurrences
+      val similarWordOcc = formattedData
         .filter { case (w1, occurrences) => similarWords.filter(w2 => w1 == w2).count() != 0
       }
 
-      val toPrintRDD = similarWordOcc.flatMap(Grapher.formatForDisplay(range))
+      // Format for printing
+      val formatter = formatTuple(range)
+      val toPrintRDD = similarWordOcc.flatMap(formatter)
+      val toGraph = formatForDisplay(formatter(testedWord), toPrintRDD.top(NB_RES))
 
-      toPrintRDD.saveAsTextFile(outputFile)
+      // Print to projects/temporal-profiles/<depends on the query>/data.csv
+      val data_csv = hdfs.createFile(new Path(outputFile + "/data.csv"))
+      data_csv(toGraph.mkString("\n"))
+      printToFile(new File(outputFile + "/data.csv")) { p => toGraph.foreach(p.println) }
 
-      //Graph displaying part
-      val similarities: RDD[(String, Array[Double])] =
-        searchWordFormatter(formattedData, similarWords.collect().toList)
-
-      similarities.map(_._1).collect().toList
+      val result = similarWords.collect().toList
+      if (result.length == 0) {
+        List("NOSIMILARWORDS")
+      } else {
+        result
+      }
     }
   }
 
-  def deleteFolder(folder: File): Unit = {
-    val files = folder.listFiles
-    files.foreach(f => {
-      if (f.isDirectory) {
-        deleteFolder(f)
-      } else {
-        f.delete
-      }
-    })
-    folder.delete
-  }
-
-  def printToFile(f: File)(op: PrintWriter => Unit): Unit = {
+  private def printToFile(f: File)(op: PrintWriter => Unit): Unit = {
     val p = new PrintWriter(f)
     try {
       op(p)
@@ -81,5 +77,4 @@ object Launcher {
       p.close()
     }
   }
-
 }

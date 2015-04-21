@@ -13,9 +13,13 @@ object Grapher {
    * @param similar similar word to searched word with its occurrences
    * @return a list of string. Each element corresponds to one unique tuple (word, year, #occurrences in that year)
    */
-  def formatForDisplay(range: Range)(similar: (String, Array[Double])): List[String] = {
+  def formatTuple(range: Range)(similar: (String, Array[Double])): List[String] = {
     val (w, o) = similar
     o.map(_ => w).zip(range).zip(o).map { case ((ww, y), oo) => ww + "," + y + "," + oo.toInt
     }.toList
+  }
+
+  def formatForDisplay(word: List[String], similarWords: Array[String]): List[String] = {
+    "Word,Year,Occurrences" :: (word ++ similarWords)
   }
 }
