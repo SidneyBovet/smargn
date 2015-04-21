@@ -11,6 +11,7 @@ function adapt_params(selector) {
         case "Naive":
         case "Inverse":
         case "Shift":
+        case "DTW":
         default:
             nb_params = 1;
     }
