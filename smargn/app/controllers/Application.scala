@@ -15,6 +15,18 @@ object Application extends Controller with ResultParser {
   private val INPUT = "input/"
   private val OUTPUT = "public/data/"
 
+  private def createOutput(words: Seq[String], technique: String, params: Seq[Double]): String = {
+    s"hdfs://projects/temporal-profiles/results/${words.mkString("-")}${
+      if (params.nonEmpty) {
+        s"_${technique.toLowerCase}_${
+          params.mkString("-")
+        }"
+      } else {
+        ""
+      }
+    }/"
+  }
+
   // Enables CORS
   val headers: List[(String, String)] = List("Access-Control-Allow-Origin" -> "*",
     "Access-Control-Allow-Methods" -> "GET, POST, OPTIONS", "Access-Control-Max-Age" -> "3600",
@@ -100,7 +112,7 @@ object Application extends Controller with ResultParser {
             // Go to bash
             client.exec("bash")
             // Send the job to YARN with the correct arguments
-            client.exec("spark-submit --class Main --master yarn-client SparkCommander.jar" +
+            client.exec("spark-submit --class SparkCommander --master yarn-client SparkCommander-assembly-1.0.jar" +
               s"-w ${words.mkString(" ")}" +
               s"-t ${name}" +
               s"${
@@ -149,8 +161,9 @@ object Application extends Controller with ResultParser {
 
   private def stdOutToMap(results: String): Map[String, List[String]] = {
     parse(result, results) match {
-      case Success(map) => map
-      case Failure() => Map()
+      case Success(map, _) => map
+      case Failure(_, _) => Map()
+      case Error(_, _) => Map()
     }
   }
 

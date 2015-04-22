@@ -1,7 +1,5 @@
 package utils
 
-import java.io.{PrintWriter, File}
-
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -18,63 +16,67 @@ object Launcher {
   private val startYear = 1840
   private val endYear = 2000
   private val NB_RES = 10
+  val NSW = "NOSIMILARWORDS"
+  val NOTFOUND = "ERROR404"
 
   def runList(words: List[String], inputDir: String, outputFile: String, parameters: List[Double],
               similarityTechnique: Technique, spark: SparkContext,
               range: Range = startYear to endYear): Map[String, List[String]] = {
-    words.map(w => w -> run(w, inputDir, outputFile, parameters, similarityTechnique, spark, range)).toMap
+    val hdfs = new HDFSHandler(spark.hadoopConfiguration)
+
+    // Create folder for result
+    hdfs.createFolder(outputFile)
+
+    // Getting results for all words
+    val results = words.map(w =>
+      w -> run(w, inputDir, outputFile, parameters, similarityTechnique, spark, hdfs, range)).toMap
+
+    // Create or append to result file and
+    // append results found to results.txt
+    val similarWordsPath = new Path(outputFile + "/results.txt")
+    hdfs.appendToFile(similarWordsPath)(results.map { case (w, res) => s"$w -> ${res.mkString(" ")}" }.toList)
+    hdfs.close()
+    results
   }
 
   def run(word: String, inputDir: String, outputFile: String, parameters: List[Double], similarityTechnique: Technique,
-          spark: SparkContext, range: Range = startYear to endYear): List[String] = {
-    val hdfs = new HDFSHandler(spark.hadoopConfiguration)
+          spark: SparkContext, hdfs: HDFSHandler, range: Range = startYear to endYear): List[String] = {
     val data = spark.textFile(inputDir)
-
 
     //Formatting part
     val formattedData = dataFormatter(data).cache()
     // testedWords is the line with the words we look for and its occurrences
     val testedWords = searchWordFormatter(formattedData, List(word))
 
+
     if (testedWords.count == 0) {
-      List("ERROR404")
+      List(NOTFOUND)
     } else {
-      hdfs.createFolder(outputFile)
       val testedWord = testedWords.first()
 
       //apply the similarity technique
-      val similarWords = similarityTechnique(formattedData, testedWord, parameters).cache()
+      val similarWords = similarityTechnique(formattedData, testedWord, parameters).collect().toList
 
       // Get similar words with its occurrences
-      val similarWordOcc = formattedData
-        .filter { case (w1, occurrences) => similarWords.filter(w2 => w1 == w2).count() != 0
-      }
+      val similarWordOcc = formattedData.filter { case (w, occurrences) => similarWords.contains(w) }
 
       // Format for printing
-      val formatter = formatTuple(range)
+      val formatter = formatTuple(range) _
       val toPrintRDD = similarWordOcc.flatMap(formatter)
       val toGraph = formatForDisplay(formatter(testedWord), toPrintRDD.top(NB_RES))
 
       // Print to projects/temporal-profiles/<depends on the query>/data.csv
-      val data_csv = hdfs.createFile(new Path(outputFile + "/data.csv"))
-      data_csv(toGraph.mkString("\n"))
-      printToFile(new File(outputFile + "/data.csv")) { p => toGraph.foreach(p.println) }
+      val dataCSVPath = new Path(outputFile + "/data.csv")
 
-      val result = similarWords.collect().toList
-      if (result.length == 0) {
-        List("NOSIMILARWORDS")
+      // Get stream by creating file projects/temporal-profiles/<depends on the query>/data.csv or appending to it
+      // Print to projects/temporal-profiles/<depends on the query>/data.csv
+      hdfs.appendToFile(dataCSVPath)(toGraph)
+
+      if (similarWords.length == 0) {
+        List(NSW)
       } else {
-        result
+        similarWords
       }
-    }
-  }
-
-  private def printToFile(f: File)(op: PrintWriter => Unit): Unit = {
-    val p = new PrintWriter(f)
-    try {
-      op(p)
-    } finally {
-      p.close()
     }
   }
 }

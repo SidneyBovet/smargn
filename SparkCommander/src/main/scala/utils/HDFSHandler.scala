@@ -18,23 +18,31 @@ class HDFSHandler(conf: Configuration) {
     }
   }
 
+  def exists(path: Path): Boolean = hdfs.exists(path)
+
   def getFile(path: Path): InputStream = {
-    require(hdfs.exists(path))
+    require(hdfs.exists(path), s"${path.getName} should exist")
     hdfs.open(path)
   }
 
   def appendToFile(path: Path)(data: List[String]) = {
-    require(hdfs.exists(path))
-    val stream = new PrintWriter(hdfs.append(path))
-    data.foreach(stream.println)
-    stream.close()
+    if (!hdfs.exists(path)) {
+      createFile(path: Path)(data: List[String])
+    } else {
+      require(hdfs.exists(path), s"${path.getName} should exist")
+      val stream = new PrintWriter(hdfs.append(path))
+      data.foreach(stream.println)
+      stream.close()
+    }
   }
 
-  def createFile(path: Path)(data: String) = {
-    require(hdfs.exists(path))
+  private def createFile(path: Path)(data: List[String]) = {
+    require(hdfs.exists(path.getParent), s"${path.getParent.getName} should exist")
     val stream = new PrintWriter(hdfs.create(path))
     data.foreach(stream.println)
     stream.close()
   }
+
+  def close() = hdfs.close()
 
 }
