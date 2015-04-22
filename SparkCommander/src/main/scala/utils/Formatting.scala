@@ -14,7 +14,7 @@ object Formatting {
    * @return the formatted representation (word, freq) of the data
    */
   def dataFormatter(data: RDD[(String)]): RDD[(String, Array[Double])] = {
-    data.map(line => line.split(" ")).map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble)))
+    data.map(line => line.split("\\s")).map((i: Array[String]) => (i.head, i.tail.map(y => y.toDouble)))
   }
 
   /**
