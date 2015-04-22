@@ -4,7 +4,7 @@ import com.decodified.scalassh.SSH
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
-import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
+import techniques.{DynamicTimeWrapping, NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
 import utils._
 import utils.Launcher._
 import utils.Result
@@ -134,6 +134,7 @@ object Application extends Controller with ResultParser {
             case "Naive" => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
             case "Inverse" => runList(words, INPUT, OUTPUT, params, NaiveInverseComparisons.naiveInverseDifference)
             case "Shift" => runList(words, INPUT, OUTPUT, params, NaiveShiftComparison.naiveDifferenceShift)
+            case "DTW" => runList(words, INPUT, OUTPUT, params, DynamicTimeWrapping.dtwComparisonScaleMax)
             case _ => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
           }
 
