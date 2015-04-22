@@ -1,6 +1,8 @@
 package controllers
 
+import com.decodified.scalassh
 import com.decodified.scalassh.SSH
+import com.decodified.scalassh.SSH._
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
@@ -109,24 +111,22 @@ object Application extends Controller with ResultParser {
           // Create SSH connection to icdataportal2. Uses ~/.scala-ssh/icdataportal2 for authentication
           // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put in it.
           SSH("icdataportal2") { client =>
+            val client = scalassh.sshClientToRichClient(client)
             // Go to bash
             client.exec("bash")
             // Send the job to YARN with the correct arguments
             client.exec("spark-submit --class SparkCommander --master yarn-client SparkCommander-assembly-1.0.jar" +
               s"-w ${words.mkString(" ")}" +
-              s"-t ${name}" +
+              s"-t $name" +
               s"${
                 if (params.nonEmpty) {
                   s"-p"
                 } else {
                   ""
                 }
-              }").right.map { result => Logger.debug("Result:" + result.stdOutAsString())
-              Logger.debug(stdOutToMap(result.stdOutAsString()).toString)
-              Logger.debug(Json.prettyPrint(resultsToJson(stdOutToMap(result.stdOutAsString()))))
-              // Transform that string to a Map[String, List[String]] and then into a Json and send to the browser
-              Ok(resultsToJson(stdOutToMap(result.stdOutAsString())))
-            }
+              }")
+            client.exec(s"hadoop fs -get ${createOutput(words, name, params)}/results.txt")
+            client.download("~/results.txt", "./public/data/")
           }
           val results = name match {
             //  Add the case for your technique T here. Example:
