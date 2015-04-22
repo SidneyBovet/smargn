@@ -59,8 +59,7 @@ object SparkCommander {
           case "Shift" => NaiveShiftComparison.naiveDifferenceShift
           case _ => NaiveComparisons.naiveDifferenceScalingMax
         }
-        val results = runList(words.toList, INPUT, output, parameters.toList, tech, sc)
-        results.foreach(r => println(s"${r._1} -> ${r._2.mkString(" ")}"))
+        runList(words.toList, INPUT, output, parameters.toList, tech, sc)
       case None => // Bad arguments
     }
 
