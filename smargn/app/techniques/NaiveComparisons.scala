@@ -2,6 +2,7 @@ package techniques
 
 import org.apache.spark.rdd.RDD
 import utils.Scaling._
+import utils.SubTechniques._
 
 /**
  * Created by Joanna on 4/7/15.
@@ -86,6 +87,54 @@ object NaiveComparisons {
    */
   def naiveDivisionScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
     naiveDivision(data.map(proportionalScalarAverage), proportionalScalarAverage(testedWord), parameters)
+  }
+
+  /**
+   * Apply the max scaling function before calling the NaiveDifference similarity function and
+   * shifts it
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the accepted difference between two array value that we accept, L(1) is the shifting range and L(2) is the shifting step size
+   * @return words that are similar
+   */
+  def naiveDifferenceScalingMaxWithShifting(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDifferenceScalingMax, parameters(1).toInt, parameters(2).toInt)
+  }
+
+  /**
+   * Apply the average scaling function before calling the NaiveDifference similarity function and
+   * shifts it
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the accepted difference between two array value that we accept, L(1) is the shifting range and L(2) is the shifting step size
+   * @return words that are similar
+   */
+  def naiveDifferenceScalingAverageWithShifting(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDifferenceScalingAverage, parameters(1).toInt, parameters(2).toInt)
+  }
+
+  /**
+   * Apply the max scaling function before calling the NaiveDivision similarity function
+   * the ratio line and shifts it
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the straightness of the curve that we accept, L(1) is the shifting range and L(2) is the shifting step size
+   * @return words that are similar
+   */
+  def naiveDivisionScalingMaxWithShifting(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDivisionScalingMax, parameters(1).toInt, parameters(2).toInt)
+  }
+
+  /**
+   * Apply the average scaling function before calling the NaiveDivision similarity function
+   * the ratio line and shifts it
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the straightness of the curve that we accept, L(1) is the shifting range and L(2) is the shifting step size
+   * @return words that are similar
+   */
+  def naiveDivisionScalingAverageWithShifting(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDivisionScalingAverage, parameters(1).toInt, parameters(2).toInt)
   }
 
   /** *******************************************************************************************************

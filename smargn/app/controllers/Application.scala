@@ -75,7 +75,7 @@ object Application extends Controller with ResultParser {
 
   def runNaiveShift(word: String): Action[AnyContent] = {
     Action {
-      val res = run(word, INPUT, OUTPUT, List(0.2), NaiveShiftComparison.naiveDifferenceShift)
+      val res = run(word, INPUT, OUTPUT, List(0.2, 5.0, 1.0), NaiveComparisons.naiveDifferenceScalingMaxWithShifting)
       if (res == List()) {
         Ok(views.html.notSimilarWords(word))
       } else if (res.head == "ERROR404") {
