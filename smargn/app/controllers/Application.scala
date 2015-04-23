@@ -110,8 +110,8 @@ object Application extends Controller with ResultParser {
           // Apply desired technique and get results
           // Create SSH connection to icdataportal2. Uses ~/.scala-ssh/icdataportal2 for authentication
           // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put in it.
-          SSH("icdataportal2") { client =>
-            val client = scalassh.sshClientToRichClient(client)
+          SSH("icdataportal2") { c =>
+            val client = scalassh.sshClientToRichClient(c)
             // Go to bash
             client.exec("bash")
             // Send the job to YARN with the correct arguments
