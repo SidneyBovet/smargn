@@ -40,8 +40,14 @@ hadoop jar target/1gram-step2-0.0.1-SNAPSHOT.jar mapred.MapReduce2 <input dir> <
 ```bash
 cd 1gram-cleaning
 sbt package
-spark-submit --class OneGramCleaning --master yarn-client --num-executors <numExecutors> target/scala-2.10/onegramcleaning_2.10-1.0.jar <input dir> <output dir> <sample input dir> <sample output dir> <threshold>
+spark-submit --class OneGramCleaning --master yarn-client --num-executors <numExecutors> --driver-memory 16g --executor-memory 8g target/scala-2.10/onegramcleaning_2.10-1.0.jar <input dir> <output dir> <sample input dir> <sample output dir> <threshold>
 ```
+
+The output no longer is human-readable; its format is the following:
+<Int:number of years>
+<Int:word0 length><Bytes:word0><Double:year0><Double:year1>...<Double:lastYear>
+<Int:word1 length><Bytes:word1><Double:year0><Double:year1>...<Double:lastYear>
+...
 
 ### All projects
 ```bash
