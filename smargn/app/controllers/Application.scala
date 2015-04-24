@@ -1,16 +1,16 @@
 package controllers
 
-import com.decodified.scalassh
+import java.nio.file.{FileSystems, Files}
+
 import com.decodified.scalassh.SSH
-import com.decodified.scalassh.SSH._
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
-import techniques.{DynamicTimeWrapping, NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
-import utils._
+import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
 import utils.Launcher._
-import utils.Result
-import utils.ResultParser
+import utils.{Result, ResultParser, _}
+
+import scala.io.Source
 
 object Application extends Controller with ResultParser {
 
@@ -18,11 +18,9 @@ object Application extends Controller with ResultParser {
   private val OUTPUT = "public/data/"
 
   private def createOutput(words: Seq[String], technique: String, params: Seq[Double]): String = {
-    s"hdfs://projects/temporal-profiles/results/${words.mkString("-")}${
+    s"hdfs:///projects/temporal-profiles/results/${words.mkString("-")}_${technique.toLowerCase}${
       if (params.nonEmpty) {
-        s"_${technique.toLowerCase}_${
-          params.mkString("-")
-        }"
+        s"_${params.mkString("-")}"
       } else {
         ""
       }
@@ -75,7 +73,7 @@ object Application extends Controller with ResultParser {
 
   def runNaiveShift(word: String): Action[AnyContent] = {
     Action {
-      val res = run(word, INPUT, OUTPUT, List(0.2, 5.0, 1.0), NaiveComparisons.naiveDifferenceScalingMaxWithShifting)
+      val res = run(word, INPUT, OUTPUT, List(0.2), NaiveShiftComparison.naiveDifferenceShift)
       if (res == List()) {
         Ok(views.html.notSimilarWords(word))
       } else if (res.head == "ERROR404") {
@@ -110,36 +108,73 @@ object Application extends Controller with ResultParser {
           // Apply desired technique and get results
           // Create SSH connection to icdataportal2. Uses ~/.scala-ssh/icdataportal2 for authentication
           // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put in it.
-          SSH("icdataportal2") { c =>
-            val client = scalassh.sshClientToRichClient(c)
-            // Go to bash
-            client.exec("bash")
-            // Send the job to YARN with the correct arguments
-            client.exec("spark-submit --class SparkCommander --master yarn-client SparkCommander-assembly-1.0.jar" +
-              s"-w ${words.mkString(" ")}" +
-              s"-t $name" +
-              s"${
-                if (params.nonEmpty) {
-                  s"-p"
-                } else {
-                  ""
-                }
-              }")
-            client.exec(s"hadoop fs -get ${createOutput(words, name, params)}/results.txt")
-            client.download("~/results.txt", "./public/data/")
+          val paramsStr = if (params.nonEmpty) s"_${params.mkString("-")}" else ""
+          val outputDir = s"${words.mkString("-")}_${name.toLowerCase}$paramsStr"
+
+          val resultsPath = FileSystems.getDefault.getPath(s"./results/$outputDir/")
+          if (Files.notExists(resultsPath)) {
+            Files.createDirectory(resultsPath)
           }
-          val results = name match {
-            //  Add the case for your technique T here. Example:
-            //  case T.name    => runList(words, <input dir>, <output dir>, parameters, <code for T>)
-            case "Naive" => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
-            case "Inverse" => runList(words, INPUT, OUTPUT, params, NaiveInverseComparisons.naiveInverseDifference)
-            case "Shift" => runList(words, INPUT, OUTPUT, params, NaiveShiftComparison.naiveDifferenceShift)
-            case "DTW" => runList(words, INPUT, OUTPUT, params, DynamicTimeWrapping.dtwComparisonScaleMax)
-            case _ => runList(words, INPUT, OUTPUT, params, NaiveComparisons.naiveDifferenceScalingMax)
+          val res = SSH("icdataportal2") { client =>
+            Logger.debug("Connection to icdataportal2 complete")
+            // Go to bash
+            val hdfsResDir = s"/projects/temporal-profiles/results/$outputDir/"
+
+            // TODO before sending the job to YARN, check if the directory already exists on HDFS
+            // Send the job to YARN with the correct arguments
+            // At each step, exit code 0 means success. All others mean failure.
+            // See http://support.attachmate.com/techdocs/2116.html for more details on exit codes
+            Logger.debug(s"Send job to YARN $hdfsResDir")
+            client.exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-client " +
+              "SparkCommander-assembly-1.0.jar -w " + words.mkString(" ") + " -t " + name + {
+              if (params.nonEmpty) {
+                " -p " + params.mkString(" ")
+              } else {
+                ""
+              }
+            } + "\"").right.flatMap { res =>
+              Logger.debug("Job finished: " + res.exitCode.get)
+
+              //Make the directory usable by others in the group
+              client.exec("bash -c \"source .bashrc; hadoop fs -chmod -R 770 hdfs://" + hdfsResDir + "\"").right
+                .flatMap { res =>
+                Logger.debug("chmod done " + res.exitCode.get)
+
+                // Download results from HDFS to local on cluster
+                client.exec("bash -c \"source .bashrc; hadoop fs -get hdfs://" + hdfsResDir +
+                  "/results.txt\" ~/results.txt").right.flatMap { res =>
+                  Logger.debug("get results.txt done " + res.exitCode.get)
+
+                  // Download results from cluster to server
+                  client.download("results.txt", "./results/" + outputDir + "/").right.map { res =>
+                    Logger.debug("results.txt downloaded to " + outputDir)
+
+                    // Download data.csv from HDFS to local on cluster
+                    client.exec("bash -c \"source .bashrc; hadoop fs -get hdfs://" + hdfsResDir +
+                      "/data.csv\" ~/data.csv").right.flatMap { res =>
+                      Logger.debug("get data.csv done " + res.exitCode.get)
+
+                      // Download data.csv from cluster to server
+                      client.download("data.csv", "./results/" + outputDir + "/").right.map { res =>
+                        Logger.debug("data.csv downloaded to " + outputDir)
+                        client.exec("bash -c \"source .bashrc; rm results.txt data.csv\"").right
+                          .map { res => Logger.debug("Deleted results.txt and data.csv from local on the cluster")
+
+                          // Read downloaded result file
+                          val resultsStr = Source.fromFile("./results/" + outputDir + "/results.txt", "utf-8").getLines
+                          resultsToJson(stdOutToMap(resultsStr.toList))
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
 
-          // Send result to browser
-          Ok(resultsToJson(results))
+          // Send back results to the browser
+          Logger.debug(Json.prettyPrint(res.right.get.right.get.right.get))
+          Ok(res.right.get.right.get.right.get)
       }
     }
   }
@@ -160,12 +195,9 @@ object Application extends Controller with ResultParser {
     }
   }
 
-  private def stdOutToMap(results: String): Map[String, List[String]] = {
-    parse(result, results) match {
-      case Success(map, _) => map
-      case Failure(_, _) => Map()
-      case Error(_, _) => Map()
-    }
+  private def stdOutToMap(results: List[String]): Map[String, List[String]] = {
+    Logger.debug("Results are: " + results)
+    results.flatMap(e => parse(result, e).get).toMap
   }
 
   /**

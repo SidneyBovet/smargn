@@ -38,4 +38,4 @@ project/plugins/project/
 resources/
 
 /smargn/*.bat
-
+/smargn/results
