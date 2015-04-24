@@ -10,20 +10,24 @@ trait ResultParser extends RegexParsers {
   val NOTFOUND = "ERROR404"
 
   def result: Parser[Map[String, List[String]]] = {
-    rep(line) ^^ { case l => l.foldLeft(Map[String, List[String]]()) { case (acc, curr) => acc ++ curr } }
+    rep((line | errorLine) <~ opt("\n")) ^^ { case l => l.flatten.toMap
+    }
   }
 
   def line: Parser[Map[String, List[String]]] = {
-    word ~ "->" ~ (error | rep(word)) ~ "\n" ^^ { case w ~ sep ~ NSW ~ end => Map(w -> List(NSW))
-    case w ~ sep ~ NOTFOUND ~ end => Map(w -> List(NOTFOUND))
-    case w ~ sep ~ (ws: List[String]) ~ end => Map(w -> ws)
+    (word <~ "->") ~ rep(word) ^^ { case w ~ ws => Map(w -> ws)
     }
   }
 
-  def word: Parser[String] = {
-    """[a-zA-Z04]""".r ^^ {
-      _.toString
+  def errorLine: Parser[Map[String, List[String]]] = {
+    (word <~ "->") ~ error ^^ { case w ~ NSW => Map(w -> List(NSW))
+    case w ~ NOTFOUND => Map(w -> List(NOTFOUND))
     }
+  }
+
+  // Darn you accents!
+  def word: Parser[String] = {
+    "[a-zA-Z0-9âàáêèéîìíôòóûùúÂÀÁÊÈÉÎÌÍÔÒÓÛÙÚ']+".r ^^ { case w => w.toString }
   }
 
   def error: Parser[String] = NSW | NOTFOUND

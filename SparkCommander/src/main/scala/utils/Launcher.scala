@@ -62,8 +62,8 @@ object Launcher {
 
       // Format for printing
       val formatter = formatTuple(range) _
-      val toPrintRDD = similarWordOcc.flatMap(formatter)
-      val toGraph = formatForDisplay(formatter(testedWord), toPrintRDD.top(NB_RES))
+      val toPrintRDD = similarWordOcc.take(NB_RES).flatMap(formatter)
+      val toGraph = formatForDisplay(formatter(testedWord), toPrintRDD)
 
       // Print to projects/temporal-profiles/<depends on the query>/data.csv
       val dataCSVPath = new Path(outputFile + "/data.csv")
