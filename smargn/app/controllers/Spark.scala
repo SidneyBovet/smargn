@@ -1,6 +1,6 @@
-package techniques
+package controllers
 
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
  * Created by Valentin on 26/03/15.
@@ -12,6 +12,7 @@ object Spark {
     if (sc.isEmpty) {
       sc = Some(new SparkContext(new SparkConf().setAppName("naiveCompare").setMaster("local[2]")))
       //                          .setMaster("yarn-client")
+      //                          .setMaster("spark://icdataprotal2:.../...")))
     }
     sc.get
   }

@@ -42,7 +42,10 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
             if ("<full_text".equals(word)) {
                 inArticle = true;
             } else if ("</full_text".equals(word)) {
-                return article.trim();
+            	String trimActicle = article.trim();
+            	if(trimActicle.length() > 0) {
+            		return trimActicle;
+            	}
             } else if (inArticle) {
             	word = cleanWord(word);
             	if(word.length() > 1) {

@@ -1,4 +1,4 @@
-import org.apache.log4j.{Logger, Level}
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.scalatest.FunSuite
 
@@ -9,6 +9,9 @@ import org.scalatest.FunSuite
 object SparkTest extends org.scalatest.Tag("com.bd.test.tags.SparkTest")
 
 trait SparkTestUtils extends FunSuite {
+
+  import utils.Formatting._
+
   var sc: SparkContext = _
 
   /**
@@ -24,7 +27,11 @@ trait SparkTestUtils extends FunSuite {
    */
   def sparkTest(name: String, silenceSpark: Boolean = true)(body: => Unit) {
     test(name, SparkTest) {
-      val origLogLevels: Map[String, Level] = if (silenceSpark) SparkUtil.silenceSpark() else Map[String, Level]()
+      val origLogLevels: Map[String, Level] = if (silenceSpark) {
+        SparkUtil.silenceSpark()
+      } else {
+        Map[String, Level]()
+      }
       sc = new SparkContext("local", name)
       try {
         body
@@ -33,7 +40,9 @@ trait SparkTestUtils extends FunSuite {
         sc = null
         // To avoid Akka rebinding to the same port, since it doesn't unbind immediately on shutdown
         System.clearProperty("spark.master.port")
-        if (silenceSpark) SparkUtil.setOldLogLevels(origLogLevels)
+        if (silenceSpark) {
+          SparkUtil.setOldLogLevels(origLogLevels)
+        }
       }
     }
   }

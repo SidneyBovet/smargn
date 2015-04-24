@@ -34,3 +34,8 @@ project/plugins/project/
 
 #LibreOffice stuff
 .~*
+
+resources/
+
+/smargn/*.bat
+/smargn/results

@@ -2,6 +2,7 @@ package techniques
 
 import org.apache.spark.rdd.RDD
 import utils.Scaling._
+import utils.SubTechniques._
 
 /**
  * Created by Joanna on 4/7/15.
@@ -16,18 +17,17 @@ object NaiveComparisons {
    * array's elements difference
    * @param data collection of word, frequency to tuple to look into
    * @param testedWord word that we want to find its similar word
-   * @param parameters L(0) contains the accepted difference between two array value that we accept
+   * @param parameters L(0) contains the accepted difference between two array value that we accept, L(1) contains the number of non-similar values that we accept
    * @return words that are similar
    */
   def naiveDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-
-    val acceptedDifference = parameters(0)
-    //add the testedWord values to the arrays and compute difference for future comparison
-    val zipDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => math.abs(x._1 - x._2)), x._2))
-    //test similarity criteria between each data word array and the tested word
-    val booleanDataTestedWord = zipDataTestedWord.map(x => (x._1, x._2.map(y => y <= acceptedDifference)))
-    //filter the arrays that have at least one value that didn't pass the similarity test
-    booleanDataTestedWord.map(x => (x._1, x._2.filter(_ == false))).filter(x => x._2.length == 0 && x._1 != testedWord._1).map(x => (x._1))
+    val acceptedDifference = parameters.head
+    if (parameters.size > 1) {
+      val acceptedFalse = parameters(1)
+      data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDifferenceMetric(y._1, y._2, acceptedDifference, acceptedFalse))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
+    } else {
+      data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDifferenceMetric(y._1, y._2, acceptedDifference))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
+    }
   }
 
   /**
@@ -39,17 +39,8 @@ object NaiveComparisons {
    * @return words that are similar
    */
   def naiveDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val acceptedDifference = parameters(0)
-    //add the testedWord values to the arrays and compute division for future comparison
-    val dividedDataTestedWord = data.map(x => (x._1, testedWord._2.zip(x._2).map(x => x._1 / x._2), x._2))
-    //could be useful for testing purpose
-    //val tempDifferenceMaxMin = dividedDataTestedWord.map(x => (x._1, (((findMinAndMax(x._2))._2)- ((findMinAndMax(x
-    // ._2))._1))))
-    val booleanDataTestedWord = dividedDataTestedWord.map { x =>
-      val minMax = findMinAndMax(x._2)
-      (x._1, minMax._2 - minMax._1 < acceptedDifference)
-    }
-    booleanDataTestedWord.filter(x => x._2 && x._1 != testedWord._1).map(x => x._1)
+    val acceptedDifference = parameters.head
+    data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDivisionMetric(y._1, y._2, acceptedDifference))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
   }
 
   /**
@@ -60,7 +51,7 @@ object NaiveComparisons {
    * @return words that are similar
    */
   def naiveDifferenceScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDifference(data.map(proportionalScalarMax(_)), proportionalScalarMax(testedWord), parameters)
+    naiveDifference(data.map(proportionalScalarMax), proportionalScalarMax(testedWord), parameters)
   }
 
   /**
@@ -71,7 +62,7 @@ object NaiveComparisons {
    * @return words that are similar
    */
   def naiveDifferenceScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDifference(data.map(proportionalScalarAverage(_)), proportionalScalarAverage(testedWord), parameters)
+    naiveDifference(data.map(proportionalScalarAverage), proportionalScalarAverage(testedWord), parameters)
   }
 
   /**
@@ -83,7 +74,7 @@ object NaiveComparisons {
    * @return words that are similar
    */
   def naiveDivisionScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDivision(data.map(proportionalScalarMax(_)), proportionalScalarMax(testedWord), parameters)
+    naiveDivision(data.map(proportionalScalarMax), proportionalScalarMax(testedWord), parameters)
   }
 
   /**
@@ -95,7 +86,105 @@ object NaiveComparisons {
    * @return words that are similar
    */
   def naiveDivisionScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDivision(data.map(proportionalScalarAverage(_)), proportionalScalarAverage(testedWord), parameters)
+    naiveDivision(data.map(proportionalScalarAverage), proportionalScalarAverage(testedWord), parameters)
+  }
+
+  /**
+   * Apply the max scaling function before calling the NaiveDifference similarity function and
+   * shifts it
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the accepted difference between two array value that we accept, L(1) is the shifting range and L(2) is the shifting step size
+   * @return words that are similar
+   */
+  def naiveDifferenceScalingMaxWithShifting(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDifferenceScalingMax, parameters(1).toInt, parameters(2).toInt)
+  }
+
+  /**
+   * Apply the average scaling function before calling the NaiveDifference similarity function and
+   * shifts it
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the accepted difference between two array value that we accept, L(1) is the shifting range and L(2) is the shifting step size
+   * @return words that are similar
+   */
+  def naiveDifferenceScalingAverageWithShifting(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDifferenceScalingAverage, parameters(1).toInt, parameters(2).toInt)
+  }
+
+  /**
+   * Apply the max scaling function before calling the NaiveDivision similarity function
+   * the ratio line and shifts it
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the straightness of the curve that we accept, L(1) is the shifting range and L(2) is the shifting step size
+   * @return words that are similar
+   */
+  def naiveDivisionScalingMaxWithShifting(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDivisionScalingMax, parameters(1).toInt, parameters(2).toInt)
+  }
+
+  /**
+   * Apply the average scaling function before calling the NaiveDivision similarity function
+   * the ratio line and shifts it
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the straightness of the curve that we accept, L(1) is the shifting range and L(2) is the shifting step size
+   * @return words that are similar
+   */
+  def naiveDivisionScalingAverageWithShifting(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    shift(data, testedWord, parameters, NaiveComparisons.naiveDivisionScalingAverage, parameters(1).toInt, parameters(2).toInt)
+  }
+
+  /** *******************************************************************************************************
+    * Metrics
+    * ******************************************************************************************************* */
+  /**
+   * Compute the metric of similarity based on a naiveDifference approach for two words.
+   * @param word1
+   * @param word2
+   * @param acceptedDifference accepted difference between two array value that we accept
+   * @param acceptedFalse percentage of non-similar values that we accept
+   * @return sum of differences of each element if words are considered similar, Double.MaxValue otherwise
+   */
+  def naiveDifferenceMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), acceptedDifference: Double = 15, acceptedFalse: Double = 0.05): Double = {
+
+    val zipped = word1._2.zip(word2._2)
+    val zippedDif = zipped.map(x => math.abs(x._1 - x._2))
+    if (zippedDif.map(_ <= acceptedDifference).count(_ == false) <= zippedDif.size * acceptedFalse) {
+      zippedDif.sum
+    } else {
+      Double.MaxValue
+    }
+  }
+
+  //problem metric only base on 2 points ==> very biased
+  /**
+   * Compute the metric of similarity based on a naiveDivision approach for two words.
+   * @param word1
+   * @param word2
+   * @param acceptedDifference accepted difference between min and max value of the created line
+   * @return difference of min element and max element of the "line" (i.e. w1/w2 element) if words are considered similar, Double.MaxValue otherwise
+   */
+  def naiveDivisionMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), acceptedDifference: Double = 0.8): Double = {
+
+    val zipped = word1._2.zip(word2._2)
+    val divided = zipped.map(x => math.abs((if (x._1 == 0) {
+      x._2
+    } else {
+      x._1
+    }) / (if (x._2 == 0) {
+      1
+    } else {
+      x._2
+    })))
+    val minMax = findMinAndMax(divided)
+    if (minMax._2 - minMax._1 < acceptedDifference) {
+      minMax._2 - minMax._1
+    } else {
+      Double.MaxValue
+    }
   }
 
 }

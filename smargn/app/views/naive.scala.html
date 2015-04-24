@@ -1,17 +1,73 @@
 @(results: List[String])
 
-@main("Welcome to Play") {
+@main("BD15-Smargn") {
+    <script src="@routes.Assets.at("javascripts/send_words.js")" type ="text/javascript"></script>
+    <div class="container-fluid">
+        <div class="col-md-4 text-center" id="words">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="word1" id="word1">
+            </div>
 
-    <ul id="results">
-        @for(res <- results) {
-            <li>@res</li>
-        }
-    </ul>
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="word2" id="word2">
+            </div>
 
-    <div id="chartContainer">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.8/d3.js"></script>
-        <script src="http://dimplejs.org/dist/dimple.v2.1.2.js"></script>
-        <script src ="@routes.Assets.at("javascripts/display_chart.js")" type="text/javascript"></script>
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="word3" id="word3">
+            </div>
+
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="word4" id="word4">
+            </div>
+
+            <button onclick="send_words()" type="button" class="btn btn-default" id="search">Smargn 'em all!</button>
+        </div>
+        <div class="col-md-4" id="parameters">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="parameter1" id="parameter1">
+                </div>
+
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="parameter2" id="parameter2">
+                </div>
+
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="parameter3" id="parameter3">
+                </div>
+
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="parameter4" id="parameter4">
+                </div>
+
+            <!-- Choose technique to apply -->
+            <form role="form">
+                <div class="form-group">
+                    <select class="form-control" id="technique_selector">
+                        <option>Naive</option>
+                        <option>Naive inverse</option>
+                        <option>Shift</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div id="errormsg"></div>
+            <div id="results">
+                <ul class="list-group">
+                @for(res <- results) {
+                    <li class="list-group-item">@res</li>
+                }
+                </ul>
+            </div>
+        </div>
+
+        <div class="row">
+            <div id="chartContainer">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.8/d3.js"></script>
+                <script src="http://dimplejs.org/dist/dimple.v2.1.2.js"></script>
+                <script src ="@routes.Assets.at("javascripts/display_chart.js")" type="text/javascript"></script>
+            </div>
+        </div>
     </div>
-
 }

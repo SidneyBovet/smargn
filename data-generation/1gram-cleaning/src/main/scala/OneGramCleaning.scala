@@ -15,6 +15,7 @@ object OneGramCleaning {
     }
     // threshold value for words
     val minOcc = if(args.length >= 5) args(4).toInt else 50
+
     val sc = new SparkContext(new SparkConf().setAppName("OneGramCleaning"))
     val lines = sc.textFile(args(0))
     val parsedLines = lines.map(line => {
@@ -61,6 +62,6 @@ object OneGramCleaning {
       out.writeInt(wordBytes.length)
       out.write(wordBytes)
       el._2.foreach(freq => out.writeDouble((freq)))
-      })
+    })
   }
 }
