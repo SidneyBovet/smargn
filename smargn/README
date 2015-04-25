@@ -17,9 +17,8 @@ the child "<option><name of T></option>".
  - Modify public/javascripts/adapt_params.js and add a case for T to
 specify its number of parameters.
 In project Spark Commander:
- - Go to Application.scala and look for the
-function smargn. Add a "case <name of T> => ..." to be able to launch it from
-the browser.
+ - Go to SparkCommander.scala and look for the function main.
+ Add a "case <name of T> => ..." to be able to launch it from the browser.
 
 All files of the technique must be in SparkCommander!! No technique should be in
 smargn since it needs to be on the cluster to have a Spark Context.
