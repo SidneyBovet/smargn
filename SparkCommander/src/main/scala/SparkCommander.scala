@@ -25,19 +25,20 @@ object SparkCommander {
    * @param technique the technique to use
    * @param parameters the parameter for that technique
    */
-  case class Config(words: Seq[String], technique: String, parameters: Seq[Double])
+  case class Config(words: Seq[String] = Seq[String](), technique: String = "", parameters: Seq[Double] = Seq[Double]())
 
   private val parser = new OptionParser[Config]("scopt") {
     head("SparkCommander", "1.0")
-    opt[Seq[String]]('w', "words") action {
-      (words, config) => config.copy(words = words)
+
+    arg[String]("<word>...") unbounded() action {
+      (words, config) => config.copy(words = config.words :+ words)
     } text "The words you want to search"
     opt[String]('t', "technique") action {
       (technique, config) => config.copy(technique = technique)
     } text "The technique you want to use"
-    opt[Seq[Double]]('p', "parameters") action {
-      (parameters, config) => config.copy(parameters = parameters)
-    } text "The parameters for this technique"
+    arg[Double]("<parameter>...") unbounded() optional() action {
+      (parameters, config) => config.copy(parameters = config.parameters :+ parameters)
+    } text "Optional parameters for this technique"
   }
 
   /**
