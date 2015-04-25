@@ -1,4 +1,3 @@
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
 import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
@@ -54,7 +53,7 @@ object SparkCommander {
     parser.parse(args, Config(words = Seq(), technique = null, parameters = Seq())) match {
       case Some(Config(words, technique, parameters)) =>
         val output = createOutput(words, technique, parameters)
-        val tech: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)] = technique match {
+        val tech: Technique = technique match {
           case "Naive" => NaiveComparisons.naiveDifferenceScalingMax
           case "Inverse" => NaiveInverseComparisons.naiveInverseDifference
           case "Shift" => NaiveShiftComparison.naiveDifferenceShift
