@@ -20,11 +20,11 @@ object TopK {
    * @param order the ordering used by the tree
    * @return top k most similar words to the testedWord
    */
-  def retrieveTopK(k: Integer, metric: ((String, Array[Double]), (String, Array[Double])) => Double, data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), order: ((String, Double), (String, Double)) => Boolean): List[String] = {
+  def retrieveTopK(k: Integer, metric: ((String, Array[Double]), (String, Array[Double]), List[Double]) => Double, data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), order: ((String, Double), (String, Double)) => Boolean, metricParameters: List[Double] = List()): List[String] = {
 
     val myOrdering = Ordering.fromLessThan[(String, Double)](order)
     val tree = mutable.TreeSet.empty(myOrdering)
-    val dataMetric = data.map(x => (x._1, metric(x, testedWord))).cache()
+    val dataMetric = data.map(x => (x._1, metric(x, testedWord, metricParameters))).cache()
     val kElem = dataMetric.take(k)
     kElem.map(tree.add)
     val restElem = dataMetric.zipWithIndex().filter(_._2 >= k).map(_._1)

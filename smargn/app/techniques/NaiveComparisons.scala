@@ -24,9 +24,9 @@ object NaiveComparisons {
     val acceptedDifference = parameters.head
     if (parameters.size > 1) {
       val acceptedFalse = parameters(1)
-      data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDifferenceMetric(y._1, y._2, acceptedDifference, acceptedFalse))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
+      data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDifferenceMetric(y._1, y._2, List(acceptedDifference, acceptedFalse)))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
     } else {
-      data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDifferenceMetric(y._1, y._2, acceptedDifference))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
+      data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDifferenceMetric(y._1, y._2, List(acceptedDifference)))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
     }
   }
 
@@ -40,7 +40,7 @@ object NaiveComparisons {
    */
   def naiveDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
     val acceptedDifference = parameters.head
-    data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDivisionMetric(y._1, y._2, acceptedDifference))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
+    data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDivisionMetric(y._1, y._2, List(acceptedDifference)))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
   }
 
   /**
@@ -144,12 +144,15 @@ object NaiveComparisons {
    * Compute the metric of similarity based on a naiveDifference approach for two words.
    * @param word1
    * @param word2
-   * @param acceptedDifference accepted difference between two array value that we accept
-   * @param acceptedFalse percentage of non-similar values that we accept
+   * @param parameters L(0) contains the accepted difference between two array value that we accept and L(1) the percentage of non-similar values that we accept
    * @return sum of differences of each element if words are considered similar, Double.MaxValue otherwise
    */
-  def naiveDifferenceMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), acceptedDifference: Double = 15, acceptedFalse: Double = 0.05): Double = {
-
+  def naiveDifferenceMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List(15, 0.05)): Double = {
+    val acceptedDifference = parameters.head
+    var acceptedFalse = 0.05
+    if (parameters.size > 1) {
+      acceptedFalse = parameters(1)
+    }
     val zipped = word1._2.zip(word2._2)
     val zippedDif = zipped.map(x => math.abs(x._1 - x._2))
     if (zippedDif.map(_ <= acceptedDifference).count(_ == false) <= zippedDif.size * acceptedFalse) {
@@ -164,11 +167,11 @@ object NaiveComparisons {
    * Compute the metric of similarity based on a naiveDivision approach for two words.
    * @param word1
    * @param word2
-   * @param acceptedDifference accepted difference between min and max value of the created line
+   * @param parameters L(0) contains the accepted difference between min and max value of the created line
    * @return difference of min element and max element of the "line" (i.e. w1/w2 element) if words are considered similar, Double.MaxValue otherwise
    */
-  def naiveDivisionMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), acceptedDifference: Double = 0.8): Double = {
-
+  def naiveDivisionMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List(0.8)): Double = {
+    val acceptedDifference = parameters.head
     val zipped = word1._2.zip(word2._2)
     val divided = zipped.map(x => math.abs((if (x._1 == 0) {
       x._2

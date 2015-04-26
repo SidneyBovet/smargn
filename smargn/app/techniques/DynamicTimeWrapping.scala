@@ -55,12 +55,12 @@ object DynamicTimeWrapping {
    * Compares two temporal profiles using Dynamic Time Wrapping.
    * @param word1 first temporal profile
    * @param word2 second temporal profile
-   * @param margin optional parameter to specify how far form the diagonal the matching can deviate.
+   * @param parameters L(0) contains the optional parameter to specify how far form the diagonal the matching can deviate.
    * @return distance between the two temporal profiles
    */
-  def dynamicTimeWrappingMetric(word1: Array[Double], word2: Array[Double], margin: Int = 20): Double = {
+  def dynamicTimeWrappingMetric(word1: Array[Double], word2: Array[Double], parameters: List[Double] = List(20.0)): Double = {
     val dtw = Array.ofDim[Double](word1.length, word2.length)
-
+    val margin = parameters.head.toInt
     dtw(0)(0) = distance(word1(0), word2(0))
 
     for (j <- 1 to Math.min(margin, word2.length - 1)) {

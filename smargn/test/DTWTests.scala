@@ -8,13 +8,13 @@ class DTWTests extends SparkTestUtils with ShouldMatchers {
   test("DTW simple test") {
     val word1 = Array[Double](1, 1, 1, 9, 1)
     val word2 = Array[Double](1, 1, 10, 1, 1)
-    dynamicTimeWrappingMetric(word1, word2, 2) should be(1)
+    dynamicTimeWrappingMetric(word1, word2, List(2.0)) should be(1)
   }
 
   test("DTW complex test") {
     val word1 = Array[Double](1, 1, 1, 9, 10, 12, 4, 1)
     val word2 = Array[Double](1, 1, 10, 11, 13, 5, 1, 1)
-    dynamicTimeWrappingMetric(word1, word2, 2) should be(4)
+    dynamicTimeWrappingMetric(word1, word2, List(2.0)) should be(4)
   }
 
   sparkTest("DTW comparison test") {
