@@ -9,38 +9,38 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
   test("testMetricDifference1") {
     val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
     val word2 = ("green", Array(5.0, 3.0, 2.0, 5.0, 5.0))
-    naiveDifferenceMetric(word1, word2, 1, 0.2) should be(7.0)
+    naiveDifferenceMetric(word1, word2, List(1, 0.2)) should be(7.0)
   }
 
   test("testMetricDifference2") {
     val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
     val word2 = ("green", Array(0.0, 3.0, 2.0, 5.0, 5.0))
-    naiveDifferenceMetric(word1, word2, 1, 0.2) should be(5.0)
+    naiveDifferenceMetric(word1, word2, List(1, 0.2)) should be(5.0)
   }
 
   test("testMetricDifference3") {
     val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
     val word2 = ("green", Array(0.0, 3.0, 2.0, 10.0, 5.0))
-    naiveDifferenceMetric(word1, word2, 1, 0.2) should be(Double.MaxValue)
+    naiveDifferenceMetric(word1, word2, List(1, 0.2)) should be(Double.MaxValue)
   }
 
   test("testMetricDifference4") {
     val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
     val word2 = ("green", Array(0.0, 3.0, 2.0, 10.0, 5.0))
-    naiveDifferenceMetric(word1, word2, 1, 2) should be(10.0)
+    naiveDifferenceMetric(word1, word2, List(1, 2)) should be(10.0)
   }
 
 
   test("testMetricDivision1") {
     val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
     val word2 = ("green", Array(1.0, 4.0, 3.0, 5.0, 5.0))
-    naiveDivisionMetric(word1, word2, 1) should be(0.5)
+    naiveDivisionMetric(word1, word2, List(1)) should be(0.5)
   }
 
   test("testMetricDivision2") {
     val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
     val word2 = ("green", Array(1.0, 3.0, 3.0, 5.0, 0.0))
-    naiveDivisionMetric(word1, word2, 1) should be(Double.MaxValue)
+    naiveDivisionMetric(word1, word2, List(1)) should be(Double.MaxValue)
   }
 
 

@@ -19,7 +19,7 @@ class TopKTest extends SparkTestUtils with ShouldMatchers {
     val data = sc.parallelize(preData)
 
 
-    val metric = (x: (String, Array[Double]), y: (String, Array[Double])) => math.abs(x._2(0) - y._2(0))
+    val metric = (x: (String, Array[Double]), y: (String, Array[Double]), parameters: List[Double]) => math.abs(x._2(0) - y._2(0))
     val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
       x._2 < y._2
     } else x._1 < y._1
@@ -42,7 +42,7 @@ class TopKTest extends SparkTestUtils with ShouldMatchers {
     val data = sc.parallelize(preData)
 
 
-    val metric = (x: (String, Array[Double]), y: (String, Array[Double])) => math.abs(x._2(0) - y._2(0))
+    val metric = (x: (String, Array[Double]), y: (String, Array[Double]), parameters: List[Double]) => math.abs(x._2(0) - y._2(0))
     val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
       x._2 < y._2
     } else x._1 < y._1
@@ -66,14 +66,13 @@ class TopKTest extends SparkTestUtils with ShouldMatchers {
     val data = sc.parallelize(preData)
 
 
-    val metric = (x: (String, Array[Double]), y: (String, Array[Double])) => math.abs(x._2(0) - y._2(0))
+    val metric = (x: (String, Array[Double]), y: (String, Array[Double]), parameters: List[Double]) => math.abs(x._2(0) - y._2(0))
     val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
       x._2 < y._2
     } else x._1 < y._1
 
     TopK.retrieveTopK(10, metric, data, testedWord, order) should be(List("orange", "blue", "yellow", "flower", "rainbow")
     )
-
   }
 
 }
