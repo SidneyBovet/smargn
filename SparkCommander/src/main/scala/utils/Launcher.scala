@@ -70,7 +70,7 @@ object Launcher {
 
       // Get stream by creating file projects/temporal-profiles/<depends on the query>/data.csv or appending to it
       // Print to projects/temporal-profiles/<depends on the query>/data.csv
-      hdfs.appendToFile(dataCSVPath)(toGraph)
+      hdfs.appendToFile(dataCSVPath)(if(!hdfs.exists(dataCSVPath)) "Word,Year,Occurrences" :: toGraph else toGraph)
 
       if (similarWords.length == 0) {
         List(NSW)

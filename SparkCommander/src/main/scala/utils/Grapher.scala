@@ -20,6 +20,6 @@ object Grapher {
   }
 
   def formatForDisplay(word: List[String], similarWords: Array[String]): List[String] = {
-    "Word,Year,Occurrences" :: (word ++ similarWords)
+    word ++ similarWords
   }
 }

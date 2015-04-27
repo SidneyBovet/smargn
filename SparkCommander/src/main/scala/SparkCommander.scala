@@ -59,7 +59,7 @@ object SparkCommander {
           case "Shift" => NaiveShiftComparison.naiveDifferenceShift
           case _ => NaiveComparisons.naiveDifferenceScalingMax
         }
-        
+
         runList(words.toList, INPUT, output, parameters.toList, tech, sc)
       case None => // Bad arguments
     }
