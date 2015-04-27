@@ -48,7 +48,6 @@ object Launcher {
     // testedWords is the line with the words we look for and its occurrences
     val testedWords = searchWordFormatter(formattedData, List(word))
 
-
     if (testedWords.count == 0) {
       List(NOTFOUND)
     } else {
@@ -70,7 +69,7 @@ object Launcher {
 
       // Get stream by creating file projects/temporal-profiles/<depends on the query>/data.csv or appending to it
       // Print to projects/temporal-profiles/<depends on the query>/data.csv
-      hdfs.appendToFile(dataCSVPath)(if(!hdfs.exists(dataCSVPath)) "Word,Year,Occurrences" :: toGraph else toGraph)
+      hdfs.appendToFile(dataCSVPath)(if (!hdfs.exists(dataCSVPath)) "Word,Year,Occurrences" :: toGraph else toGraph)
 
       if (similarWords.length == 0) {
         List(NSW)

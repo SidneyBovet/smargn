@@ -45,7 +45,9 @@ object SparkCommander {
    * @param args must be in the format: -w word1,word2?,...  -t technique_name -p param1?,param2?,...
    */
   def main(args: Array[String]) = {
-    val conf = new SparkConf().setAppName("SparkCommander").setMaster("yarn-client")
+    val conf = new SparkConf().setAppName("SparkCommander")
+      .setMaster("yarn-cluster")
+      .set("num-executors", "25")
 
     val sc = new SparkContext(conf)
 
