@@ -111,7 +111,7 @@ object Application extends Controller with ResultParser {
           val paramsStr = if (params.nonEmpty) s"_${params.mkString("-")}" else ""
           val outputDir = s"${words.mkString("-")}_${name.toLowerCase}$paramsStr"
 
-          val resultsPath = FileSystems.getDefault.getPath(s"./results/$outputDir/")
+          val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$outputDir/")
           if (Files.notExists(resultsPath)) {
             Files.createDirectory(resultsPath)
           }
@@ -155,14 +155,16 @@ object Application extends Controller with ResultParser {
                       Logger.debug("get data.csv done " + res.exitCode.get)
 
                       // Download data.csv from cluster to server
-                      client.download("data.csv", "./results/" + outputDir + "/").right.map { res =>
+                      client.download("data.csv", "./public/results/" + outputDir + "/").right.map { res =>
                         Logger.debug("data.csv downloaded to " + outputDir)
                         client.exec("bash -c \"source .bashrc; rm results.txt data.csv\"").right
                           .map { res => Logger.debug("Deleted results.txt and data.csv from local on the cluster")
 
                           // Read downloaded result file
-                          val resultsStr = Source.fromFile("./results/" + outputDir + "/results.txt", "utf-8").getLines
-                          resultsToJson(stdOutToMap(resultsStr.toList))
+                          val resultsStream = Source.fromFile("./public/results/" + outputDir + "/results.txt", "utf-8")
+                          val resultsStr = resultsStream.getLines().toList
+                          resultsStream.close()
+                          resultsToJson(stdOutToMap(resultsStr))
                         }
                       }
                     }
@@ -173,6 +175,7 @@ object Application extends Controller with ResultParser {
           }
 
           // Send back results to the browser
+          // up up down down left right left right B A start
           Logger.debug(Json.prettyPrint(res.right.get.right.get.right.get))
           Ok(res.right.get.right.get.right.get)
       }
