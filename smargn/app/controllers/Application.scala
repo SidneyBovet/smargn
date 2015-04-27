@@ -126,9 +126,9 @@ object Application extends Controller with ResultParser {
             // See http://support.attachmate.com/techdocs/2116.html for more details on exit codes
             Logger.debug(s"Send job to YARN $hdfsResDir")
             client.exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-client " +
-              "SparkCommander-assembly-1.0.jar -w " + words.mkString(" ") + " -t " + name + {
+              "SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
               if (params.nonEmpty) {
-                " -p " + params.mkString(" ")
+                " -p " + params.mkString(",")
               } else {
                 ""
               }

@@ -29,21 +29,20 @@ object SparkCommander {
   private val parser = new OptionParser[Config]("scopt") {
     head("SparkCommander", "1.0")
 
-    arg[String]("<word>...") unbounded() action {
-      (words, config) => config.copy(words = config.words :+ words)
+    opt[Seq[String]]('w', "words") valueName "<word1>,<word2>,..." action {
+      (words, config) => config.copy(words = words)
     } text "The words you want to search"
     opt[String]('t', "technique") action {
       (technique, config) => config.copy(technique = technique)
     } text "The technique you want to use"
-    arg[Double]("<parameter>...") unbounded() optional() action {
-      (parameters, config) => config.copy(parameters = config.parameters :+ parameters)
+    opt[Seq[Double]]('p', "parameters") valueName "<param1>,<param2>..." optional() action {
+      (parameters, config) => config.copy(parameters = parameters)
     } text "Optional parameters for this technique"
   }
 
   /**
    *
-   * @param args must be in the format:
-   *             -w word1, word2?, ...  -t technique_name -p param1?, param2?, ...
+   * @param args must be in the format: -w word1,word2?,...  -t technique_name -p param1?,param2?,...
    */
   def main(args: Array[String]) = {
     val conf = new SparkConf().setAppName("SparkCommander").setMaster("yarn-client")
@@ -53,12 +52,14 @@ object SparkCommander {
     parser.parse(args, Config(words = Seq(), technique = null, parameters = Seq())) match {
       case Some(Config(words, technique, parameters)) =>
         val output = createOutput(words, technique, parameters)
+
         val tech: Technique = technique match {
           case "Naive" => NaiveComparisons.naiveDifferenceScalingMax
           case "Inverse" => NaiveInverseComparisons.naiveInverseDifference
           case "Shift" => NaiveShiftComparison.naiveDifferenceShift
           case _ => NaiveComparisons.naiveDifferenceScalingMax
         }
+        
         runList(words.toList, INPUT, output, parameters.toList, tech, sc)
       case None => // Bad arguments
     }
