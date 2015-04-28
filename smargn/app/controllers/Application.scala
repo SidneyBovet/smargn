@@ -1,6 +1,6 @@
 package controllers
 
-import java.io.File
+import java.io.{PrintWriter, File}
 import java.nio.file.{FileSystems, Files}
 
 import com.decodified.scalassh.SSH
@@ -17,6 +17,7 @@ object Application extends Controller with ResultParser {
 
   private val INPUT = "input/"
   private val OUTPUT = "public/data/"
+  private val FIRST_LINE = "Word,Year,Occurrences"
 
   // Enables CORS
   val headers: List[(String, String)] = List("Access-Control-Allow-Origin" -> "*",
@@ -76,7 +77,18 @@ object Application extends Controller with ResultParser {
   }
 
   def getCSV(search: String): Action[AnyContent] = {
-    Action(Ok.sendFile(new File("./public/results/" + search + "/data.csv")))
+    Action {
+      Logger.debug("Retrieving data for display on search: " + search)
+      val dataCSVFile = new File("./public/results/" + search + "/complete_data.csv")
+      val dataCSV = Source.fromFile("./public/results/" + search + "/data.csv").getLines().toList
+      Ok.sendFile(if (dataCSV.head != FIRST_LINE) {
+        Logger.debug("first line was " + dataCSV.head)
+        printToFile(dataCSVFile) { p => (FIRST_LINE :: dataCSV).foreach(p.println) }
+        dataCSVFile
+      } else {
+        new File("./public/results/" + search + "/data.csv")
+      })
+    }
   }
 
   /**
@@ -210,5 +222,14 @@ object Application extends Controller with ResultParser {
 
     Json.obj("nosimilarwords" -> Json.toJson(nsw), "notindata" -> Json.toJson(nid), "results" ->
       Json.toJson(res))
+  }
+
+  private def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
+    val p = new java.io.PrintWriter(f)
+    try {
+      op(p)
+    } finally {
+      p.close()
+    }
   }
 }
