@@ -1,8 +1,10 @@
 package techniques
 
+import controllers.Spark
 import org.apache.spark.rdd.RDD
 import utils.Scaling._
 import utils.SubTechniques._
+import utils.TopK._
 
 /**
  * Created by Joanna on 4/7/15.
@@ -41,6 +43,31 @@ object NaiveComparisons {
   def naiveDivision(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
     val acceptedDifference = parameters.head
     data.map(x => (testedWord, x)).map(y => (y._2._1, naiveDivisionMetric(y._1, y._2, List(acceptedDifference)))).filter(y => y._2 != Double.MaxValue && y._1 != testedWord._1).map(_._1)
+  }
+
+  def naiveDifferenceTopK(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    val k = parameters.head
+    val acceptedDifference = parameters(1)
+    val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
+      x._2 < y._2
+    } else x._1 < y._1
+    val retrievedWords = retrieveTopK(k.toInt, naiveDifferenceMetricTopK, data, testedWord, order, List(acceptedDifference))
+    val sc = Spark.ctx
+    sc.parallelize(retrievedWords)
+  }
+
+  def naiveDifferenceTopKScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    naiveDifferenceTopK(data.map(proportionalScalarMax), proportionalScalarMax(testedWord), parameters)
+  }
+
+  def naiveDivisionTopK(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    val k = parameters.head
+    val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
+      x._2 < y._2
+    } else x._1 < y._1
+    val retrievedWords = retrieveTopK(k.toInt, naiveDivisionMetricTopK, data, testedWord, order)
+    val sc = Spark.ctx
+    sc.parallelize(retrievedWords)
   }
 
   /**
