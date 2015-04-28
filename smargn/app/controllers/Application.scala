@@ -1,5 +1,6 @@
 package controllers
 
+import java.io.File
 import java.nio.file.{FileSystems, Files}
 
 import com.decodified.scalassh.SSH
@@ -74,14 +75,16 @@ object Application extends Controller with ResultParser {
     }
   }
 
+  def getCSV(search: String): Action[AnyContent] = {
+    Action(Ok.sendFile(new File("./public/results/" + search + "/data.csv")))
+  }
+
   /**
    * Loads the default page
    * @return HTTP Ok with default html page
    */
   def blank: Action[AnyContent] = {
-    Action {
-      Ok(views.html.smargn())
-    }
+    Action(Ok(views.html.smargn()))
   }
 
   /**
