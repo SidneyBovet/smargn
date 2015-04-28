@@ -10,7 +10,6 @@ import scala.collection.mutable
  */
 object TopK {
 
-
   /**
    * order the similar words based on the result of the metric in a tree of size k and return its elements
    * @param k number of similar words we want to retrieve
@@ -20,22 +19,38 @@ object TopK {
    * @param order the ordering used by the tree
    * @return top k most similar words to the testedWord
    */
-  def retrieveTopK(k: Integer, metric: ((String, Array[Double]), (String, Array[Double]), List[Double]) => Double, data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), order: ((String, Double), (String, Double)) => Boolean, metricParameters: List[Double] = List()): List[String] = {
+  def retrieveTopK(k: Integer, metric: ((String, Array[Double]), (String, Array[Double]), List[Double]) => Double,
+                   data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                   order: ((String, Double), (String, Double)) => Boolean,
+                   metricParameters: List[Double] = List()): Array[String] = {
 
     val myOrdering = Ordering.fromLessThan[(String, Double)](order)
-    val tree = mutable.TreeSet.empty(myOrdering)
     val dataMetric = data.map(x => (x._1, metric(x, testedWord, metricParameters))).cache()
-    val kElem = dataMetric.take(k)
-    kElem.map(tree.add)
-    val restElem = dataMetric.zipWithIndex().filter(_._2 >= k).map(_._1)
 
-    restElem.collect().foreach(x => if (x._2 < tree.last._2) {
-      tree.remove(tree.last)
-      tree.add(x)
-    })
+    // Specify that the mapPartition operation will be executed on each partition separately
+    val keepPartitions = true
 
-    tree.toList.map(_._1)
+    // For each partition, returns the k words that have the higher ranking
+    val partialTopK = dataMetric.mapPartitions(it => {
+      var i = 0
+      val tree = mutable.TreeSet.empty(myOrdering)
+      while (it.hasNext && i < k) {
+        tree.add(it.next())
+        i += 1
+      }
+      while (it.hasNext) {
+        val elem = it.next()
+        val last = tree.last
+        if (elem._2 < last._2) {
+          tree.remove(last)
+          tree.add(elem)
+        }
+      }
+      tree.iterator
+    }, keepPartitions)
 
+    // Collect the results of each partition and take the k best elements
+    partialTopK.takeOrdered(k)(myOrdering).map(_._1)
   }
 }
 
