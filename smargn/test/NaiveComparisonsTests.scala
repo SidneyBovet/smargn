@@ -98,16 +98,6 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
     naiveDifferenceMetricTopK(word1, word2, List(1)) should be(125.0)
   }
 
-
-  sparkTest("testNaiveDifferenceTopK") {
-    val testedWord = ("parrot", Array(1.0, 2.0, 3.0, 4.0, 5.0))
-    val dataRaw = Array(("blue", Array(0.0, 3.0, 2.0, 5.0, 5.0)), ("yellow", Array(0.0, 2.0, 3.0, 5.0, 5.0)), ("flower", Array(1.0, 2.0, 3.0, 4.0, 5.0)), ("orange", Array(5.0, 10.0, 2.0, 5.0, 7.0)), ("dummy", Array(25.0, 10.0, 20.0, 50.0, 55.0)))
-    val data = sc.parallelize(dataRaw)
-
-    naiveDifferenceTopK(data, testedWord, List(3, 1)).collect() should be(Array("flower", "yellow", "blue"))
-  }
-
-
   test("testMetricDivisionTopKNormal") {
     val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
     val word2 = ("green", Array(1.0, 4.0, 3.0, 5.0, 5.0))
@@ -132,15 +122,5 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
     val word2 = ("green", Array(1.0, 4.0, 0.0, 5.0, 5.0))
     naiveDivisionMetricTopK(word1, word2) should be(0.5)
   }
-
-
-  sparkTest("testNaiveDivisionTopK") {
-    val testedWord = ("parrot", Array(1.0, 2.0, 3.0, 4.0, 5.0))
-    val dataRaw = Array(("blue", Array(1.0, 4.0, 3.0, 5.0, 5.0)), ("orange", Array(1.0, 4.0, 3.0, 5.0, 5.0)), ("flower", Array(1.0, 4.0, 0.0, 5.0, 5.0)), ("yellow", Array(51.0, 4.0, 0.0, 5.0, 5.0)), ("dummy", Array(1.0, 2.0, 3.0, 4.0, 5.0)))
-    val data = sc.parallelize(dataRaw)
-
-    naiveDifferenceTopK(data, testedWord, List(3, 1)).collect() should be(Array("dummy", "blue", "orange"))
-  }
-
 
 }
