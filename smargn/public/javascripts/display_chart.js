@@ -3,16 +3,12 @@
  */
 function display_chart() {
     // Download data.csv
-    $.get({
-        url: "/results/" + outputFolder() + "data.csv",
-        success: function (data) {
-            console.log(data);
-        }
-    });
-    // Make graph visible
-    $("#chartContainer").css("visibility", "visible");
+    var dataCSV = "/assets/results/" + outputFolder() + "/data.csv";
+    console.log(dataCSV);
     // Display
-    d3.csv("/results/" + outputFolder() + "/data.csv", function (data) {
+    d3.csv(dataCSV, function (data) {
+        // Make graph visible
+        $("#chartContainer").css("visibility", "visible");
         var svg = dimple.newSvg("#chartContainer", 590, 400);
         var myChart = new dimple.chart(svg, data);
         myChart.setBounds(10, 20, 720, 480);
@@ -23,6 +19,7 @@ function display_chart() {
         myChart.addSeries("Word", dimple.plot.line);
         myChart.draw();
     });
+
 }
 
 function outputFolder() {
