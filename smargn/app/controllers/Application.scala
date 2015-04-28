@@ -126,7 +126,7 @@ object Application extends Controller with ResultParser {
             Logger.debug(s"Send job to YARN $hdfsResDir")
             client.exec(
               "bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster --num-executors 25" +
-                " SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
+                " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
                 if (params.nonEmpty) {
                   " -p " + params.mkString(",")
                 } else {
@@ -136,12 +136,12 @@ object Application extends Controller with ResultParser {
               Logger.debug("Job finished: " + res.exitCode.get)
 
               //Make the directory usable by others in the group
-              client.exec("bash -c \"source .bashrc; hadoop fs -chmod -R 770 hdfs://" + hdfsResDir + "\"").right
+              client.exec("bash -c \"source .bashrc; hadoop fs -chmod -R 775 hdfs://" + hdfsResDir + "\"").right
                 .flatMap { res =>
                 Logger.debug("chmod done " + res.exitCode.get)
 
                 // Download results from HDFS to local on cluster
-                client.exec("bash -c \"source .bashrc; hadoop fs -get " + hdfsResDir + "/results.txt\" ~/results.txt")
+                client.exec("bash -c \"source .bashrc; hadoop fs -getmerge " + hdfsResDir + "/results/\" ~/results.txt")
                   .right.flatMap { res =>
                   Logger.debug("get results.txt done " + res.exitCode.get)
 
@@ -150,7 +150,7 @@ object Application extends Controller with ResultParser {
                     Logger.debug("results.txt downloaded to " + outputDir)
 
                     // Download data.csv from HDFS to local on cluster
-                    client.exec("bash -c \"source .bashrc; hadoop fs -get " + hdfsResDir + "/data.csv\" ~/data.csv")
+                    client.exec("bash -c \"source .bashrc; hadoop fs -getmerge " + hdfsResDir + "/data/\" ~/data.csv")
                       .right.flatMap { res =>
                       Logger.debug("get data.csv done " + res.exitCode.get)
 
