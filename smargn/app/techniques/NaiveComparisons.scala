@@ -52,8 +52,7 @@ object NaiveComparisons {
       x._2 < y._2
     } else x._1 < y._1
     val retrievedWords = retrieveTopK(k.toInt, naiveDifferenceMetricTopK, data, testedWord, order, List(acceptedDifference))
-    val sc = Spark.ctx
-    sc.parallelize(retrievedWords)
+    data.sparkContext.parallelize(retrievedWords)
   }
 
   def naiveDifferenceTopKScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
@@ -66,8 +65,7 @@ object NaiveComparisons {
       x._2 < y._2
     } else x._1 < y._1
     val retrievedWords = retrieveTopK(k.toInt, naiveDivisionMetricTopK, data, testedWord, order)
-    val sc = Spark.ctx
-    sc.parallelize(retrievedWords)
+    data.sparkContext.parallelize(retrievedWords)
   }
 
   /**
