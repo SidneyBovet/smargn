@@ -4,15 +4,15 @@
 function display_chart() {
     // Download data.csv
     $.get({
-        url: "/results/"+ outputFolder() +"data.csv",
-        success: function(data) {
+        url: "/results/" + outputFolder() + "data.csv",
+        success: function (data) {
             console.log(data);
         }
     });
     // Make graph visible
     $("#chartContainer").css("visibility", "visible");
     // Display
-    d3.csv("/results/"+ outputFolder() + "/data.csv", function (data) {
+    d3.csv("/results/" + outputFolder() + "/data.csv", function (data) {
         var svg = dimple.newSvg("#chartContainer", 590, 400);
         var myChart = new dimple.chart(svg, data);
         myChart.setBounds(10, 20, 720, 480);
@@ -34,7 +34,7 @@ function outputFolder() {
         }
     }
 
-    var technique = $("#technique_selector").val();
+    var technique = $("#technique_selector").val().toString().toLowerCase();
     var parameters = [];
     for (i = 1; i <= $("#input_params > .input-group").length; i++) {
         var param = $("#parameter" + i).val();
@@ -42,5 +42,5 @@ function outputFolder() {
             parameters.push(param);
         }
     }
-    return words.join("-") + "_" + technique + "_" + parameters.join("-")
+    return (words.join("-") + "_" + technique + "_" + parameters.join("-")).toString()
 }
