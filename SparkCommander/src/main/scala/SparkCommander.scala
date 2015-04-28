@@ -1,6 +1,7 @@
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
 import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
+import utils.HDFSHandler
 import utils.Launcher._
 
 /**
@@ -49,11 +50,16 @@ object SparkCommander {
       .setMaster("yarn-cluster")
       .set("num-executors", "25")
 
-    val sc = new SparkContext(conf)
+    @transient val sc = new SparkContext(conf)
 
     parser.parse(args, Config(words = Seq(), technique = null, parameters = Seq())) match {
       case Some(Config(words, technique, parameters)) =>
         val output = createOutput(words, technique, parameters)
+
+        val hdfs = new HDFSHandler(sc.hadoopConfiguration)
+        // Create folder for results
+        hdfs.createFolder(output)
+        hdfs.close()
 
         val tech: Technique = technique match {
           case "Naive" => NaiveComparisons.naiveDifferenceScalingMax
@@ -62,7 +68,7 @@ object SparkCommander {
           case _ => NaiveComparisons.naiveDifferenceScalingMax
         }
 
-        runList(words.toList, INPUT, output, parameters.toList, tech, sc)
+        runList(words, INPUT, output, parameters.toList, tech, sc)
       case None => // Bad arguments
     }
 

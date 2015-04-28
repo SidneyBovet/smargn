@@ -20,10 +20,9 @@ object Formatting {
   /**
    * Get the word's frequency from the data for a list of words
    * @param formattedData the formatted data we will look into
-   * @param words the list of words we want to find the frequency
+   * @param word the word we want to find the frequency list
    * @return the complete representation (word, freq) of the list of words
    */
-  def searchWordFormatter(formattedData: RDD[(String, Array[Double])],
-                          words: List[String]): RDD[(String, Array[Double])] =
-    formattedData.filter { case (w, o) => words.contains(w) }
+  def searchWordFormatter(formattedData: RDD[(String, Array[Double])], word: String): RDD[(String, Array[Double])] =
+    formattedData.filter { case (w, o) => word == w }
 }
