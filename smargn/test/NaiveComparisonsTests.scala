@@ -67,4 +67,60 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
     naiveDivision(data, testedWord, List(0.8)).collect().sortWith(_ < _) should be(Array("flower").sortWith(_ < _))
   }
 
+
+  test("testMetricDifferenceTopKMiddle") {
+    val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
+    val word2 = ("green", Array(0.0, 3.0, 2.0, 5.0, 5.0))
+    naiveDifferenceMetricTopK(word1, word2, List(1)) should be(0.8)
+  }
+
+  test("testMetricDifferenceTopKGood") {
+    val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
+    val word2 = ("green", Array(0.0, 2.0, 3.0, 5.0, 5.0))
+    naiveDifferenceMetricTopK(word1, word2, List(1)) should be(0.4)
+  }
+
+  test("testMetricDifferenceTopKPerfect") {
+    val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
+    val word2 = ("green", Array(1.0, 2.0, 3.0, 4.0, 5.0))
+    naiveDifferenceMetricTopK(word1, word2, List(1)) should be(0.0)
+  }
+
+  test("testMetricDifferenceTopKBad") {
+    val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
+    val word2 = ("green", Array(5.0, 10.0, 2.0, 5.0, 7.0))
+    naiveDifferenceMetricTopK(word1, word2, List(1)) should be(8.0)
+  }
+
+  test("testMetricDifferenceTopKWorst") {
+    val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
+    val word2 = ("green", Array(5.0, 10.0, 20.0, 50.0, 55.0))
+    naiveDifferenceMetricTopK(word1, word2, List(1)) should be(125.0)
+  }
+
+  test("testMetricDivisionTopKNormal") {
+    val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
+    val word2 = ("green", Array(1.0, 4.0, 3.0, 5.0, 5.0))
+    naiveDivisionMetricTopK(word1, word2, List(1)) should be(0.5)
+  }
+
+
+  test("testMetricDivisionTopK0Num") {
+    val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
+    val word2 = ("green", Array(1.0, 4.0, 3.0, 5.0, 5.0))
+    naiveDivisionMetricTopK(word1, word2) should be(2.5)
+  }
+
+  test("testMetricDivisionTopK0Den") {
+    val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
+    val word2 = ("green", Array(1.0, 4.0, 0.0, 5.0, 5.0))
+    naiveDivisionMetricTopK(word1, word2) should be(2.5)
+  }
+
+  test("testMetricDivisionTopK0DenNum") {
+    val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
+    val word2 = ("green", Array(1.0, 4.0, 0.0, 5.0, 5.0))
+    naiveDivisionMetricTopK(word1, word2) should be(0.5)
+  }
+
 }

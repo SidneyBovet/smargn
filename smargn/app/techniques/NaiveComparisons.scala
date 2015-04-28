@@ -174,8 +174,13 @@ object NaiveComparisons {
     val acceptedDifference = parameters.head
     val zipped = word1._2.zip(word2._2)
     val divided = zipped.map(x => math.abs((if (x._1 == 0) {
-      x._2
-    } else {
+      if (x._2 == 0) {
+        1
+      } else {
+        x._2 * x._2
+      }
+    }
+    else {
       x._1
     }) / (if (x._2 == 0) {
       1
@@ -189,5 +194,38 @@ object NaiveComparisons {
       Double.MaxValue
     }
   }
+
+  def naiveDifferenceMetricTopK(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List(15)): Double = {
+    val acceptedDifference = parameters.head
+    val zipped = word1._2.zip(word2._2)
+    val zippedDif = zipped.map(x => math.abs(x._1 - x._2))
+    val trueDif = zippedDif.map(_ <= acceptedDifference).filter(_ == true)
+    if (trueDif.length > 0) {
+      zippedDif.sum / trueDif.length
+    } else {
+      zippedDif.sum
+    }
+  }
+
+  def naiveDivisionMetricTopK(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List()): Double = {
+    val zipped = word1._2.zip(word2._2)
+    val divided = zipped.map(x => math.abs((if (x._1 == 0) {
+      if (x._2 == 0) {
+        1
+      } else {
+        x._2 * x._2
+      }
+    }
+    else {
+      x._1
+    }) / (if (x._2 == 0) {
+      1
+    } else {
+      x._2
+    })))
+    val minMax = findMinAndMax(divided)
+    minMax._2 - minMax._1
+  }
+
 
 }
