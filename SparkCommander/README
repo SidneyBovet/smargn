@@ -1,0 +1,39 @@
+Sparkcommander:
+===============
+
+This application should be on the cluster and is submitted as a jar to Spark
+by smargn.
+To code in Sparkcommander:
+ - Follow the instructions in ../README to add your technique. It involves
+   modifying src/main/scala/SparkCommander.scala
+
+ - use the command 'sbt assembly' in the folder SparkCommander/ to package and
+   add all dependencies in the jar. Then upload to the cluster using SCP: 'scp
+   <path to SparkCommander>/target/scala-2.10/SparkCommander-assembly-1.0.jar
+   <your gaspar login>@icdataportal2:~'. Example for myself: 'scp
+   ./target/scala-2.10/SparkCommander-assembly-1.0.jar rutz@icdataportal2:~'
+   (When I am in the folder SparkCommander).
+
+ - If you want to test only your technique without the Web Interface, create an
+   SSH connection to icdataportal2, then use the command 'spark-submit --class
+   SparkCommander --master yarn-client SparkCommander-assembly-1.0.jar <word>...
+   -n technique_name <parameter>...' Where <word>... is a list of space
+   separated words you want to search and <parameter> is a list of space
+   separated doubles which are the parameters for this technique. If any error
+   in the parameters of SparkCommander is made, it should print explanations on
+   what are the parameters and how to put them in the command line (Thank you
+   scopt: https://github.com/scopt/scopt).
+   To get your results, use 'hadoop fs -<the command you want>
+   /projects/temporal-profiles/results/<dash separated list of the
+   words>_<technique name>_<dash separated list of the parameters as doubles>/
+   results.txt'. The results are displayed as follows:
+   <word> -> [list of similar words]
+   <word> -> NOSIMILARWORDS
+   <word> -> ERROR404
+   We assume it to be trivial to understand the format.
+   If you want to relaunch the same command twice, do not forget to rm -R the
+   folder of your results being /project/temporal-profiles/results/<your folder>
+   otherwise, it could happen that the program crashes since it should only be
+   called when the results have never been computed before.
+
+If questions have not been answered, contact me! :)

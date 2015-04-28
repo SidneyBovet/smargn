@@ -1,4 +1,3 @@
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
 import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
@@ -25,40 +24,44 @@ object SparkCommander {
    * @param technique the technique to use
    * @param parameters the parameter for that technique
    */
-  case class Config(words: Seq[String], technique: String, parameters: Seq[Double])
+  case class Config(words: Seq[String] = Seq[String](), technique: String = "", parameters: Seq[Double] = Seq[Double]())
 
   private val parser = new OptionParser[Config]("scopt") {
     head("SparkCommander", "1.0")
-    opt[Seq[String]]('w', "words") action {
+
+    opt[Seq[String]]('w', "words") valueName "<word1>,<word2>,..." action {
       (words, config) => config.copy(words = words)
     } text "The words you want to search"
     opt[String]('t', "technique") action {
       (technique, config) => config.copy(technique = technique)
     } text "The technique you want to use"
-    opt[Seq[Double]]('p', "parameters") action {
+    opt[Seq[Double]]('p', "parameters") valueName "<param1>,<param2>..." optional() action {
       (parameters, config) => config.copy(parameters = parameters)
-    } text "The parameters for this technique"
+    } text "Optional parameters for this technique"
   }
 
   /**
    *
-   * @param args must be in the format:
-   *             -w word1, word2?, ...  -t technique_name -p param1?, param2?, ...
+   * @param args must be in the format: -w word1,word2?,...  -t technique_name -p param1?,param2?,...
    */
   def main(args: Array[String]) = {
-    val conf = new SparkConf().setAppName("SparkCommander").setMaster("yarn-client")
+    val conf = new SparkConf().setAppName("SparkCommander")
+      .setMaster("yarn-cluster")
+      .set("num-executors", "25")
 
     val sc = new SparkContext(conf)
 
     parser.parse(args, Config(words = Seq(), technique = null, parameters = Seq())) match {
       case Some(Config(words, technique, parameters)) =>
         val output = createOutput(words, technique, parameters)
-        val tech: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)] = technique match {
+
+        val tech: Technique = technique match {
           case "Naive" => NaiveComparisons.naiveDifferenceScalingMax
           case "Inverse" => NaiveInverseComparisons.naiveInverseDifference
           case "Shift" => NaiveShiftComparison.naiveDifferenceShift
           case _ => NaiveComparisons.naiveDifferenceScalingMax
         }
+
         runList(words.toList, INPUT, output, parameters.toList, tech, sc)
       case None => // Bad arguments
     }

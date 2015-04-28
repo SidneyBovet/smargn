@@ -12,7 +12,7 @@ import utils.Grapher._
  * Main launcher of the program
  */
 object Launcher {
-  private type Technique = (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[String]
+  type Technique = (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[String]
   private val startYear = 1840
   private val endYear = 2000
   private val NB_RES = 10
@@ -48,7 +48,6 @@ object Launcher {
     // testedWords is the line with the words we look for and its occurrences
     val testedWords = searchWordFormatter(formattedData, List(word))
 
-
     if (testedWords.count == 0) {
       List(NOTFOUND)
     } else {
@@ -70,7 +69,7 @@ object Launcher {
 
       // Get stream by creating file projects/temporal-profiles/<depends on the query>/data.csv or appending to it
       // Print to projects/temporal-profiles/<depends on the query>/data.csv
-      hdfs.appendToFile(dataCSVPath)(toGraph)
+      hdfs.appendToFile(dataCSVPath)(if (!hdfs.exists(dataCSVPath)) "Word,Year,Occurrences" :: toGraph else toGraph)
 
       if (similarWords.length == 0) {
         List(NSW)

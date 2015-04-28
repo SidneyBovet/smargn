@@ -111,28 +111,28 @@ object Application extends Controller with ResultParser {
           val paramsStr = if (params.nonEmpty) s"_${params.mkString("-")}" else ""
           val outputDir = s"${words.mkString("-")}_${name.toLowerCase}$paramsStr"
 
-          val resultsPath = FileSystems.getDefault.getPath(s"./results/$outputDir/")
+          val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$outputDir/")
           if (Files.notExists(resultsPath)) {
             Files.createDirectory(resultsPath)
           }
-          val res = SSH("icdataportal2") { client =>
+          SSH("icdataportal2") { client =>
             Logger.debug("Connection to icdataportal2 complete")
-            // Go to bash
-            val hdfsResDir = s"/projects/temporal-profiles/results/$outputDir/"
+            val hdfsResDir = "/projects/temporal-profiles/results/" + outputDir
 
             // TODO before sending the job to YARN, check if the directory already exists on HDFS
             // Send the job to YARN with the correct arguments
             // At each step, exit code 0 means success. All others mean failure.
             // See http://support.attachmate.com/techdocs/2116.html for more details on exit codes
             Logger.debug(s"Send job to YARN $hdfsResDir")
-            client.exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-client " +
-              "SparkCommander-assembly-1.0.jar -w " + words.mkString(" ") + " -t " + name + {
-              if (params.nonEmpty) {
-                " -p " + params.mkString(" ")
-              } else {
-                ""
-              }
-            } + "\"").right.flatMap { res =>
+            client.exec(
+              "bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster --num-executors 25" +
+                " SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
+                if (params.nonEmpty) {
+                  " -p " + params.mkString(",")
+                } else {
+                  ""
+                }
+              } + "\"").right.flatMap { res =>
               Logger.debug("Job finished: " + res.exitCode.get)
 
               //Make the directory usable by others in the group
@@ -141,8 +141,8 @@ object Application extends Controller with ResultParser {
                 Logger.debug("chmod done " + res.exitCode.get)
 
                 // Download results from HDFS to local on cluster
-                client.exec("bash -c \"source .bashrc; hadoop fs -get hdfs://" + hdfsResDir +
-                  "/results.txt\" ~/results.txt").right.flatMap { res =>
+                client.exec("bash -c \"source .bashrc; hadoop fs -get " + hdfsResDir + "/results.txt\" ~/results.txt")
+                  .right.flatMap { res =>
                   Logger.debug("get results.txt done " + res.exitCode.get)
 
                   // Download results from cluster to server
@@ -150,19 +150,22 @@ object Application extends Controller with ResultParser {
                     Logger.debug("results.txt downloaded to " + outputDir)
 
                     // Download data.csv from HDFS to local on cluster
-                    client.exec("bash -c \"source .bashrc; hadoop fs -get hdfs://" + hdfsResDir +
-                      "/data.csv\" ~/data.csv").right.flatMap { res =>
+                    client.exec("bash -c \"source .bashrc; hadoop fs -get " + hdfsResDir + "/data.csv\" ~/data.csv")
+                      .right.flatMap { res =>
                       Logger.debug("get data.csv done " + res.exitCode.get)
 
                       // Download data.csv from cluster to server
-                      client.download("data.csv", "./results/" + outputDir + "/").right.map { res =>
+                      client.download("data.csv", "./public/results/" + outputDir + "/").right.map { res =>
                         Logger.debug("data.csv downloaded to " + outputDir)
                         client.exec("bash -c \"source .bashrc; rm results.txt data.csv\"").right
                           .map { res => Logger.debug("Deleted results.txt and data.csv from local on the cluster")
 
                           // Read downloaded result file
-                          val resultsStr = Source.fromFile("./results/" + outputDir + "/results.txt", "utf-8").getLines
-                          resultsToJson(stdOutToMap(resultsStr.toList))
+                          val resultsStream = Source.fromFile("./public/results/" + outputDir + "/results.txt", "utf-8")
+                          val resultsStr = resultsStream.getLines().toList
+                          resultsStream.close()
+                          // Send back results to the browser
+                          Ok(resultsToJson(stdOutToMap(resultsStr)))
                         }
                       }
                     }
@@ -170,11 +173,7 @@ object Application extends Controller with ResultParser {
                 }
               }
             }
-          }
-
-          // Send back results to the browser
-          Logger.debug(Json.prettyPrint(res.right.get.right.get.right.get))
-          Ok(res.right.get.right.get.right.get)
+          }.right.get.right.get.right.get
       }
     }
   }
