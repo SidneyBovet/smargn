@@ -17,16 +17,6 @@ object Application extends Controller with ResultParser {
   private val INPUT = "input/"
   private val OUTPUT = "public/data/"
 
-  private def createOutput(words: Seq[String], technique: String, params: Seq[Double]): String = {
-    s"hdfs:///projects/temporal-profiles/results/${words.mkString("-")}_${technique.toLowerCase}${
-      if (params.nonEmpty) {
-        s"_${params.mkString("-")}"
-      } else {
-        ""
-      }
-    }/"
-  }
-
   // Enables CORS
   val headers: List[(String, String)] = List("Access-Control-Allow-Origin" -> "*",
     "Access-Control-Allow-Methods" -> "GET, POST, OPTIONS", "Access-Control-Max-Age" -> "3600",
@@ -141,23 +131,23 @@ object Application extends Controller with ResultParser {
                 Logger.debug("chmod done " + res.exitCode.get)
 
                 // Download results from HDFS to local on cluster
-                client.exec("bash -c \"source .bashrc; hadoop fs -getmerge " + hdfsResDir + "/results/\" ~/results.txt")
+                client.exec("bash -c \"source .bashrc; hadoop fs -getmerge " + hdfsResDir + "/results ~/results.txt\"")
                   .right.flatMap { res =>
                   Logger.debug("get results.txt done " + res.exitCode.get)
-
                   // Download results from cluster to server
-                  client.download("results.txt", "./results/" + outputDir + "/").right.map { res =>
+                  client.download("results.txt", "./public/results/" + outputDir).right.map { res =>
                     Logger.debug("results.txt downloaded to " + outputDir)
 
                     // Download data.csv from HDFS to local on cluster
-                    client.exec("bash -c \"source .bashrc; hadoop fs -getmerge " + hdfsResDir + "/data/\" ~/data.csv")
+                    client.exec("bash -c \"source .bashrc; hadoop fs -getmerge " + hdfsResDir + "/data ~/data.csv\"")
                       .right.flatMap { res =>
                       Logger.debug("get data.csv done " + res.exitCode.get)
 
                       // Download data.csv from cluster to server
-                      client.download("data.csv", "./public/results/" + outputDir + "/").right.map { res =>
+                      client.download("data.csv", "./public/results/" + outputDir).right.map { res =>
                         Logger.debug("data.csv downloaded to " + outputDir)
-                        client.exec("bash -c \"source .bashrc; rm results.txt data.csv\"").right
+                        // Remove results and data frorm local account on the cluster
+                        client.exec("rm results.txt data.csv").right
                           .map { res => Logger.debug("Deleted results.txt and data.csv from local on the cluster")
 
                           // Read downloaded result file
@@ -172,7 +162,7 @@ object Application extends Controller with ResultParser {
                   }
                 }
               }
-            }
+            } // up up down down left right left right B A start
           }.right.get.right.get.right.get
       }
     }
@@ -195,7 +185,7 @@ object Application extends Controller with ResultParser {
   }
 
   private def stdOutToMap(results: List[String]): Map[String, List[String]] = {
-    Logger.debug("Results are: " + results)
+    //    Logger.debug("Results are: " + results)
     results.flatMap(e => parse(result, e).get).toMap
   }
 
