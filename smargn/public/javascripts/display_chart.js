@@ -3,14 +3,19 @@
  */
 function display_chart() {
     // Download data.csv
-    var dataCSV = "/datacsv/" + outputFolder();
+    $.get({
+        url: "/results/" + outputFolder() + "data.csv",
+        success: function (data) {
+            console.log(data);
+        }
+    });
+    // Make graph visible
+    $("#chartContainer").css("visibility", "visible");
     // Display
-    d3.csv(dataCSV, function (data) {
-        // Make graph visible
-        $("#chartContainer").css("visibility", "visible");
+    d3.csv("/results/" + outputFolder() + "/data.csv", function (data) {
         var svg = dimple.newSvg("#chartContainer", 590, 400);
         var myChart = new dimple.chart(svg, data);
-        myChart.setBounds(60, 30, 505, 305);
+        myChart.setBounds(10, 20, 720, 480);
         var x = myChart.addCategoryAxis("x", "Year");
         x.addOrderRule("Date");
         var y = myChart.addMeasureAxis("y", "Occurrences");
