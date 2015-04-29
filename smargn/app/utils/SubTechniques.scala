@@ -92,7 +92,7 @@ object SubTechniques {
   /**
    * The function is used to found words that are similar up to a time t and then diverge
    * @param data collection of word, frequency to tuple to look into
-   * @param testedWord word that we want to find its similar word
+   * @param testedWord word that we want to find its similar word (acceptedDifference, miniOfDivergence, falseVariation)
    * @param parameters parameters applicable to the given technique
    * @param similarityTechnique the function that implements the technique we want to use
    * @return words that are similar up to a time t and then diverge
@@ -100,6 +100,7 @@ object SubTechniques {
   def divergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double],
                  similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)]): RDD[(String)] = {
     val acceptedDifference = parameters.head
+    //use miniOfDivergence =  30
     val miniOfDivergence = parameters(1)
     val falseVariation = parameters(2)
     //add the testedWord values to the arrays and compute difference for future comparison

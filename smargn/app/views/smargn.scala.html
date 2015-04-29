@@ -22,27 +22,28 @@
                 <input type="text" class="form-control" placeholder="word4" id="word4">
             </div>
 
-            <button onclick="send_words()" type="button" class="btn btn-default" id="search">Smargn 'em all!</button>
+            <button onclick="send_words ( )" type="button" class="btn btn-default" id="search">Smargn 'em all!</button>
         </div>
         <div class="col-md-4" id="parameters">
-            <!-- Parameters of technique -->
+                <!-- Parameters of technique -->
             <div id="input_params">
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="parameter1" id="parameter1">
                 </div>
             </div>
-            <!-- Choose technique to apply -->
+                <!-- Choose technique to apply -->
             <form role="form">
                 <div class="form-group">
-                    <select class="form-control" id="technique_selector" onchange="adapt_params(this)">
-                        <!-- Add your technique T here -->
-                        <!-- Example:
+                    <select class="form-control" id="technique_selector" onchange="adapt_params ( this )">
+                            <!-- Add your technique T here -->
+                            <!-- Example:
                         <option>T.name</option>
                         -->
                         <option>Naive</option>
                         <option>Inverse</option>
                         <option>Shift</option>
                         <option>DTW</option>
+                        <option>Divergence</option>
                     </select>
                 </div>
             </form>
@@ -57,7 +58,7 @@
         </div>
 
         <div class="col-md-12">
-            <button onclick="display_chart()" type="button" class="btn btn-default" id="display">Display 'em all</button>
+            <button onclick="display_chart ( )" type="button" class="btn btn-default" id="display">Display 'em all</button>
             <div id="chartContainer">
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.8/d3.js"></script>
                 <script src="http://dimplejs.org/dist/dimple.v2.1.2.js"></script>
