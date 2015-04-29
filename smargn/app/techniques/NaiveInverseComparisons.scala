@@ -19,7 +19,7 @@ object NaiveInverseComparisons {
    */
   def naiveInverseDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                              parameters: List[Double]): RDD[(String)] = {
-    NaiveComparisons.naiveDifference(data, inverse(testedWord), parameters)
+    NaiveComparisons.naiveDifference(data, (testedWord._1, testedWord._2.reverse), parameters)
   }
 
 }
