@@ -86,6 +86,7 @@ object SubTechniques {
         }
       }
     }
+    println("COunterOFFalse => " + counterOfFalse)
     counterOfFalse
   }
 
