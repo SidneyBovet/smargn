@@ -18,11 +18,10 @@ object Smoothing {
   /**
    * Given a parameter x, smooth the curve by doing the average of x points together.
    * @param data collection of (word, frequency)
-   * @param parameters the number of points to average together
+   * @param smoothingValue the number of points to average together
    * @return the smoothed data
    */
-  def smooth(data: RDD[(String, Array[Double])], parameters: List[Double]): RDD[(String, Array[Double])] = {
-    val smoothingValue = parameters.head
+  def smooth(data: RDD[(String, Array[Double])], smoothingValue: Double): RDD[(String, Array[Double])] = {
     val smoothedData = data.map(x => (x._1, averageByWindow(x._2, smoothingValue)))
     return smoothedData
   }
