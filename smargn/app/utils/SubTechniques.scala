@@ -1,7 +1,6 @@
 package utils
 
 import org.apache.spark.rdd.RDD
-import utils.Smoothing._
 
 
 /**
@@ -92,7 +91,8 @@ object SubTechniques {
 
   /**
    * The function is used to found words that are similar up to a time t and then diverge
-   * @param zipDataTestedWord list of number of words per year
+   * @param testedWordSample list of number of words per year
+   * @param AWordSampleFromData list of number of words per year
    * @param convergencePercentage percentage used to define what must be the number of points similar to each other in
    *                              the two tested word in order to say the curve is similar
    *                              (use it with the size of the array of the testedWord)
@@ -100,107 +100,12 @@ object SubTechniques {
    *
    * @return if the two tested sample words are similar.
    */
-  def evalConvergence(zipDataTestedWord: (String, Array[(Double, Double)]), convergencePercentage: Double, differencethreshold: Double): Boolean = {
-    val differenceValue = zipDataTestedWord._2.map(x => math.abs(x._1 - x._2))
+  def evalConvergence(testedWordSample: Array[Double], AWordSampleFromData: Array[Double], convergencePercentage: Double, differencethreshold: Double): Boolean = {
+    val differenceValue = testedWordSample.zip(AWordSampleFromData).map(x => math.abs(x._1 - x._2))
     val listOfSimilarPoints = differenceValue.map(y => y <= differencethreshold)
-    val numberOfsimilarPoints = listOfSimilarPoints.count(_ == true)
-    numberOfsimilarPoints >= zipDataTestedWord._2.length * convergencePercentage
+    val numberOfsimilarPoints = listOfSimilarPoints.filter(_ == true).size
+    return numberOfsimilarPoints >= testedWordSample.length * convergencePercentage
   }
-
-
-  // Curve MUST be smoothed otherwise it won't work
-  def testEvolutionOfDifference(zipDataTestedWord: (String, Array[(Double, Double)]), maxNumberOfOutsidersDecreasing: Int = 7, maxNumberOfOutsidersIncreasing: Int = 7): Boolean = {
-    val differences = zipDataTestedWord._2.map(x => math.abs(x._1 - x._2))
-    var current: Double = differences.head
-    var outsiders = 0
-    var outsidersIncreasing = 0
-    var x: Double = 0
-    var init = true
-    var decreasingTesting = true
-    val log = true
-
-
-    for (x <- differences) {
-      // must have a leat one "intersection" of the curves
-      if (init) {
-        current = x
-        init = false
-      }
-      else {
-
-        if (decreasingTesting) {
-          if (x < current) {
-            println("DOWN")
-            current = x
-          }
-          else {
-            println("UP")
-            outsiders = outsiders + 1
-            if (outsiders >= maxNumberOfOutsidersDecreasing) {
-              println("END DECREASING because the curve is not decreasing anymore")
-              decreasingTesting = false
-            }
-          }
-        }
-        else {
-          if (x > current) {
-            println("UP")
-            current = x
-          }
-          else {
-            println("DOWN")
-            outsidersIncreasing = outsidersIncreasing + 1
-            if (outsidersIncreasing >= maxNumberOfOutsidersIncreasing) {
-              println("BAD END")
-              return false
-            }
-          }
-        }
-
-      }
-
-
-    }
-    true
-  }
-
-  // In the function the curves will be smoothed!
-  def smarterDivergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val maxNumberOfOutsiders = parameters.head // good to use 7
-    val maxNumberOfOutsidersIncreasing = parameters(1) // good to use 7
-    val smoothingValue = parameters(2) // good to use >= 10
-    val smoothtestedWord = smooth(testedWord, smoothingValue)
-
-
-    val dataSmoothed = smooth(data, smoothingValue)
-    //    println(dataSmoothed.first._2.toList)
-
-
-    val zipDataTestedWord = dataSmoothed.map(x => (x._1, smoothtestedWord._2.zip(x._2)))
-    // take a tuple (word, (point1TestValue1,point1TestValue2),(point2TestValue1,point2TestValue1),...) and first map to (word, true) if they do the divergence
-    zipDataTestedWord.map(x => (x._1, testEvolutionOfDifference(x, maxNumberOfOutsiders.toInt, maxNumberOfOutsidersIncreasing.toInt))).filter(x => x._2).map(_._1)
-  }
-
-
-  //  //  WORK IN PROGRESS
-  //  def testConvergence(zipDataTestedWord: (String, Array[(Double, Double)]), minimumConvergenceWindow: Double = 7.0): Boolean = {
-  //    val arrToTest = zipDataTestedWord._2
-  //    var middleIndex: Int = arrToTest.length / 2
-  //    var initialIndexAddLeft: Int = minimumConvergenceWindow.toInt / 2
-  //    var initialIndexAddRight: Int = minimumConvergenceWindow.toInt - initialIndexAddLeft
-  //    var rightIndex: Int = 0
-  //    var leftIndex: Int = 0
-  //    if (minimumConvergenceWindow > 1.0) {
-  //      rightIndex = middleIndex + initialIndexAddRight
-  //      leftIndex = middleIndex - initialIndexAddLeft
-  //    }
-  //    else {
-  //      rightIndex = middleIndex
-  //      leftIndex = middleIndex - 1
-  //    }
-  //    true
-  //  }
-
 
   /**
    * The function is used to found words that are similar up to a time t and then diverge
