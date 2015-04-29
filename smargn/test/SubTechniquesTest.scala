@@ -73,4 +73,31 @@ class SubTechniquesTest extends SparkTestUtils with ShouldMatchers {
     naiveDifferenceDivergence(data, testedWord, List(1.0, 3.0, 3.0)).collect().sortWith(_ < _) should be(Array("cloud", "sea"))
   }
 
+
+  sparkTest("testDivergenceInverse1") {
+    val testedWord = ("word1", Array(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 5.0, 7.0, 9.0, 20.0, 23.0).reverse)
+
+    val dataRaw = Array(("sea", Array(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 2.0, 10.0, 0.0).reverse))
+    val data = sc.parallelize(dataRaw)
+    naiveInverseDifferenceDivergence(data, testedWord, List(1.0, 3.0, 3.0)).collect().sortWith(_ < _) should be(Array("sea"))
+  }
+
+  // Here we would expect an empty array because we have two value in sea that differ form the word1. But the two curves
+  // do not diverge
+  sparkTest("testDivergenceInverse2") {
+    val testedWord = ("word1", Array(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 5.0, 7.0, 9.0, 20.0, 23.0).reverse)
+    val dataRaw = Array(("sea", Array(3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 5.0, 2.0, 2.0, 19.0, 23.0).reverse))
+    val data = sc.parallelize(dataRaw)
+    naiveInverseDifferenceDivergence(data, testedWord, List(1.0, 3.0, 3.0)).collect().sortWith(_ < _) should be(Array())
+  }
+
+  sparkTest("testDivergenceInverse3") {
+    val testedWord = ("word1", Array(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 5.0, 7.0, 9.0, 20.0, 23.0).reverse)
+    val dataRaw = Array(("sea", Array(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 2.0, 10.0, 0.0)), ("sky", Array(13.0, 23.0, 33.0, 33.0, 0.0, 30.0, 0.0, 2.0, 2.0, 1.0, 0.0)), ("cloud", Array(3.0, 3.0, 3.0, 3.0, 3.0, 0.0, 0.0, 2.0, 2.0, 10.0, 0.0)))
+    val dataRawReversed = dataRaw.map(x => (x._1, x._2.reverse))
+    val data = sc.parallelize(dataRawReversed)
+    naiveInverseDifferenceDivergence(data, testedWord, List(1.0, 3.0, 3.0)).collect().sortWith(_ < _) should be(Array("cloud", "sea"))
+  }
+
+
 }
