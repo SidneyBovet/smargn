@@ -25,13 +25,13 @@ object TestCases {
            differentWords: List[String], parameters: List[Double],
            similarityTechnique: Technique): Double = {
 
-    var result : RDD[(String)] = similarityTechnique(data,testedWord,parameters)
+    val result : RDD[(String)] = similarityTechnique(data,testedWord,parameters)
 
 
-    var simWords = count(result,similarWords)
-    var diffWords = count(result,differentWords)
-    var simRatio = simWords.toDouble / similarWords.size.toDouble
-    var diffRatio = diffWords.toDouble / similarWords.size.toDouble
+    val simWords = count(result,similarWords)
+    val diffWords = count(result,differentWords)
+    val simRatio = simWords.toDouble / similarWords.size.toDouble
+    val diffRatio = diffWords.toDouble / similarWords.size.toDouble
 
 
 
