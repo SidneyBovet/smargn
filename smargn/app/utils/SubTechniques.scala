@@ -91,14 +91,30 @@ object SubTechniques {
 
   /**
    * The function is used to found words that are similar up to a time t and then diverge
+   * @param testedWordSample list of number of words per year
+   * @param AWordSampleFromData list of number of words per year
+   * @param convergencePercentage percentage used to define what must be the number of points similar to each other in
+   *                              the two tested word in order to say the curve is similar
+   *                              (use it with the size of the array of the testedWord)
+   * @param differencethreshold threshold used in order to say if two point are similar or not
+   *
+   * @return if the two tested sample words are similar.
+   */
+  def evalConvergence(testedWordSample: Array[Double], AWordSampleFromData: Array[Double], convergencePercentage: Double, differencethreshold: Double): Boolean = {
+    val differenceValue = testedWordSample.zip(AWordSampleFromData).map(x => math.abs(x._1 - x._2))
+    val listOfSimilarPoints = differenceValue.map(y => y <= differencethreshold)
+    val numberOfsimilarPoints = listOfSimilarPoints.filter(_ == true).size
+    return numberOfsimilarPoints >= testedWordSample.length * convergencePercentage
+  }
+
+  /**
+   * The function is used to found words that are similar up to a time t and then diverge
    * @param data collection of word, frequency to tuple to look into
    * @param testedWord word that we want to find its similar word (acceptedDifference, miniOfDivergence, falseVariation)
    * @param parameters parameters applicable to the given technique
-   * @param similarityTechnique the function that implements the technique we want to use
    * @return words that are similar up to a time t and then diverge
    */
-  def divergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double],
-                 similarityTechnique: (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[(String)]): RDD[(String)] = {
+  def divergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
     val acceptedDifference = parameters.head
     //use miniOfDivergence =  30
     val miniOfDivergence = parameters(1)
