@@ -3,6 +3,7 @@ import org.scalatest.ShouldMatchers
 import techniques.NaiveShiftComparison._
 import techniques.NaiveInverseComparisons._
 import techniques.Divergence._
+import utils.SubTechniques._
 
 class SubTechniquesTest extends SparkTestUtils with ShouldMatchers {
 
@@ -97,5 +98,12 @@ class SubTechniquesTest extends SparkTestUtils with ShouldMatchers {
     val dataRawReversed = dataRaw.map(x => (x._1, x._2.reverse))
     val data = sc.parallelize(dataRawReversed)
     naiveInverseDifferenceDivergence(data, testedWord, List(1.0, 3.0, 3.0)).collect().sortWith(_ < _) should be(Array("cloud", "sea"))
+  }
+
+  sparkTest("testsmartDivergence1") {
+    val testedWord = ("vapeur", Array(421, 491, 387, 195, 220, 187, 171, 269, 213, 250, 282, 439, 348, 459, 903, 853, 1196, 1042, 937, 597, 652, 700, 815, 710, 599, 743, 640, 651, 874, 862, 844, 911, 944, 872, 914, 838, 659, 789, 760, 644, 710, 747, 766, 1003, 806, 780, 647, 860, 699, 692, 649, 1176, 1169, 990, 994, 1061, 1013, 876, 919, 851, 957, 836, 862, 764, 1241, 885, 906, 749, 674, 746, 723, 766, 1055, 873, 1015, 1809, 2127, 701, 261, 132, 289, 289, 353, 544, 387, 550, 714, 909, 940, 958, 697, 544, 402, 352, 428, 505, 435, 792, 420, 603, 611, 535, 401, 276, 248, 212, 248, 246, 167, 228, 225, 202, 212, 198, 208, 246, 247, 318, 385, 278, 240, 213, 194, 219, 198, 180, 179, 164, 159, 154, 194, 154, 113, 182, 138, 112, 150, 121, 174, 220, 167, 228, 298, 217, 328, 312, 554, 564, 540, 190, 257, 836, 2064, 408, 808, 496, 732, 1056, 30).map(x => x.toDouble))
+    val dataRaw = Array(("nucléaire", Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 1, 1, 1, 0, 0, 0, 4, 5, 0, 6, 1, 8, 0, 7, 64, 51, 52, 39, 48, 66, 222, 297, 232, 628, 554, 1129, 1201, 985, 1005, 1049, 1419, 1940, 1741, 1303, 1538, 1214, 803, 792, 587, 663, 563, 1145, 1217, 1595, 2179, 2293, 2371, 3589, 2176, 2366, 1827, 2091, 2400, 2033, 7320, 5338, 4440, 1328, 1492, 4928, 8226, 2148, 3634, 4186, 3642, 4428, 148).map(x => x.toDouble)))
+    val data = sc.parallelize(dataRaw)
+    smarterDivergence(data, testedWord, List(7.0, 7.0, 10.0)).collect().sortWith(_ < _) should be(Array("vapeur", "nucléaire"))
   }
 }

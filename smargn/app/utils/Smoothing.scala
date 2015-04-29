@@ -12,7 +12,7 @@ object Smoothing {
 
   def averageByWindow(arr: Array[Double], window: Double): Array[Double] = {
     val chunks = arr.grouped(window.toInt).toArray
-    return chunks.map(x => x.sum / x.size)
+    chunks.map(x => x.sum / x.size)
   }
 
   /**
@@ -23,7 +23,7 @@ object Smoothing {
    */
   def smooth(data: RDD[(String, Array[Double])], smoothingValue: Double): RDD[(String, Array[Double])] = {
     val smoothedData = data.map(x => (x._1, averageByWindow(x._2, smoothingValue)))
-    return smoothedData
+    smoothedData
   }
 
 }

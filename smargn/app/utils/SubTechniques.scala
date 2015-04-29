@@ -1,7 +1,7 @@
 package utils
 
 import org.apache.spark.rdd.RDD
-import utils.Smoothing
+import utils.Smoothing._
 
 
 /**
@@ -109,7 +109,7 @@ object SubTechniques {
 
 
   // Curve MUST be smoothed otherwise it won't work
-  def testEvolutionOfDifference(zipDataTestedWord: (String, Array[(Double, Double)]), maxNumberOfOutsiders: Int = 7.0, maxNumberOfOutsidersIncreasing: Int = 7.0): Boolean = {
+  def testEvolutionOfDifference(zipDataTestedWord: (String, Array[(Double, Double)]), maxNumberOfOutsiders: Int = 7, maxNumberOfOutsidersIncreasing: Int = 7): Boolean = {
     val differences = zipDataTestedWord._2.map(x => math.abs(x._1 - x._2))
     var current: Double = differences.head
     var outsiders = 0
@@ -155,6 +155,20 @@ object SubTechniques {
     true
   }
 
+  // In the function the curves will be smoothed!
+  def smarterDivergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
+    val maxNumberOfOutsiders = parameters.head
+    val maxNumberOfOutsidersIncreasing = parameters(1)
+    val smoothingValue = parameters(2)
+    val dataSmoothed = smooth(data, smoothingValue)
+
+
+    val zipDataTestedWord = dataSmoothed.map(x => (x._1, testedWord._2.zip(x._2)))
+    // take a tuple (word, (point1TestValue1,point1TestValue2),(point2TestValue1,point2TestValue1),...) and first map to (word, true) if they do the divergence
+    zipDataTestedWord.map(x => (x._1, testEvolutionOfDifference(x, maxNumberOfOutsiders.toInt, maxNumberOfOutsidersIncreasing.toInt))).filter(x => x._2).map(_._1)
+  }
+
+
   //  //  WORK IN PROGRESS
   //  def testConvergence(zipDataTestedWord: (String, Array[(Double, Double)]), minimumConvergenceWindow: Double = 7.0): Boolean = {
   //    val arrToTest = zipDataTestedWord._2
@@ -173,20 +187,6 @@ object SubTechniques {
   //    }
   //    true
   //  }
-
-
-  // In the function the curves will be smoothed!
-  def smarterDivergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val maxNumberOfOutsiders = parameters.head
-    val maxNumberOfOutsidersIncreasing = parameters(1)
-    val smoothingValue = parameters(2)
-    val dataSmoothed = Smoothing.smooth(data, smoothingValue)
-
-
-    val zipDataTestedWord = dataSmoothed.map(x => (x._1, testedWord._2.zip(x._2)))
-    // take a tuple (word, (point1TestValue1,point1TestValue2),(point2TestValue1,point2TestValue1),...) and first map to (word, true) if they do the divergence
-    zipDataTestedWord.map(x => (x._1, testEvolutionOfDifference(x, maxNumberOfOutsiders.toInt, maxNumberOfOutsidersIncreasing.toInt))).filter(x => x._2).map(_._1)
-  }
 
 
   /**
