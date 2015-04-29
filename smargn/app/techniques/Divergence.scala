@@ -20,7 +20,7 @@ object Divergence {
   def naiveDifferenceDivergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                                 parameters: List[Double]): RDD[(String)] = {
 
-    divergence(data, testedWord, parameters, NaiveComparisons.naiveDifferenceScalingMax)
+    divergence(data, testedWord, parameters)
   }
 
   /**
@@ -33,7 +33,7 @@ object Divergence {
   def naiveInverseDifferenceDivergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                                        parameters: List[Double]): RDD[(String)] = {
     val dataInversed = data.map(x => (x._1, x._2.reverse))
-    divergence(dataInversed, (testedWord._1, testedWord._2.reverse), parameters, NaiveComparisons.naiveDifferenceScalingMax)
+    divergence(dataInversed, (testedWord._1, testedWord._2.reverse), parameters)
   }
 
 }

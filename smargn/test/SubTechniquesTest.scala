@@ -98,6 +98,4 @@ class SubTechniquesTest extends SparkTestUtils with ShouldMatchers {
     val data = sc.parallelize(dataRawReversed)
     naiveInverseDifferenceDivergence(data, testedWord, List(1.0, 3.0, 3.0)).collect().sortWith(_ < _) should be(Array("cloud", "sea"))
   }
-
-
 }
