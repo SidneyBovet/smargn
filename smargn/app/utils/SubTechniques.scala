@@ -113,6 +113,5 @@ object SubTechniques {
     // if numOfFalseFromEnd(x._2, falseVariation) >= miniOfDivergence is fasle then the curve do not really diverge
     booleanDataTestedWord.map(x => (x._1, x._2.filter(_ == false)))
       .filter(x => x._2.length <= 2 * miniOfDivergence && x._1 != testedWord._1 && numOfFalseFromEnd(x._2, falseVariation) >= miniOfDivergence).map(_._1)
-
   }
 }
