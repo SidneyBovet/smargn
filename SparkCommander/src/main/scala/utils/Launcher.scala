@@ -6,6 +6,8 @@ import org.apache.spark.rdd.RDD
 import utils.Formatting._
 import utils.Grapher._
 
+import utils.TestCases._
+
 
 /**
  * Created by Joanna on 4/7/15.
@@ -18,6 +20,25 @@ object Launcher {
   private val NB_RES = 10
   val NSW = "NOSIMILARWORDS"
   val NOTFOUND = "ERROR404"
+
+  def runParamsFinding(sc: SparkContext, inputDir: String): Unit = {
+    val outputDir = "hdfs:///projects/temporal-profiles/results/testCases"
+    val hdfs = new HDFSHandler(sc.hadoopConfiguration)
+
+    // Create folder for result
+    hdfs.createFolder(outputDir)
+    val data = sc.textFile(inputDir)
+
+    val formattedData = dataFormatter(data).cache()
+
+
+    val res: Array[Array[(String, Double, List[Double])]] = runTestsAll(sc, formattedData).collect()
+
+    val resPath = new Path(outputDir + "/results.txt")
+
+    hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c) => s"$a, $b, ${c.mkString(" ")}" }).toList)
+    hdfs.close()
+  }
 
   def runList(words: List[String], inputDir: String, outputFile: String, parameters: List[Double],
               similarityTechnique: Technique, spark: SparkContext,
@@ -71,7 +92,7 @@ object Launcher {
       // Print to projects/temporal-profiles/<depends on the query>/data.csv
       hdfs.appendToFile(dataCSVPath)(if (!hdfs.exists(dataCSVPath)) "Word,Year,Occurrences" :: toGraph else toGraph)
 
-      if (similarWords.length == 0) {
+      if (similarWords.isEmpty) {
         List(NSW)
       } else {
         similarWords
