@@ -8,16 +8,16 @@ function adapt_params(selector) {
         //  case T.name:
         //      nb_params = 73;
         //      break;
+        // Add at the beginning and do not forget the break in order not to show the wrong number of
+        // parameters of other metrics
+        case "Divergence":
+        case "SmarterDivergence":
+            nb_params = 3;
+            break;
         case "Naive":
         case "Inverse":
         case "Shift":
         case "DTW":
-        case "Divergence":
-            nb_params = 3;
-            break;
-        case "SmarterDivergence":
-            nb_params = 3;
-            break;
         default:
             nb_params = 1;
     }
