@@ -20,8 +20,11 @@ object TestCases {
   val inputParams = "hdfs:///projects/temporal-profiles/Tests/params"
 
   // Parses the test cases in the file inputCases
-  def parseTestCases(spark: SparkContext): RDD[(String, List[String], List[String])] = {
-    val testCases = spark.textFile(inputCases)
+  def parseTestCases(spark: SparkContext): List[(String, List[String], List[String])] = {
+    //val testCases = spark.textFile(inputCases)
+    val testCases = List[String]() //TODO read data as a List
+
+
     testCases.map(line => {
       val tmp = line.split("\\s")
       (tmp(0), tmp(1).split("\\s").toList, tmp(2).split("\\s").toList)
@@ -29,15 +32,19 @@ object TestCases {
   }
 
   // Parses the boundaries for each techniques
-  def parseTechniques(spark: SparkContext): RDD[(String, List[(String, String)])] = {
-    val params = spark.textFile(inputParams)
+  def parseTechniques(spark: SparkContext): List[(Technique, List[(Double, Double)])] = {
+    //val params = spark.textFile(inputParams)
+    val params = List[String]() //TODO read data as a List
+
+
     params.map(line => {
       val lineSplit = line.split("\\s")
       (lineSplit(0), lineSplit.drop(1).map(s => {
         val tuple = s.split(",")
         (tuple(0), tuple(1))
       }).toList)
-    })
+    }).map(x => (getTechnique(x._1),x._2.map(y => (y._1.toDouble,y._2.toDouble))))
+
   }
 
   def count(result: RDD[(String)], wordList: List[String]): Int = {
@@ -96,5 +103,32 @@ object TestCases {
       case "naivedifferenceshift" => naiveDifferenceShift
       case _ => naiveDifference
     }
+  }
+
+  def runTestsAll(spark: SparkContext, data: RDD[(String, Array[Double])]): Unit = {
+    val techniques = parseTechniques(spark)
+    val testCases = parseTestCases(spark)
+    val result = techniques.map(x => runTests(spark, data, x._1, x._2, testCases))
+  }
+
+
+  def runTests(spark: SparkContext, data: RDD[(String, Array[Double])], technique: Technique,
+               techniqueParams: (List[(Double, Double)]), testCases: List[(String, List[String], List[String])] = null):
+               List[(String, Double, List[Double])] = {
+
+    var test: List[(String, List[String], List[String])] = null
+    if (testCases == null) {
+      test = parseTestCases(spark)
+    }
+    else {
+      test = testCases
+    }
+
+
+
+    test.map(t =>
+      (t._1, 0.0, testParameters(data, data.filter(x => x._1.equals(t._1)).first(), t._2, t._3, techniqueParams, 10, technique))
+    )
+
   }
 }
