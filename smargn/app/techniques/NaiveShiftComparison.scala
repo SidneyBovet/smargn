@@ -26,5 +26,4 @@ object NaiveShiftComparison {
     //and one for the parameters of the shift itself (len and step)
     shift(data, testedWord, parameters, NaiveComparisons.naiveDifferenceScalingMax, 3, 1)
   }
-
 }
