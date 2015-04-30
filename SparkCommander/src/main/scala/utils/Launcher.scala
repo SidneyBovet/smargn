@@ -45,7 +45,7 @@ object Launcher {
     val testedWords = searchWordFormatter(formattedData, List(word))
 
     if (testedWords.count == 0) {
-      (spark.parallelize(Seq(NOTFOUND)), emptyRDD)
+      (spark.parallelize(Seq(word + " -> " + NOTFOUND)), emptyRDD)
     } else {
       val testedWord = testedWords.first()
 
@@ -53,7 +53,7 @@ object Launcher {
       val similarWords = similarityTechnique(formattedData, testedWord, parameters)
 
       if (similarWords.count() == 0) {
-        (spark.parallelize(Seq(NSW)), emptyRDD)
+        (spark.parallelize(Seq(word + " -> " + NSW)), emptyRDD)
       } else {
         // Get similar words with their occurrences
         // RDD[T].contains(T) does not exist in Spark 1.2.x so we join them
@@ -72,7 +72,7 @@ object Launcher {
         // We use reduce because it is parallelizable.
         // The function reduce takes a binary operator which has to be commutative in order to be parallelizable!
         // in this case, we do not care about the order of the words
-        (spark.parallelize(Seq(testedWord._1 + " -> " + similarWords.reduce(_ + " " + _))),
+        (spark.parallelize(Seq(word + " -> " + similarWords.reduce(_ + " " + _))),
           testedWords.flatMap(formatter) ++ spark.parallelize(similarWordOcc.flatMap(formatter).take(NB_RES * range.size)))
       }
     }
