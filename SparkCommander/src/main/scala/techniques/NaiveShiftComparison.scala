@@ -10,6 +10,8 @@ object Divergence {
 
   import utils.SubTechniques._
 
+  import utils.SubTechniques._
+
   /**
    * @param data collection of word, frequency to tuple to look into
    * @param testedWord word that we want to find its similar word

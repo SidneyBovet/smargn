@@ -40,7 +40,7 @@ object Launcher {
     val emptyRDD: RDD[String] = spark.emptyRDD[String]
 
     //Formatting part
-    val formattedData = dataFormatter(data).cache()
+    val formattedData = dataFormatter2(data).cache()
     // testedWords is the line with the words we look for and its occurrences
     val testedWords = searchWordFormatter(formattedData, word)
 

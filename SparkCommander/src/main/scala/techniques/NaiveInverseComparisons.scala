@@ -1,7 +1,6 @@
 package techniques
 
 import org.apache.spark.rdd.RDD
-import utils.SubTechniques._
 
 /**
  * Created by John and Fabien on 13.4.15.
@@ -9,6 +8,7 @@ import utils.SubTechniques._
  */
 object NaiveInverseComparisons {
 
+  import utils.SubTechniques._
 
   /**
    * Given a word, find words which curve is the inverse using the NaiveInverse technique
