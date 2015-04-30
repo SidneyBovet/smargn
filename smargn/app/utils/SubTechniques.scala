@@ -157,9 +157,9 @@ object SubTechniques {
 
   // In the function the curves will be smoothed!
   def smarterDivergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val maxNumberOfOutsiders = parameters.head
-    val maxNumberOfOutsidersIncreasing = parameters(1)
-    val smoothingValue = parameters(2)
+    val maxNumberOfOutsiders = parameters.head // good to use 7
+    val maxNumberOfOutsidersIncreasing = parameters(1) // good to use 7
+    val smoothingValue = parameters(2) // good to use >= 10
     val dataSmoothed = smooth(data, smoothingValue)
 
 

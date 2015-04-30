@@ -1,7 +1,7 @@
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
 import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison, Divergence}
-import utils.HDFSHandler
+import utils.{SubTechniques, HDFSHandler}
 import utils.Launcher._
 
 /**
@@ -66,6 +66,7 @@ object SparkCommander {
           case "Inverse" => NaiveInverseComparisons.naiveInverseDifference
           case "Shift" => NaiveShiftComparison.naiveDifferenceShift
           case "Divergence" => Divergence.naiveDifferenceDivergence
+          case "SmarterDivergence" => SubTechniques.smarterDivergence
           case _ => NaiveComparisons.naiveDifferenceScalingMax
         }
 
