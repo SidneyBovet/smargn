@@ -16,16 +16,13 @@ object Smoothing {
     var to: Int = window.toInt
     var i = 0
 
-    for (i <- 0 to (arr.length - window.toInt)) {
+    for (i <- 0 to (arr.length - 1)) {
 
       val smoothPoint: Double = arr.slice(from, to).sum / arr.slice(from, to).length
       smoothed = smoothed :+ smoothPoint
       from = from + 1
       to = to + 1
-
-
     }
-    smoothed = smoothed :+ arr.last
     smoothed
   }
 
