@@ -15,6 +15,9 @@ function adapt_params(selector) {
         case "Divergence":
             nb_params = 3;
             break;
+        case "SmarterDivergence":
+            nb_params = 3;
+            break;
         default:
             nb_params = 1;
     }
