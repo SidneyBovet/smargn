@@ -127,7 +127,7 @@ object Application extends Controller with ResultParser {
             val hdfsResDir = "/projects/temporal-profiles/results/" + outputDir
 
             // TODO before sending the job to YARN, check if the directory already exists on HDFS
-            val r = client.exec("bash -c \"source .bashrc; hadoop fs -test -d hdfs://" + hdfsResDir + "; echo $?\"")
+            val r = client.exec("hadoop fs -test -d " + hdfsResDir + "/results; echo $?")
             r.right.map { res =>
               Logger.debug("Does " + hdfsResDir + " exist? " + res.stdOutAsString().charAt(0))
               if (res.stdOutAsString().charAt(0) == '0') {
@@ -218,6 +218,7 @@ object Application extends Controller with ResultParser {
    */
   private def resultsToJson(results: Map[String, List[String]]): JsValue = {
     // Compute words with no result, words not in the data and results for each words
+    //    Logger.debug("Results are: " + results)
     val (nsw, nid, res) = results.foldLeft((List[String](), List[String](), Map[String, List[String]]()))
     { case ((lNSW, lNID, lRES), (w, List(NSW))) => (w :: lNSW, lNID, lRES)
     case ((lNSW, lNID, lRES), (w, List(NOTFOUND))) => (lNSW, w :: lNID, lRES)
@@ -237,8 +238,8 @@ object Application extends Controller with ResultParser {
     }
   }
 
-  private def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
-                         (implicit client: SshClient): Validated[CommandResult] = {
+  def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
+                 (implicit client: SshClient): Validated[CommandResult] = {
     {
       client
         .exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster --num-executors 25" +
@@ -251,14 +252,14 @@ object Application extends Controller with ResultParser {
       } + "\"").right.flatMap { res =>
         Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
         //Make the directory usable by others in the group
-        client.exec("bash -c \"source .bashrc; hadoop fs -chmod -R 775 hdfs://" + hdfsResDir + "\"")
+        client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)
       }
     }
   }
 
   private def mergeAndDl(directory: String, file: String, dlDst: String)(implicit client: SshClient) = {
     // Download results from HDFS to local on cluster
-    client.exec("bash -c \"source .bashrc; hadoop fs -getmerge " + directory + " " + file + "\"").right.flatMap { res =>
+    client.exec("hadoop fs -getmerge " + directory + " " + file).right.flatMap { res =>
       Logger.debug("get " + file.substring(2) + " done " + res.exitCode.get)
       // Download results from cluster to server
       client.download(file.substring(2), dlDst)
