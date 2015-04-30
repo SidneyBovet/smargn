@@ -1,13 +1,14 @@
 package techniques
 
 import org.apache.spark.rdd.RDD
-import utils.SubTechniques._
 
 /**
  * Created by John and Fabien on 13.4.15.
  * Naive functions that compute the similar words list of a given word based on comparison techniques
  */
 object NaiveInverseComparisons {
+
+  import utils.SubTechniques._
 
   /**
    * Given a word, find words which curve is the inverse using the NaiveInverse technique
@@ -18,7 +19,7 @@ object NaiveInverseComparisons {
    */
   def naiveInverseDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                              parameters: List[Double]): RDD[(String)] = {
-    NaiveComparisons.naiveDifference(data, inverse(testedWord), parameters)
+    NaiveComparisons.naiveDifference(data, (testedWord._1, testedWord._2.reverse), parameters)
   }
 
 }
