@@ -136,7 +136,7 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
 
   sparkTest("testNaiveDivisionTopK") {
     val testedWord = ("parrot", Array(1.0, 2.0, 3.0, 4.0, 5.0))
-    val dataRaw = Array(("blue", Array(1.0, 4.0, 3.0, 5.0, 5.0)), ("yellow", Array(1.0, 4.0, 3.0, 5.0, 5.0)), ("flower", Array(1.0, 4.0, 0.0, 5.0, 5.0)), ("orange", Array(51.0, 4.0, 0.0, 5.0, 5.0)), ("dummy", Array(1.0, 2.0, 3.0, 4.0, 5.0)))
+    val dataRaw = Array(("blue", Array(1.0, 4.0, 3.0, 5.0, 5.0)), ("orange", Array(1.0, 4.0, 3.0, 5.0, 5.0)), ("flower", Array(1.0, 4.0, 0.0, 5.0, 5.0)), ("yellow", Array(51.0, 4.0, 0.0, 5.0, 5.0)), ("dummy", Array(1.0, 2.0, 3.0, 4.0, 5.0)))
     val data = sc.parallelize(dataRaw)
 
     naiveDifferenceTopK(data, testedWord, List(3, 1)).collect() should be(Array("dummy", "blue", "orange"))
