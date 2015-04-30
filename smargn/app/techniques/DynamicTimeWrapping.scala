@@ -2,6 +2,7 @@ package techniques
 
 import org.apache.spark.rdd.RDD
 import utils.Scaling._
+import utils.ComputationUtilities._
 
 /**
  * Created by mathieu and ana on 09/04/15.
@@ -83,23 +84,5 @@ object DynamicTimeWrapping {
       }
     }
     dtw(word1.length - 1)(word2.length - 1)
-  }
-
-  /**
-   * @param p1 first point
-   * @param p2 second point
-   * @return euclidean distance between the two points
-   */
-  def euclideanDistance(p1: (Int, Double), p2: (Int, Double)): Double = {
-    Math.sqrt(Math.pow(p1._1 - p2._1, 2) + Math.pow(p1._2 - p2._2, 2))
-  }
-
-  /**
-   * @param p1 first point
-   * @param p2 second point
-   * @return absolute distance between the two points
-   */
-  def distance(p1: Double, p2: Double): Double = {
-    Math.abs(p1 - p2)
   }
 }
