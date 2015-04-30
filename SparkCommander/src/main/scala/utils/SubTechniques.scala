@@ -109,7 +109,7 @@ object SubTechniques {
 
 
   // Curve MUST be smoothed otherwise it won't work
-  def testEvolutionOfDifference(zipDataTestedWord: (String, Array[(Double, Double)]), maxNumberOfOutsiders: Int = 7, maxNumberOfOutsidersIncreasing: Int = 7): Boolean = {
+  def testEvolutionOfDifference(zipDataTestedWord: (String, Array[(Double, Double)]), maxNumberOfOutsidersDecreasing: Int = 7, maxNumberOfOutsidersIncreasing: Int = 7): Boolean = {
     val differences = zipDataTestedWord._2.map(x => math.abs(x._1 - x._2))
     var current: Double = differences.head
     var outsiders = 0
@@ -117,8 +117,11 @@ object SubTechniques {
     var x: Double = 0
     var init = true
     var decreasingTesting = true
+    val log = true
+
 
     for (x <- differences) {
+      // must have a leat one "intersection" of the curves
       if (init) {
         current = x
         init = false
@@ -127,22 +130,28 @@ object SubTechniques {
 
         if (decreasingTesting) {
           if (x < current) {
+            println("DOWN")
             current = x
           }
           else {
+            println("UP")
             outsiders = outsiders + 1
-            if (outsiders >= maxNumberOfOutsiders) {
+            if (outsiders >= maxNumberOfOutsidersDecreasing) {
+              println("END DECREASING because the curve is not decreasing anymore")
               decreasingTesting = false
             }
           }
         }
         else {
           if (x > current) {
+            println("UP")
             current = x
           }
           else {
+            println("DOWN")
             outsidersIncreasing = outsidersIncreasing + 1
             if (outsidersIncreasing >= maxNumberOfOutsidersIncreasing) {
+              println("BAD END")
               return false
             }
           }
@@ -157,13 +166,17 @@ object SubTechniques {
 
   // In the function the curves will be smoothed!
   def smarterDivergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    val maxNumberOfOutsiders = parameters.head
-    val maxNumberOfOutsidersIncreasing = parameters(1)
-    val smoothingValue = parameters(2)
+    val maxNumberOfOutsiders = parameters.head // good to use 7
+    val maxNumberOfOutsidersIncreasing = parameters(1) // good to use 7
+    val smoothingValue = parameters(2) // good to use >= 10
+    val smoothtestedWord = smooth(testedWord, smoothingValue)
+
+
     val dataSmoothed = smooth(data, smoothingValue)
+    //    println(dataSmoothed.first._2.toList)
 
 
-    val zipDataTestedWord = dataSmoothed.map(x => (x._1, testedWord._2.zip(x._2)))
+    val zipDataTestedWord = dataSmoothed.map(x => (x._1, smoothtestedWord._2.zip(x._2)))
     // take a tuple (word, (point1TestValue1,point1TestValue2),(point2TestValue1,point2TestValue1),...) and first map to (word, true) if they do the divergence
     zipDataTestedWord.map(x => (x._1, testEvolutionOfDifference(x, maxNumberOfOutsiders.toInt, maxNumberOfOutsidersIncreasing.toInt))).filter(x => x._2).map(_._1)
   }
