@@ -62,10 +62,10 @@ object PeakComparison {
     val proportionSimilarities = parameters.head
     val windowSize = parameters(1).toInt
     val deltaX = parameters(2).toInt
-    val deltaY = parameters(3).toInt
+    val deltaY = if (parameters.size < 4) 3 else parameters(3).toInt
 
     data.flatMap { x =>
-      if (peakMeanDerivativeMetric(testedWord, x, windowSize, deltaX, deltaY) > proportionSimilarities) {
+      if (peakMeanDerivativeMetric(testedWord, x, windowSize, deltaX, deltaY) < proportionSimilarities) {
         List(x._1)
       } else {
         List()
@@ -109,7 +109,7 @@ object PeakComparison {
     val distinctPeaks2 = peakMeanDerivative(word2, windowSize, deltaX, deltaY)
 
     if (distinctPeaks1.size == 0 || distinctPeaks2.size == 0) {
-      return 0.0
+      return 1.0
     }
 
     val numberOfSimilarPeaks = (for {
@@ -118,7 +118,7 @@ object PeakComparison {
       if Math.abs(p1._1 - p2._1) <= 1
     } yield p1).size
 
-    1 - Math.max(numberOfSimilarPeaks * 1.0 / distinctPeaks1.size, numberOfSimilarPeaks * 1.0 / distinctPeaks2.size)
+    1 - Math.min(numberOfSimilarPeaks * 1.0 / distinctPeaks1.size, numberOfSimilarPeaks * 1.0 / distinctPeaks2.size)
   }
 
   /**
@@ -298,7 +298,6 @@ object PeakComparison {
             if (indexOfMinDescending - indexOfMaxAscending <= deltaX && frequencies(indexOfMaxAscending) > deltaY * frequencies(indexOfMinAscending)) {
               result = (indexOfMaxAscending, indexOfMinAscending * 1.0, indexOfMinDescending * 1.0) :: result
             }
-            println(s"The i is $i and will become $indexOfMaxAscending")
             i = indexOfMinDescending
           } else {
             i += 1

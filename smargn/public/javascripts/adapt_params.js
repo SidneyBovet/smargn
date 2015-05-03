@@ -15,7 +15,7 @@ function adapt_params(selector) {
             nb_params = 3;
             break;
 	case "Peaks":
-            nb_params = 3;
+            nb_params = 4;
             break;
         case "Naive":
         case "Inverse":
