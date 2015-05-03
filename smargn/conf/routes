@@ -3,20 +3,23 @@
 # ~~~~
 
 # CORS authorization
-OPTIONS        /*url                   controllers.Application.options(url)
+OPTIONS        /*url                       controllers.Application.options(url)
 # Home page
-GET            /                       controllers.Application.index
+GET            /                           controllers.Application.index
+
+# Get blank page
+GET            /naive/:word                controllers.Application.runNaive(word)
 
 # Blank search page
-GET            /smargn                 controllers.Application.blank()
+GET            /smargn                     controllers.Application.blank
 # Search for words
-POST           /smargn                 controllers.Application.smargn()
+POST           /smargn                     controllers.Application.smargn
 
-GET            /datacsv/:search        controllers.Application.getCSV(search)
+GET            /datacsv/:search            controllers.Application.getCSV(search)
 
-GET            /display                controllers.Application.displayBlank()
+GET            /naive/inverse/:word        controllers.Application.runNaiveInverse(word)
 
-POST           /display                controllers.Application.displayCurve()
+GET            /naive/shift/:word          controllers.Application.runNaiveShift(word)
 
 # Map static resources from the /public folder to the /assets URL path
-GET            /assets/*file           controllers.Assets.at(path="/public", file)
+GET            /assets/*file               controllers.Assets.at(path="/public", file)
