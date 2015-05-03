@@ -2,7 +2,6 @@ package masters
 
 import masters.Launcher._
 import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
 import utils.Formatting._
 import utils.Grapher._
 

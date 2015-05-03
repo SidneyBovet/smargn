@@ -39,14 +39,7 @@ object DisplayCommander {
 
     parser.parse(args, Config(words = Seq())) match {
       case Some(Config(words)) =>
-        val output = createOutput(words)
-
-        val hdfs = new HDFSHandler(sc.hadoopConfiguration)
-        // Create folder for results
-        hdfs.createFolder(output)
-        hdfs.close()
-
-        runList(words, INPUT, output, sc)
+        runList(words, INPUT, createOutput(words), sc)
       case None => // Bad arguments
     }
 

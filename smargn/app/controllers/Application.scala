@@ -273,4 +273,15 @@ object Application extends Controller with ResultParser {
     import scala.sys.process._
     Process("rm -R ./public/results/" + folder).run
   }
+
+  private def sparkSubmitDisplayer(words: List[String], hdfsResDir: String)
+                                  (client: SshClient): Validated[CommandResult] = {
+    client
+      .exec("bash -c \"source .bashrc; spark-submit --class DisplayCommander --master yarn-cluster --num-executors 25" +
+      " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + "\"").right.flatMap({ res =>
+      //      Logger.debug(res.stdErrAsString())
+      Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
+      client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)
+    })
+  }
 }
