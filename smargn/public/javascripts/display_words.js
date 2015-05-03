@@ -10,6 +10,8 @@ function display_words() {
         }
     }
 
+    console.log("Displaying words: " + words.join(" "));
+
     $.ajax({
         type: "POST",
         url: "/display",

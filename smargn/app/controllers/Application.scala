@@ -46,7 +46,7 @@ object Application extends Controller with ResultParser {
     Action(BodyParsers.parse.json) { req =>
       req.body match {
         case JsObject(Seq(("words", JsArray(words)))) =>
-          val localFolder = words.mkString("-")
+          val localFolder = words.map(Json.stringify).mkString("-")
           val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$localFolder/")
           if (Files.notExists(resultsPath)) {
             Files.createDirectory(resultsPath)
