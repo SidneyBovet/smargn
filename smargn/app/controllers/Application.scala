@@ -35,6 +35,12 @@ object Application extends Controller with ResultParser {
     }
   }
 
+  def displayBlank: Action[AnyContent] = {
+    Action {
+      Ok(views.html.display())
+    }
+  }
+
   def displayCurve: Action[JsValue] = {
     // TODO before sending the job to YARN, check if the directory already exists on HDFS
     Logger.debug("Trying to display a curve")
