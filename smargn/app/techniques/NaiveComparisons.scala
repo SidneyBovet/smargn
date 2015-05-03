@@ -21,20 +21,17 @@ object NaiveComparisons {
     val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
       x._2 < y._2
     } else x._1 < y._1
-    val retrievedWords = retrieveTopK(k.toInt, naiveDifferenceMetricTopK, data, testedWord, order, List(acceptedDifference))
+    val retrievedWords = retrieveTopK(k.toInt, naiveDifferenceMetricTopK, data.map(proportionalScalarAverage), proportionalScalarAverage(testedWord), order, List(acceptedDifference))
     data.sparkContext.parallelize(retrievedWords)
   }
 
-  def naiveDifferenceTopKScalingMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    naiveDifferenceTopK(data.map(proportionalScalarMax), proportionalScalarMax(testedWord), parameters)
-  }
 
   def naiveDivisionTopK(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
     val k = parameters.head
     val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
       x._2 < y._2
     } else x._1 < y._1
-    val retrievedWords = retrieveTopK(k.toInt, naiveDivisionMetricTopK, data, testedWord, order)
+    val retrievedWords = retrieveTopK(k.toInt, naiveDivisionMetricTopK, data.map(proportionalScalarAverage), proportionalScalarAverage(testedWord), order)
     data.sparkContext.parallelize(retrievedWords)
   }
 
@@ -204,20 +201,8 @@ object NaiveComparisons {
    */
   def naiveDivisionMetricTopK(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List()): Double = {
     val zipped = word1._2.zip(word2._2)
-    val divided = zipped.map(x => math.abs((if (x._1 == 0) {
-      if (x._2 == 0) {
-        1
-      } else {
-        x._2 * x._2
-      }
-    }
-    else {
-      x._1
-    }) / (if (x._2 == 0) {
-      1
-    } else {
-      x._2
-    })))
+    val zippedWithoutZero = zipped.map(x => (x._1 + 1, x._2 + 1))
+    val divided = zippedWithoutZero.map(x => math.abs(x._1 / x._2))
     val minMax = findMinAndMax(divided)
     minMax._2 - minMax._1
   }
