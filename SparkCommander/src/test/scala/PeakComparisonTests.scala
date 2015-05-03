@@ -1,5 +1,4 @@
 
-import org.apache.spark.SparkContext
 import org.scalatest._
 import techniques.PeakComparison._
 import utils.Formatting._
