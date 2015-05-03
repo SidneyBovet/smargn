@@ -1,6 +1,6 @@
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
-import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison, Divergence}
+import techniques._
 import utils.{SubTechniques, HDFSHandler}
 import utils.Launcher._
 
@@ -62,11 +62,12 @@ object SparkCommander {
         hdfs.close()
 
         val tech: Technique = technique match {
-          case "Naive" => NaiveComparisons.naiveDifferenceScalingMax
-          case "Inverse" => NaiveInverseComparisons.naiveInverseDifference
-          case "Shift" => NaiveShiftComparison.naiveDifferenceShift
-          case "Divergence" => Divergence.naiveDifferenceDivergence
-          case "SmarterDivergence" => SubTechniques.smarterDivergence
+          // Add your technique methods here. All lowercase for the name pliz
+          case "naive" => NaiveComparisons.naiveDifferenceScalingMax
+          case "inverse" => NaiveInverseComparisons.naiveInverseDifference
+          case "shift" => NaiveShiftComparison.naiveDifferenceShift
+          case "divergence" => Divergence.naiveDifferenceDivergence
+          case "smarterdivergence" => SubTechniques.smarterDivergence
           case _ => NaiveComparisons.naiveDifferenceScalingMax
         }
 

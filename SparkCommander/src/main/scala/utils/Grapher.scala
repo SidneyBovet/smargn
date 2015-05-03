@@ -15,6 +15,6 @@ object Grapher {
    */
   def formatTuple(range: Range)(similar: (String, Array[Double])): List[String] = {
     val (w, o) = similar
-    range.zip(o).map { case (y, oo) => w + "," + y + "," + oo.toInt }.toList
+    range.zip(o).map { case (y, oo) => w + "," + y + "," + oo }.toList
   }
 }
