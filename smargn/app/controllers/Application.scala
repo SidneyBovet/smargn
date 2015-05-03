@@ -81,7 +81,10 @@ object Application extends Controller with ResultParser {
       Logger.debug("Retrieving data for display on search: " + search)
       val dataCSVFile = new File("./public/results/" + search + "/complete_data.csv")
       val dataCSV = Source.fromFile("./public/results/" + search + "/data.csv").getLines().toList
-      val file = Ok.sendFile(if (dataCSV.head != FIRST_LINE) {
+      val file = Ok.sendFile(if (dataCSV == Nil) {
+        printToFile(dataCSVFile) { p => p.println(FIRST_LINE) }
+        dataCSVFile
+      } else if (dataCSV.head != FIRST_LINE) {
         Logger.debug("first line was " + dataCSV.head)
         printToFile(dataCSVFile) { p => (FIRST_LINE :: dataCSV).foreach(p.println) }
         dataCSVFile
