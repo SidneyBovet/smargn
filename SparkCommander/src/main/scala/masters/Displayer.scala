@@ -1,6 +1,5 @@
 package masters
 
-import masters.Launcher._
 import org.apache.spark.SparkContext
 import utils.Formatting._
 import utils.Grapher._
@@ -9,10 +8,14 @@ import utils.Grapher._
  * From Valentin with love on 03/05/15.
  */
 object Displayer {
-  def runList(words: Seq[String], inputDir: String, outputFile: String, spark: SparkContext,
+  private val startYear = 1840
+  private val endYear = 1998
+
+  def runList(words: Seq[String], baseProfileFile: String, inputDir: String, outputFile: String, spark: SparkContext,
               range: Range = startYear to endYear): Unit = {
     // Getting results for all words
-    val data = dataFormatter2(spark.textFile(inputDir))
+    val baseProfile = spark.textFile(baseProfileFile).take(1)(0).split(" ").map(_.toInt)
+    val data = dataFormatter(spark.textFile(inputDir), baseProfile)
     val wordsOcc = data.filter { case (w, occ) => words.contains(w) }.flatMap(formatTuple(range))
     wordsOcc.saveAsTextFile(outputFile)
   }

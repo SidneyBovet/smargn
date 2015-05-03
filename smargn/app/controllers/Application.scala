@@ -56,14 +56,26 @@ object Application extends Controller with ResultParser {
           val hdfsResDir = "/projects/temporal-profiles/results/" + localFolder
           val res = SSH("icdataportal2") { client =>
             Logger.debug("Connection to icdataportal2 complete")
-            sparkSubmitDisplayer(words.map(Json.stringify).toList, hdfsResDir)(client).right.flatMap { res =>
-              Logger.debug("Chmod done: " + res.exitCode.get)
-              mergeAndDl(hdfsResDir, "~/data.csv", "./public/results/" + localFolder)(client).right.map { res =>
-                Ok("Data for display has arrived")
+
+            val r = client.exec("hadoop fs -test -d " + hdfsResDir + "/results; echo $?")
+            r.right.map { res =>
+              Logger.debug("Does " + hdfsResDir + " exist? " + res.stdOutAsString().charAt(0))
+              if (res.stdOutAsString().charAt(0) == '0') {
+                // Read from HDFS
+                mergeAndDl(hdfsResDir, "~/data.csv", "./public/results/" + localFolder)(client).right.map { res =>
+                  Ok("Data for display has arrived")
+                }
+              } else {
+                sparkSubmitDisplayer(words.map(Json.stringify).toList, hdfsResDir)(client).right.flatMap { res =>
+                  Logger.debug("Chmod done: " + res.exitCode.get)
+                  mergeAndDl(hdfsResDir, "~/data.csv", "./public/results/" + localFolder)(client).right.map { res =>
+                    Ok("Data for display has arrived")
+                  }
+                }
               }
             }
           }
-          res.right.get
+          res.right.get.right.get
         case _ => BadRequest("Json is not in the good format")
       }
     }

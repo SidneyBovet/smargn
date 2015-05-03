@@ -9,8 +9,8 @@ import utils.Launcher._
  */
 object SparkCommander {
 
-  private val INPUT = "hdfs:///projects/temporal-profiles/data-generation/clean-1gram"
-  private val BASE_PROFILE = "hdfs:///projects/temporal-profiles/data-generation/baseProfile"
+  val INPUT = "hdfs:///projects/temporal-profiles/data-generation/clean-1gram"
+  val BASE_PROFILE = "hdfs:///projects/temporal-profiles/data-generation/baseProfile"
 
   private def createOutput(words: Seq[String], technique: String, params: Seq[Double]): String = {
     s"hdfs:///projects/temporal-profiles/results/${words.mkString("-")}${
@@ -30,7 +30,7 @@ object SparkCommander {
    * @param technique the technique to use
    * @param parameters the parameter for that technique
    */
-  case class Config(words: Seq[String] = Seq[String](), technique: String = "", parameters: Seq[Double] = Seq[Double]())
+  private case class Config(words: Seq[String] = Seq[String](), technique: String = "", parameters: Seq[Double] = Seq[Double]())
 
   private val parser = new OptionParser[Config]("scopt") {
     head("SparkCommander", "1.0")

@@ -1,4 +1,4 @@
-package masters
+package utils
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -12,20 +12,21 @@ import utils.Grapher._
  */
 object Launcher {
   type Technique = (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[String]
-  val startYear = 1840
-  val endYear = 1998
+  private val startYear = 1840
+  private val endYear = 1998
   private val NB_RES = 10
   val NSW = "NOSIMILARWORDS"
   val NOTFOUND = "ERROR404"
 
-  def runList(words: Seq[String], inputDir: String, outputFile: String, parameters: List[Double],
-              similarityTechnique: Technique, spark: SparkContext,
+  def runList(words: Seq[String], inputDir: String, baseProfileFile: String, outputFile: String,
+              parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
               range: Range = startYear to endYear): Unit = {
 
     // Getting results for all words
     val data = spark.textFile(inputDir)
+    val baseProfile = spark.textFile(baseProfileFile).take(1)(0).split(" ").map(_.toInt)
     val (res, gData) = words.map { w =>
-      run(w, data, outputFile, parameters, similarityTechnique, spark, range)
+      run(w, data, baseProfile, outputFile, parameters, similarityTechnique, spark, range)
     }.unzip
     val (results, graphData) = (res.reduce(_ ++ _), gData.reduce(_ ++ _))
     // Write results to /projects/temporal-profile/results/<outputdir>/results/
@@ -34,13 +35,13 @@ object Launcher {
     graphData.saveAsTextFile(outputFile + "data/")
   }
 
-  private def run(word: String, data: RDD[String], outputFile: String, parameters: List[Double],
-                  similarityTechnique: Technique,
-                  spark: SparkContext, range: Range = startYear to endYear): (RDD[String], RDD[String]) = {
+  private def run(word: String, data: RDD[String], baseProfile: Array[Int], outputFile: String,
+                  parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
+                  range: Range = startYear to endYear): (RDD[String], RDD[String]) = {
     val emptyRDD: RDD[String] = spark.emptyRDD[String]
 
     //Formatting part
-    val formattedData = dataFormatter2(data).cache()
+    val formattedData = dataFormatter(data, baseProfile)
     // testedWords is the line with the words we look for and its occurrences
     val testedWords = searchWordFormatter(formattedData, List(word))
 
@@ -63,8 +64,7 @@ object Launcher {
 
         val formattedDataKey = formattedData.groupBy(_._1)
         val similarWordsKey = similarWords.groupBy(x => x)
-        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap {
-          case (k, (wo, w)) => wo
+        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap { case (k, (wo, w)) => wo
         }
 
         // Format for printing
@@ -72,8 +72,8 @@ object Launcher {
         // We use reduce because it is parallelizable.
         // The function reduce takes a binary operator which has to be commutative in order to be parallelizable!
         // in this case, we do not care about the order of the words
-        (spark.parallelize(Seq(word + " -> " + similarWords.reduce(_ + " " + _))),
-          testedWords.flatMap(formatter) ++ spark.parallelize(similarWordOcc.flatMap(formatter).take(NB_RES * range.size)))
+        (spark.parallelize(Seq(word + " -> " + similarWords.reduce(_ + " " + _))), testedWords.flatMap(formatter) ++
+          spark.parallelize(similarWordOcc.flatMap(formatter).take(NB_RES * range.size)))
       }
     }
   }

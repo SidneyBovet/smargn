@@ -1,14 +1,12 @@
 import masters.Displayer._
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
-import utils.HDFSHandler
+import SparkCommander._
 
 /**
  * From Valentin with love on 03/05/15.
  */
 object DisplayCommander {
-  private val INPUT = "hdfs:///projects/temporal-profiles/data-generation/clean-1gram"
-
   private def createOutput(words: Seq[String]): String =
     "hdfs:///projects/temporal-profiles/results/" + words.mkString("-") + "/"
 
@@ -16,7 +14,7 @@ object DisplayCommander {
    * Arguments parsing representation class
    * @param words the words to search
    */
-  case class Config(words: Seq[String] = Seq[String]())
+  private case class Config(words: Seq[String] = Seq[String]())
 
   private val parser = new OptionParser[Config]("scopt") {
     head("DisplayerCommander", "1.0")
@@ -39,7 +37,7 @@ object DisplayCommander {
 
     parser.parse(args, Config(words = Seq())) match {
       case Some(Config(words)) =>
-        runList(words, INPUT, createOutput(words), sc)
+        runList(words, BASE_PROFILE, INPUT, createOutput(words), sc)
       case None => // Bad arguments
     }
 
