@@ -1,4 +1,4 @@
-package utils
+package masters
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -12,8 +12,8 @@ import utils.Grapher._
  */
 object Launcher {
   type Technique = (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[String]
-  private val startYear = 1840
-  private val endYear = 1998
+  val startYear = 1840
+  val endYear = 1998
   private val NB_RES = 10
   val NSW = "NOSIMILARWORDS"
   val NOTFOUND = "ERROR404"

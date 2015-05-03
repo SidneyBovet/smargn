@@ -1,8 +1,9 @@
+import masters.Launcher
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
 import techniques._
 import utils.{SubTechniques, HDFSHandler}
-import utils.Launcher._
+import Launcher._
 
 /**
  * From Valentin with love on 21/04/15.
