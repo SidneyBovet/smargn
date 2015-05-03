@@ -27,16 +27,21 @@ object Launcher {
 
     // Create folder for result
     hdfs.createFolder(outputDir)
-    val data = sc.textFile(inputDir)
 
+
+    val data = sc.textFile(inputDir)
     val formattedData = dataFormatter(data).cache()
 
 
-    val res: Array[Array[(String, Double, List[Double])]] = runTestsAll(sc, formattedData).collect()
+    val res: Array[Array[(String, Double, List[Double])]] = runTestsAll(sc, formattedData)
+
 
     val resPath = new Path(outputDir + "/results.txt")
 
+
     hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c) => s"$a, $b, ${c.mkString(" ")}" }).toList)
+
+
     hdfs.close()
   }
 
