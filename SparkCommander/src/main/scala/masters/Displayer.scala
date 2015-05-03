@@ -12,25 +12,9 @@ import utils.Grapher._
 object Displayer {
   def runList(words: Seq[String], inputDir: String, outputFile: String, spark: SparkContext,
               range: Range = startYear to endYear): Unit = {
-
     // Getting results for all words
-    val data = spark.textFile(inputDir)
-    val gData = words.map { w => run(w, data, spark, range) }.reduce(_ ++ _)
-    // Write results to /projects/temporal-profile/results/<outputdir>/
-    gData.saveAsTextFile(outputFile)
-  }
-
-  private def run(word: String, data: RDD[String], spark: SparkContext, range: Range): RDD[String] = {
-    //Formatting part
-    val formattedData = dataFormatter2(data).cache()
-    // testedWords is the line with the words we look for and its occurrences
-    val testedWords = searchWordFormatter(formattedData, List(word))
-
-    if (testedWords.count == 0) {
-      spark.emptyRDD[String]
-    } else {
-      // Format for printing commutative in order to be parallelizable!
-      testedWords.flatMap(formatTuple(range))
-    }
+    val data = dataFormatter2(spark.textFile(inputDir))
+    val wordsOcc = data.filter { case (w, occ) => words.contains(w) }.flatMap(formatTuple(range))
+    wordsOcc.saveAsTextFile(outputFile)
   }
 }
