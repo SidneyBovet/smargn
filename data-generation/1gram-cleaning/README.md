@@ -11,11 +11,12 @@ A word is considered useless if it occurs less that n times.
 ### How to use
 ```bash
 sbt package
-spark-submit --class OneGramCleaning --master yarn-client --num-executors <numExecutors> target/scala-2.10/onegramcleaning_2.10-1.0.jar <input dir> <output dir> <sample input dir> <sample output dir> <threshold>
+spark-submit --class OneGramCleaning --master yarn-client --num-executors <numExecutors> target/scala-2.10/onegramcleaning_2.10-1.0.jar <input dir> <output dir> <base profile output dir> <sample input dir> <sample output dir> <threshold>
 ```
-The first and the second arguments, <input dir> <output dir>, are mandatory. While the three last are optional. However, if you want to give a threshold value you have give paths for sample generation.<br />
+The first, the second  and the third arguments, <input dir> <output dir> <base profile output dir>, are mandatory. While the three last are optional. However, if you want to give a threshold value you have give paths for sample generation.<br />
 input dir: path to a file containing 1-gram to process<br />
 output dir: path to write the resulting 1-gram (it shouldn't exists)<br />
+profile output dir: path to write the base profile (the number of words written per year)<br />
 sample input dir: path to a file containing space seperated words that have to be sampled.<br />
 sample output dir: path to write the resulting sample (it shouldn't exists)<br />
 <br />

@@ -14,7 +14,7 @@ samplesList="/projects/temporal-profiles/data-generation/sample/sampleList"
 ## parsing ##
 cd parsing &&
 mvn $1 package &&
-hadoop fs -rm -r  $inputPath ;
+hadoop fs -rm -r  $parsingPath ;
 hadoop jar target/parsing-0.0.1-SNAPSHOT.jar ch.epfl.bigdata15.ngrams.parsing.ParseDriver $inputPath $parsingPath &&
 cd .. &&
 
