@@ -5,31 +5,6 @@ import utils.ComputationUtilities._
 
 object PeakComparison {
 
-  /*
-   * Compute the similar words using the derivative peak metric
-   *
-   * @param data collection of word, frequency to tuple to look into
-   * @param testedWord word that we want to find its similar word
-   * @param parameters L(0) contains the threshold of considering two words similar L(1) contains the windows size,
-   *                   L(3) contains the deltaSlope
-   * @return
-   */
-  /*def peakComparisonWithDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
-                                   parameters: List[Double]): RDD[(String)] = {
-    val proportionSimilarities = parameters.head
-    val windowSize = parameters(1).toInt
-    //val axisXDeviation = parameters(2).toInt no axis deviation - it doesn't make sens for the peaks - we want the peaks to match exactly
-    val deltaSlope = parameters(3).toInt
-
-    data.flatMap { x =>
-      if (peakDerivativeMetric(testedWord, x, windowSize, deltaSlope) > proportionSimilarities) {
-        List(x._1)
-      } else {
-        List()
-      }
-    }
-  }
-*/
   /**
    * Compute the similar words using the derivative peak metric
    * @param data collection of word, frequency to tuple to look into
@@ -74,37 +49,33 @@ object PeakComparison {
     }
   }
 
+  /**
+   * Compute the similar words using the derivative peak metric
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the threshold of considering two words similar L(1) contains the windows size, L
+   *                   (2) contains the axisXDeviation, L(3) contains the deltaMean
+   * @return
+   */
+  def peakComparisonWithMeanDerivative(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                                       parameters: List[Double]): RDD[(String)] = {
+    val proportionSimilarities = parameters.head
+    val windowSize = parameters(1).toInt
+    val deltaX = parameters(2).toInt
+    val deltaY = parameters(3).toInt
+
+    data.flatMap { x =>
+      if (peakMeanDerivativeMetric(testedWord, x, windowSize) > proportionSimilarities) {
+        List(x._1)
+      } else {
+        List()
+      }
+    }
+  }
+
   /** *******************************************************************************************************
     * Metrics
     * ******************************************************************************************************* */
-  /*
-   * Compares two words and outputs the percent of similarity. Uses windowPeakDerivative as peak defintion
-   *
-   * @param word1 word to be compared
-   * @param word2 word to be compared
-   * @param windowSize size of the window
-   * @param deltaSlope the threshold for the slope
-   * @param similarityOfSlopes
-   * @return
-
-  def peakDerivativeMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 10
-                           /*axisDeviation: Int = 2*/ , deltaSlope: Int = 1, similarityOfSlopes: Double = 0.5): Double = {
-    val distinctPeaks1 = peakDerivative(word1, windowSize, deltaSlope)
-    val distinctPeaks2 = peakDerivative(word2, windowSize, deltaSlope)
-
-    if (distinctPeaks1.size == 0 || distinctPeaks2.size == 0) {
-      return 0.0
-    }
-    val numberOfSimilarPeaks = (for {
-      p1 <- distinctPeaks1
-      p2 <- distinctPeaks2
-      if p1._1 == p2._1
-    } yield p1).size
-
-    Math.min(numberOfSimilarPeaks * 1.0 / distinctPeaks1.size, numberOfSimilarPeaks * 1.0 / distinctPeaks2.size)
-
-  }*/
-
   /**
    * Compares 2 words and outputs the percent of similarity. Uses windowPeakMinMax as definition for the peaks
    *
@@ -114,7 +85,7 @@ object PeakComparison {
    * @param delta tolerated difference between min and max
    * @return
    */
-  def peakMaxMinMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 10, delta: Double = -1): Double = {
+  def peakMaxMinMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 3, delta: Double = -1): Double = {
     peakMMetric(peakMinMax, word1, word2, windowSize, delta)
   }
 
@@ -127,11 +98,28 @@ object PeakComparison {
    * @param delta
    * @return
    */
-  def peakMeanMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 10
+  def peakMeanMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 3
                      , delta: Double = -1): Double = {
     peakMMetric(windowPeakMean, word1, word2, windowSize, delta)
   }
 
+  def peakMeanDerivativeMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 3, deltaX: Int = 5, deltaY: Int = 3): Double = {
+
+    val distinctPeaks1 = peakMeanDerivative(word1, windowSize, deltaX, deltaY)
+    val distinctPeaks2 = peakMeanDerivative(word2, windowSize, deltaX, deltaY)
+
+    if (distinctPeaks1.size == 0 || distinctPeaks2.size == 0) {
+      return 0.0
+    }
+
+    val numberOfSimilarPeaks = (for {
+      p1 <- distinctPeaks1
+      p2 <- distinctPeaks2
+      if Math.abs(p1._1 - p2._1) <= 1
+    } yield p1).size
+
+    1 - Math.max(numberOfSimilarPeaks * 1.0 / distinctPeaks1.size, numberOfSimilarPeaks * 1.0 / distinctPeaks2.size)
+  }
 
   /**
    * Helper function that applies the given definition of the peak to the data
@@ -144,7 +132,7 @@ object PeakComparison {
    * @return the similarity value of the two words (between 0 and 1)
    */
   private def peakMMetric(peakDef: ((String, Array[Double]), Int, Double) => List[(Int, Double, Double)],
-                          word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 10, delta: Double = -1): Double = {
+                          word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 3, delta: Double = -1): Double = {
     val deltaUsed = if (delta < 0) {
       Math.max(variance(word1._2), variance(word2._2))
     } else {
@@ -292,20 +280,22 @@ object PeakComparison {
       val ascendingWindow = frequencies.slice(i, findAscendingAverageWindow(frequencies, i, windowSize) + 1)
       if (ascendingWindow.nonEmpty) {
 
-        
+
         val indexOfMaxAscendingInWindow = ascendingWindow.indexOf(ascendingWindow.max)
         val indexOfMaxAscending = indexOfMaxAscendingInWindow + i
+
         val minAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).min
-        val indexOfMinAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).indexOf(minAscending)
+
+        val indexOfMinAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).indexOf(minAscending) + i
 
         //check if the detected window is of size 1 or the detaX is too large
-        if (minAscending != frequencies(indexOfMaxAscending) && indexOfMaxAscending - indexOfMinAscending <= deltaX && frequencies(indexOfMaxAscending) >= deltaY * frequencies(indexOfMinAscending)) {
+        if (minAscending != frequencies(indexOfMaxAscending) && indexOfMaxAscending - indexOfMinAscending <= deltaX && frequencies(indexOfMaxAscending) > deltaY * frequencies(indexOfMinAscending)) {
           val descendingWindow = frequencies
             .slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1)
           //check is the detected window is of size 1
           if (descendingWindow.size > 1) {
             val indexOfMinDescending = descendingWindow.indexOf(descendingWindow.min) + indexOfMaxAscending
-            if (indexOfMinDescending - indexOfMaxAscending <= deltaX && frequencies(indexOfMaxAscending) >= deltaY * frequencies(indexOfMinAscending)) {
+            if (indexOfMinDescending - indexOfMaxAscending <= deltaX && frequencies(indexOfMaxAscending) > deltaY * frequencies(indexOfMinAscending)) {
               result = (indexOfMaxAscending, indexOfMinAscending * 1.0, indexOfMinDescending * 1.0) :: result
             }
             println(s"The i is $i and will become $indexOfMaxAscending")
