@@ -43,3 +43,15 @@ function display_words() {
         contentType: "application/json; charset=utf-8"
     });
 }
+
+function outputFolder() {
+    var words = [];
+    for (var i = 1; i <= $("#words > .input-group").length; i++) {
+        var word = $("#word" + i).val();
+        if (word != undefined && word != "") {
+            words.push(word);
+        }
+    }
+
+    return words.join("-").toString()
+}

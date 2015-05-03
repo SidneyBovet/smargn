@@ -8,15 +8,15 @@ OPTIONS        /*url                   controllers.Application.options(url)
 GET            /                       controllers.Application.index
 
 # Blank search page
-GET            /smargn                 controllers.Application.blank()
+GET            /smargn                 controllers.Application.blank
 # Search for words
-POST           /smargn                 controllers.Application.smargn()
+POST           /smargn                 controllers.Application.smargn
+
+GET            /display                controllers.Application.displayBlank
+
+POST           /display                controllers.Application.displayCurve
 
 GET            /datacsv/:search        controllers.Application.getCSV(search)
-
-GET            /display                controllers.Application.displayBlank()
-
-POST           /display                controllers.Application.displayCurve()
 
 # Map static resources from the /public folder to the /assets URL path
 GET            /assets/*file           controllers.Assets.at(path="/public", file)

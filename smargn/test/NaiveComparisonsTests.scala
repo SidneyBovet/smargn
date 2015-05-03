@@ -1,6 +1,7 @@
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 import techniques.NaiveComparisons._
+import utils.Scaling._
 import org.apache.spark.rdd.RDD
 
 
@@ -64,7 +65,7 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
     val testedWord = ("parrot", Array(2.0, 3.0, 4.0, 12.0, 3.0))
     val dataRaw = Array(("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0)), ("yellow", Array(3.0, 4.0, 3.0, 6.0, 5.0)), ("flower", Array(4.0, 5.0, 6.0, 14.0, 5.0)), ("orange", Array(1.0, 5.0, 6.0, 13.0, 2.0)), ("dummy", Array(20.0, 30.0, 4.0, 2.0, 3.0)), ("parrot", Array(2.0, 3.0, 4.0, 12.0, 3.0)))
     val data = sc.parallelize(dataRaw)
-    naiveDivision(data, testedWord, List(0.8)).collect().sortWith(_ < _) should be(Array("flower").sortWith(_ < _))
+    naiveDivision(data.map(proportionalScalarAverage), proportionalScalarAverage(testedWord), List(0.8)).collect().sortWith(_ < _) should be(Array("flower").sortWith(_ < _))
   }
 
 
@@ -111,26 +112,26 @@ class NaiveComparisonsTests extends SparkTestUtils with ShouldMatchers {
   test("testMetricDivisionTopKNormal") {
     val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
     val word2 = ("green", Array(1.0, 4.0, 3.0, 5.0, 5.0))
-    naiveDivisionMetricTopK(word1, word2, List(1)) should be(0.5)
+    naiveDivisionMetricTopK(word1, word2, List(1)) should be(0.4)
   }
 
 
   test("testMetricDivisionTopK0Num") {
     val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
     val word2 = ("green", Array(1.0, 4.0, 3.0, 5.0, 5.0))
-    naiveDivisionMetricTopK(word1, word2) should be(2.5)
+    naiveDivisionMetricTopK(word1, word2) should be(0.75)
   }
 
   test("testMetricDivisionTopK0Den") {
     val word1 = ("blue", Array(1.0, 2.0, 3.0, 4.0, 5.0))
     val word2 = ("green", Array(1.0, 4.0, 0.0, 5.0, 5.0))
-    naiveDivisionMetricTopK(word1, word2) should be(2.5)
+    naiveDivisionMetricTopK(word1, word2) should be(3.4)
   }
 
   test("testMetricDivisionTopK0DenNum") {
     val word1 = ("blue", Array(1.0, 2.0, 0.0, 4.0, 5.0))
     val word2 = ("green", Array(1.0, 4.0, 0.0, 5.0, 5.0))
-    naiveDivisionMetricTopK(word1, word2) should be(0.5)
+    naiveDivisionMetricTopK(word1, word2) should be(0.4)
   }
 
 
