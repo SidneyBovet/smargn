@@ -10,21 +10,34 @@ object Scaling {
 
   /**
    * Scale the word, frequency tuple with the help of its maximum frequency
-   * @param wordFreq tuple of word and its frequency
+   * @param word tuple of word and its frequency
    * @return tuple of word and its max-scaled frequency
    */
-  def proportionalScalarMax(wordFreq: (String, Array[Double])): (String, Array[Double]) = {
-    val max = findMinAndMax(wordFreq._2)._2
-    (wordFreq._1, wordFreq._2.map(x => x / max))
+  def proportionalScalarMaxWord(word: (String, Array[Double])): (String, Array[Double]) = {
+    val max = findMinAndMax(word._2)._2
+    (word._1, word._2.map(x => x / max))
   }
 
   /**
    * Scale the word, frequency tuple with the help of its average frequency
-   * @param formattedWord tuple of word and its frequency
+   * @param word tuple of word and its frequency
    * @return tuple of word and its average-scaled frequency
    */
-  def proportionalScalarAverage(formattedWord: (String, Array[Double])): (String, Array[Double]) = {
-    val sum = formattedWord._2.sum
-    (formattedWord._1, formattedWord._2.map(x => x / sum))
+  def proportionalScalarAverageWord(word: (String, Array[Double])): (String, Array[Double]) = {
+    val sum = word._2.sum
+    (word._1, word._2.map(x => x / sum))
   }
+
+
+  /**
+   * Scale the frequency of the word with the help of its average frequency
+   * @param frequency tuple of word and its frequency
+   * @return tuple of word and its average-scaled frequency
+   */
+  def proportionalScalarAverage(frequency: (Array[Double])): (Array[Double]) = {
+    val sum = frequency.sum
+    frequency.map(x => x / sum)
+  }
+  
+
 }

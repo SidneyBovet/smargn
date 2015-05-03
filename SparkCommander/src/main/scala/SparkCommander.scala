@@ -65,13 +65,13 @@ object SparkCommander {
 
         val tech: Technique = technique match {
           // Add your technique methods here. All lowercase for the name pliz
-          case "naive" => NaiveComparisons.naiveDifferenceScalingMax
-          case "inverse" => NaiveInverseComparisons.naiveInverseDifference
-          case "shift" => NaiveShiftComparison.naiveDifferenceShift
+          case "naive" => NaiveComparisons.naiveDifferenceTopKScalingAverage
+          case "inverse" => NaiveComparisons.naiveInverseDifference
+          case "shift" => NaiveComparisons.naiveDifferenceScalingAverageWithShifting
           case "divergence" => Divergence.naiveDifferenceDivergence
           case "smarterdivergence" => SubTechniques.smarterDivergence
           case "peaks" => PeakComparison.peakComparisonWithMeanDerivative
-          case _ => NaiveComparisons.naiveDifferenceScalingMax
+          case _ => NaiveComparisons.naiveDifferenceTopKScalingAverage
         }
 
         runList(words, INPUT, output, parameters.toList, tech, sc)
