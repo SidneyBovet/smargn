@@ -3,11 +3,17 @@
  */
 function adapt_params(selector) {
     var nb_params = 0;
-    switch($(selector).val()) {
-    // Add the case for your technique T here. Example:
-    //  case T.name:
-    //      nb_params = 73;
-    //      break;
+    switch ($(selector).val()) {
+        // Add the case for your technique T here. Example:
+        //  case T.name:
+        //      nb_params = 73;
+        //      break;
+        // Add at the beginning and do not forget the break in order not to show the wrong number of
+        // parameters of other metrics
+        case "Divergence":
+        case "SmarterDivergence":
+            nb_params = 3;
+            break;
         case "Naive":
         case "Inverse":
         case "Shift":
@@ -17,15 +23,15 @@ function adapt_params(selector) {
     }
     var params = $("#input_params");
     var k = params.children().size();
-    if(k < nb_params) {
-        for(var i = k + 1; i <= nb_params; ++i) {
+    if (k < nb_params) {
+        for (var i = k + 1; i <= nb_params; ++i) {
             params.append(
-            "<div class=\"input-group\">" +
-                "<input type=\"text\" class=\"form-control\" placeholder=\"parameter"+i+"\" id=\"parameter"+i+"\">"+
-            "</div>");
+                "<div class=\"input-group\">" +
+                "<input type=\"text\" class=\"form-control\" placeholder=\"parameter" + i + "\" id=\"parameter" + i + "\">" +
+                "</div>");
         }
-    } else if(k > nb_params) {
-        for(var j = nb_params; j < k; ++j) {
+    } else if (k > nb_params) {
+        for (var j = nb_params; j < k; ++j) {
             params.children().last().remove();
         }
     }

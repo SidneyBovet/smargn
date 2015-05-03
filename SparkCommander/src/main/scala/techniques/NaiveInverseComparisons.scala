@@ -9,6 +9,7 @@ import utils.SubTechniques._
  */
 object NaiveInverseComparisons {
 
+
   /**
    * Given a word, find words which curve is the inverse using the NaiveInverse technique
    * @param data collection of word, frequency to tuple to look into
@@ -18,7 +19,7 @@ object NaiveInverseComparisons {
    */
   def naiveInverseDifference(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                              parameters: List[Double]): RDD[(String)] = {
-    NaiveComparisons.naiveDifference(data, inverse(testedWord), parameters)
+    NaiveComparisons.naiveDifference(data, (testedWord._1, testedWord._2.reverse), parameters)
   }
 
 }

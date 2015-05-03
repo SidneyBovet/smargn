@@ -1,6 +1,5 @@
 package utils
 
-import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import utils.Formatting._
@@ -19,63 +18,62 @@ object Launcher {
   val NSW = "NOSIMILARWORDS"
   val NOTFOUND = "ERROR404"
 
-  def runList(words: List[String], inputDir: String, outputFile: String, parameters: List[Double],
+  def runList(words: Seq[String], inputDir: String, outputFile: String, parameters: List[Double],
               similarityTechnique: Technique, spark: SparkContext,
-              range: Range = startYear to endYear): Map[String, List[String]] = {
-    val hdfs = new HDFSHandler(spark.hadoopConfiguration)
-
-    // Create folder for result
-    hdfs.createFolder(outputFile)
+              range: Range = startYear to endYear): Unit = {
 
     // Getting results for all words
-    val results = words.map(w =>
-      w -> run(w, inputDir, outputFile, parameters, similarityTechnique, spark, hdfs, range)).toMap
-
-    // Create or append to result file and
-    // append results found to results.txt
-    val similarWordsPath = new Path(outputFile + "/results.txt")
-    hdfs.appendToFile(similarWordsPath)(results.map { case (w, res) => s"$w -> ${res.mkString(" ")}" }.toList)
-    hdfs.close()
-    results
+    val data = spark.textFile(inputDir)
+    val (res, gData) = words.map { w =>
+      run(w, data, outputFile, parameters, similarityTechnique, spark, range)
+    }.unzip
+    val (results, graphData) = (res.reduce(_ ++ _), gData.reduce(_ ++ _))
+    // Write results to /projects/temporal-profile/<outputdir>/results/
+    results.saveAsTextFile(outputFile + "results/")
+    // Write results to /projects/temporal-profile/<outputdir>/data/
+    graphData.saveAsTextFile(outputFile + "data/")
   }
 
-  def run(word: String, inputDir: String, outputFile: String, parameters: List[Double], similarityTechnique: Technique,
-          spark: SparkContext, hdfs: HDFSHandler, range: Range = startYear to endYear): List[String] = {
-    val data = spark.textFile(inputDir)
+  private def run(word: String, data: RDD[String], outputFile: String, parameters: List[Double],
+                  similarityTechnique: Technique,
+                  spark: SparkContext, range: Range = startYear to endYear): (RDD[String], RDD[String]) = {
+    val emptyRDD: RDD[String] = spark.emptyRDD[String]
 
     //Formatting part
-    val formattedData = dataFormatter(data).cache()
+    val formattedData = dataFormatter2(data).cache()
     // testedWords is the line with the words we look for and its occurrences
     val testedWords = searchWordFormatter(formattedData, List(word))
 
-
     if (testedWords.count == 0) {
-      List(NOTFOUND)
+      (spark.parallelize(Seq(word + " -> " + NOTFOUND)), emptyRDD)
     } else {
       val testedWord = testedWords.first()
 
       //apply the similarity technique
-      val similarWords = similarityTechnique(formattedData, testedWord, parameters).collect().toList
+      val similarWords = similarityTechnique(formattedData, testedWord, parameters)
 
-      // Get similar words with its occurrences
-      val similarWordOcc = formattedData.filter { case (w, occurrences) => similarWords.contains(w) }
-
-      // Format for printing
-      val formatter = formatTuple(range) _
-      val toPrintRDD = similarWordOcc.take(NB_RES).flatMap(formatter)
-      val toGraph = formatForDisplay(formatter(testedWord), toPrintRDD)
-
-      // Print to projects/temporal-profiles/<depends on the query>/data.csv
-      val dataCSVPath = new Path(outputFile + "/data.csv")
-
-      // Get stream by creating file projects/temporal-profiles/<depends on the query>/data.csv or appending to it
-      // Print to projects/temporal-profiles/<depends on the query>/data.csv
-      hdfs.appendToFile(dataCSVPath)(toGraph)
-
-      if (similarWords.length == 0) {
-        List(NSW)
+      if (similarWords.count() == 0) {
+        (spark.parallelize(Seq(word + " -> " + NSW)), emptyRDD)
       } else {
-        similarWords
+        // Get similar words with their occurrences
+        // RDD[T].contains(T) does not exist in Spark 1.2.x so we join them
+        // Another (better) choice would be to send back the similar words with their occurrences
+        // instead of doing the job twice
+        import org.apache.spark.SparkContext._
+
+        val formattedDataKey = formattedData.groupBy(_._1)
+        val similarWordsKey = similarWords.groupBy(x => x)
+        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap {
+          case (k, (wo, w)) => wo
+        }
+
+        // Format for printing
+        val formatter = formatTuple(range) _
+        // We use reduce because it is parallelizable.
+        // The function reduce takes a binary operator which has to be commutative in order to be parallelizable!
+        // in this case, we do not care about the order of the words
+        (spark.parallelize(Seq(word + " -> " + similarWords.reduce(_ + " " + _))),
+          testedWords.flatMap(formatter) ++ spark.parallelize(similarWordOcc.flatMap(formatter).take(NB_RES * range.size)))
       }
     }
   }

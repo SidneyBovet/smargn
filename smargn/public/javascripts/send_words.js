@@ -28,6 +28,7 @@ function send_words() {
             "parameters": parameters
         }),
         success: function (data) {
+            console.log(data);
             var alerts = $("#errormsg");
             alerts.empty();
             if (data.notindata.length != 0) {

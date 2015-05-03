@@ -1,13 +1,14 @@
 package techniques
 
 import org.apache.spark.rdd.RDD
-import utils.SubTechniques._
 
 /**
  * Created by johngaspoz and Fabien on 12.04.15
  * Naive functions that compute the similar shifted words list of a given word based on comparison techniques
  */
 object NaiveShiftComparison {
+
+  import utils.SubTechniques._
 
   /**
    * NaiveDifference shifted 3 times

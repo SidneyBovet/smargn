@@ -4,7 +4,7 @@ Sparkcommander:
 This application should be on the cluster and is submitted as a jar to Spark
 by smargn.
 To code in Sparkcommander:
- - Follow the instructions in ../README to add your technique. It involves
+ - Follow the instructions in ./smargn/README to add your technique. It involves
    modifying src/main/scala/SparkCommander.scala
 
  - use the command 'sbt assembly' in the folder SparkCommander/ to package and

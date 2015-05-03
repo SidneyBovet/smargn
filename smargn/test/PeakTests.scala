@@ -80,8 +80,8 @@ class PeakTests extends SparkTestUtils with ShouldMatchers {
     val data = dataFormatter(sc.textFile(inputDir)) //parse data
     val words = searchWordFormatter(data, List("crime", "coupable")).collect()
     println(peakMaxMinMetric(words(0), words(1), 10, 10))
-  }*/
-  /*sparkTest("Coupabe - Crime (derivative)") {
+  }
+  sparkTest("Coupabe - Crime (derivative)") {
     val inputDir = "input"
     val data = dataFormatter(sc.textFile(inputDir)) //parse data
     val words = searchWordFormatter(data, List("crime", "coupable")).collect()
@@ -130,14 +130,14 @@ class PeakTests extends SparkTestUtils with ShouldMatchers {
     val met = peakDerivativeMetric(words(0), words(1), 3)
     println(met)
     met should be > 0.5
-  }*/
+  }
 
   sparkTest("Similar words to rire") {
     val inputDir = "input"
     val data = dataFormatter(sc.textFile(inputDir)) //parse data
     val words = searchWordFormatter(data, List("rire", "sourire", "crime", "vin", "EPFL", "avocat"))
     val testedWord = words.filter(w => w._1 == "rire").collect().head
-    val derivativeWords = peakComparisonWithDerivative(words, testedWord, List(0.5, 10, 3, 1))
+    val derivativeWords = peakComparisonWithDerivative(words, testedWord, List(0.5, 10, 1, 1))
     derivativeWords.collect should be(Array("rire", "sourire"))
 
   }
@@ -145,10 +145,34 @@ class PeakTests extends SparkTestUtils with ShouldMatchers {
   sparkTest("Similar words to crime") {
     val inputDir = "input"
     val data = dataFormatter(sc.textFile(inputDir)) //parse data
-    val words = searchWordFormatter(data,
-        List("rire", "sourire", "crime", "vin", "EPFL", "avocat", "coupable", "vigne"))
+    val words = searchWordFormatter(data, List("rire", "sourire", "crime", "vin", "EPFL", "avocat"))
     val testedWord = words.filter(w => w._1 == "crime").collect().head
-    val derivativeWords = peakComparisonWithDerivative(words, testedWord, List(0.5, 10, 3, 0.5))
+    val derivativeWords = peakComparisonWithDerivative(words, testedWord, List(0.5, 10, 2, 1))
     derivativeWords.collect should be(Array("crime", "coupable"))
+
+  }
+
+  sparkTest("Similar words rire from data") {
+    val inputDir = "input"
+    val data = dataFormatter(sc.textFile(inputDir)) //parse data
+    val words = searchWordFormatter(data, List("rire"))
+    val testedWord = words.filter(w => w._1 == "rire").collect().head
+    val derivativeWords = peakComparisonWithMeanDerivative(data, testedWord, List(0.5, 5, 2, 1))
+    derivativeWords.collect should be(Array("rire", "sourire"))
+  }
+
+   sparkTest("Rire - Sourire (derivative-mean)") {
+     val inputDir = "input"
+     val data = dataFormatter(sc.textFile(inputDir)) //parse data
+     val words = searchWordFormatter(data, List("rire", "crime")).collect()
+     val met = peakMeanDerivativeMetric(words(0), words(1), 5, 1, 1)
+     println(met)
+     met should be < 0.5
+   }*/
+
+  sparkTest("count") {
+    val inputDir = "input"
+    val data = dataFormatter(sc.textFile(inputDir)) //parse data
+    println(data.collect().size)
   }
 }

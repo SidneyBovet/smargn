@@ -37,7 +37,7 @@ object Launcher {
     }
 
     //Formatting part
-    val formattedData = dataFormatter(data)
+    val formattedData = dataFormatter2(data)
     val testedWords = searchWordFormatter(formattedData, List(word))
 
     if (testedWords.count == 0) {
