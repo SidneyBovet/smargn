@@ -65,7 +65,7 @@ object PeakComparison {
     val deltaY = parameters(3).toInt
 
     data.flatMap { x =>
-      if (peakMeanDerivativeMetric(testedWord, x, windowSize) > proportionSimilarities) {
+      if (peakMeanDerivativeMetric(testedWord, x, windowSize, deltaX, deltaY) > proportionSimilarities) {
         List(x._1)
       } else {
         List()
