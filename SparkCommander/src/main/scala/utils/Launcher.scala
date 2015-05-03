@@ -13,7 +13,7 @@ import utils.Grapher._
 object Launcher {
   type Technique = (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[String]
   private val startYear = 1840
-  private val endYear = 2000
+  private val endYear = 1998
   private val NB_RES = 10
   val NSW = "NOSIMILARWORDS"
   val NOTFOUND = "ERROR404"
@@ -28,9 +28,9 @@ object Launcher {
       run(w, data, outputFile, parameters, similarityTechnique, spark, range)
     }.unzip
     val (results, graphData) = (res.reduce(_ ++ _), gData.reduce(_ ++ _))
-    // Write results to /projects/temporal-profile/<outputdir>/results/
+    // Write results to /projects/temporal-profile/results/<outputdir>/results/
     results.saveAsTextFile(outputFile + "results/")
-    // Write results to /projects/temporal-profile/<outputdir>/data/
+    // Write results to /projects/temporal-profile/results/<outputdir>/data/
     graphData.saveAsTextFile(outputFile + "data/")
   }
 
@@ -56,7 +56,7 @@ object Launcher {
         (spark.parallelize(Seq(word + " -> " + NSW)), emptyRDD)
       } else {
         // Get similar words with their occurrences
-        // RDD[T].contains(T) does not exist in Spark 1.2.x so we join them
+        // RDD[T].contains(T) does not exist in Spark 1.2.x and impossible to nest RDD queries so we join them
         // Another (better) choice would be to send back the similar words with their occurrences
         // instead of doing the job twice
         import org.apache.spark.SparkContext._
