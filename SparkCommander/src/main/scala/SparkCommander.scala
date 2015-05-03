@@ -5,6 +5,7 @@ import techniques._
 import utils.{SubTechniques, HDFSHandler}
 import Launcher._
 
+
 /**
  * From Valentin with love on 21/04/15.
  */
@@ -69,6 +70,7 @@ object SparkCommander {
           case "shift" => NaiveShiftComparison.naiveDifferenceShift
           case "divergence" => Divergence.naiveDifferenceDivergence
           case "smarterdivergence" => SubTechniques.smarterDivergence
+          case "peaks" => PeakComparison.peakComparisonWithMeanDerivative
           case _ => NaiveComparisons.naiveDifferenceScalingMax
         }
 

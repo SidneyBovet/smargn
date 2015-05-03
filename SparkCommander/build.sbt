@@ -9,7 +9,8 @@ mainClass in Compile := Some("SparkCommander")
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % "1.2.1" % "provided",
   "org.apache.hadoop" % "hadoop-client" % "2.6.0" % "provided",
-  "com.github.scopt" %% "scopt" % "3.3.0"
+  "com.github.scopt" %% "scopt" % "3.3.0",
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 )
 
 resolvers += Resolver.sonatypeRepo("public")
