@@ -7,8 +7,6 @@ import com.decodified.scalassh.{CommandResult, SSH, SshClient, Validated}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
-import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
-import utils.Launcher._
 import utils.{Result, ResultParser, _}
 
 import scala.io.Source
@@ -37,41 +35,35 @@ object Application extends Controller with ResultParser {
     }
   }
 
-  def runNaive(word: String): Action[AnyContent] = {
+  def displayBlank: Action[AnyContent] = {
     Action {
-      val res = run(word, INPUT, OUTPUT, List(0.2), NaiveComparisons.naiveDifferenceScalingMax)
-      if (res == List()) {
-        Ok(views.html.notSimilarWords(word))
-      } else if (res.head == "ERROR404") {
-        Ok(views.html.notFoundPage(word))
-      } else {
-        Ok(views.html.naive(res))
-      }
+      Ok(views.html.display())
     }
   }
 
-  def runNaiveInverse(word: String): Action[AnyContent] = {
-    Action {
-      val res = Launcher.run(word, INPUT, OUTPUT, List(4.0), NaiveInverseComparisons.naiveInverseDifference)
-      if (res == List()) {
-        Ok(views.html.notSimilarWords(word))
-      } else if (res.head == "ERROR404") {
-        Ok(views.html.notFoundPage(word))
-      } else {
-        Ok(views.html.naive(res))
-      }
-    }
-  }
+  def displayCurve: Action[JsValue] = {
+    Logger.debug("Trying to display a curve")
+    Action(BodyParsers.parse.json) { req =>
+      req.body match {
+        case JsObject(Seq(("words", JsArray(words)))) =>
+          val localFolder = words.mkString("-")
+          val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$localFolder/")
+          if (Files.notExists(resultsPath)) {
+            Files.createDirectory(resultsPath)
+          }
 
-  def runNaiveShift(word: String): Action[AnyContent] = {
-    Action {
-      val res = run(word, INPUT, OUTPUT, List(0.2), NaiveShiftComparison.naiveDifferenceShift)
-      if (res == List()) {
-        Ok(views.html.notSimilarWords(word))
-      } else if (res.head == "ERROR404") {
-        Ok(views.html.notFoundPage(word))
-      } else {
-        Ok(views.html.naive(res))
+          val hdfsResDir = "/projects/temporal-profiles/results/" + localFolder
+          val res = SSH("icdataportal2") { client =>
+            sparkSubmitDisplayer(words.map(Json.stringify).toList, hdfsResDir)(client).right.flatMap { res =>
+              Logger.debug("Chmod done: " + res.exitCode.get)
+              mergeAndDl(hdfsResDir, "~/data.csv", "./public/results/" + localFolder)(client).right.map { res =>
+                Ok("Data for display has arrived")
+              }
+            }
+          }
+          res.right.get
+        case _ => BadRequest("Json is not in the good format")
+
       }
     }
   }
@@ -241,8 +233,8 @@ object Application extends Controller with ResultParser {
     }
   }
 
-  def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
-                 (implicit client: SshClient): Validated[CommandResult] = {
+  private def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
+                         (implicit client: SshClient): Validated[CommandResult] = {
     {
       client
         .exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster --num-executors 25" +
@@ -272,5 +264,15 @@ object Application extends Controller with ResultParser {
   private def rmLocalCopies(folder: String) = {
     import scala.sys.process._
     Process("rm -R ./public/results/" + folder).run
+  }
+
+  private def sparkSubmitDisplayer(words: List[String], hdfsResDir: String)
+                                  (client: SshClient): Validated[CommandResult] = {
+    client
+      .exec("bash -c \"source .bashrc; spark-submit --class DisplayCommader --master yarn-cluster --num-executors 25" +
+      " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",")).right
+      .flatMap({ res => Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
+      client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)
+    })
   }
 }
