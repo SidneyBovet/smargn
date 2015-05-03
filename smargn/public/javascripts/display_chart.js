@@ -18,7 +18,6 @@ function display_chart() {
         myChart.addSeries("Word", dimple.plot.line);
         myChart.draw();
     });
-
 }
 
 function outputFolder() {

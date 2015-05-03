@@ -54,6 +54,7 @@ object Application extends Controller with ResultParser {
 
           val hdfsResDir = "/projects/temporal-profiles/results/" + localFolder
           val res = SSH("icdataportal2") { client =>
+            Logger.debug("Connection to icdataportal2 complete")
             sparkSubmitDisplayer(words.map(Json.stringify).toList, hdfsResDir)(client).right.flatMap { res =>
               Logger.debug("Chmod done: " + res.exitCode.get)
               mergeAndDl(hdfsResDir, "~/data.csv", "./public/results/" + localFolder)(client).right.map { res =>
@@ -121,7 +122,6 @@ object Application extends Controller with ResultParser {
             Logger.debug("Connection to icdataportal2 complete")
             val hdfsResDir = "/projects/temporal-profiles/results/" + outputDir
 
-            // TODO before sending the job to YARN, check if the directory already exists on HDFS
             val r = client.exec("hadoop fs -test -d " + hdfsResDir + "/results; echo $?")
             r.right.map { res =>
               Logger.debug("Does " + hdfsResDir + " exist? " + res.stdOutAsString().charAt(0))

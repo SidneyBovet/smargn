@@ -17,6 +17,7 @@ function display_words() {
             "words": words
         }),
         success: function (data) {
+            $("#chartContainer").css("visibility", "visible");
             // Download data.csv
             var dataCSV = "/datacsv/" + outputFolder();
             // Display

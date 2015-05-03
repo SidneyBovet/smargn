@@ -38,7 +38,7 @@ object DisplayCommander {
     val sc = new SparkContext(conf)
 
     parser.parse(args, Config(words = Seq())) match {
-      case Some(Config(words, technique, parameters)) =>
+      case Some(Config(words)) =>
         val output = createOutput(words)
 
         val hdfs = new HDFSHandler(sc.hadoopConfiguration)
