@@ -70,15 +70,26 @@ object TestCases {
                     similarityTechnique: Technique): (Double, List[Double]) = {
     bounds match {
       case x :: xs => {
-        var best = (0.0, List[Double]())
-        for (y <- x._1 to(x._2, (x._2 - x._1) / x._3)) {
-          val res = getBestParams(data, testedWord, similarWords, differentWords, params ++ (y :: Nil), xs,
+        val step = x._3
+
+        //if step == 0 we do no optimization for this parameter
+        if (step == 0.0) {
+          getBestParams(data, testedWord, similarWords, differentWords, params ++ (x._1 :: Nil), xs,
             similarityTechnique)
-          if (res._1 > best._1) {
-            best = res
-          }
         }
-        best
+        else {
+          var best = (0.0, List[Double]())
+
+          for (y <- x._1 to(x._2, (x._2 - x._1) / step)) {
+            val res = getBestParams(data, testedWord, similarWords, differentWords, params ++ (y :: Nil), xs,
+              similarityTechnique)
+            if (res._1 > best._1) {
+              best = res
+            }
+          }
+          best
+        }
+
       }
       case Nil => (test(data, testedWord, similarWords, differentWords, params, similarityTechnique), params)
     }
