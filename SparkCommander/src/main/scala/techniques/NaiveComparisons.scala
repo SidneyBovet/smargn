@@ -2,7 +2,6 @@ package techniques
 
 import org.apache.spark.rdd.RDD
 import utils.Scaling._
-import utils.ComputationUtilities._
 import utils.TopK._
 import utils.SubTechniques._
 
@@ -12,13 +11,14 @@ import utils.SubTechniques._
  */
 object NaiveComparisons {
 
+  import utils.ComputationUtilities._
+
   /**
    * Compare a word,frequency tuple with a collection of word, frequency tuples to find similar words by computing
    * array's elements difference. It first scales everybody by the average and the output a ranked list of similar words
    * @param data collection of word, frequency to tuple to look into
    * @param testedWord word that we want to find its similar word
-   * @param parameters L(0) contains the accepted difference between two array value that we accept, L(1) contains
-   *                   the number of non-similar values that we accept
+   * @param parameters L(0) contains the accepted difference between two array value that we accept, L(1) contains the number of non-similar values that we accept
    * @return words that are similar
    */
   def naiveDifferenceTopKScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
@@ -87,10 +87,10 @@ object NaiveComparisons {
     NaiveComparisons.naiveDifferenceTopKScalingAverage(data, (testedWord._1, testedWord._2.reverse), parameters)
   }
 
-
   /** *******************************************************************************************************
     * Metrics
     * ******************************************************************************************************* */
+
 
   /**
    *
@@ -125,5 +125,6 @@ object NaiveComparisons {
     val minMax = findMinAndMax(divided)
     minMax._2 - minMax._1
   }
+
 
 }

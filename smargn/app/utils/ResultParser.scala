@@ -27,7 +27,7 @@ trait ResultParser extends RegexParsers {
 
   // Darn you accents!
   def word: Parser[String] = {
-    "[a-zA-Z0-9âàáêèéîìíôòóûùúÂÀÁÊÈÉÎÌÍÔÒÓÛÙÚ']+".r ^^ { case w => w.toString }
+    "[\\p{L}']+".r ^^ { case w => w.toString }
   }
 
   def error: Parser[String] = NSW | NOTFOUND

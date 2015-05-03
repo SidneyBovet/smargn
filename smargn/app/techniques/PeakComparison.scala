@@ -300,9 +300,12 @@ object PeakComparison {
 
   /**
    * For a given word detects the peaks based on finding the largest ascending window (with some smoothing based on
-   * mean), takes the maximum in that window, compares it against the minimum in the ascending window, and then finds
-   * the largest descending window starting from the maximum, and once again compares the maximum to the minimum in the
-   * window. If the respective differences satisfy the threshold, the maximum is detected as a peak
+   * mean), takes
+   * the maximum in that window, compares it against the minimum in the ascending window, and then finds the largest
+   * descending
+   * window starting from the maximum, and once again compares the maximum to the minimum in the window. If the
+   * respective
+   * differences satisfy the threshold, the maximum is detected as a peak
    *
    * @param word The word which peaks are to be analyzed
    * @param windowSize The size of the smoothing window
@@ -346,8 +349,11 @@ object PeakComparison {
 
   /**
    * For a given word detects the peaks based on the maximum descending and ascending windows and taking into
-   * consideration the size of those windows. It's different from the windowPeakMean so that instead of outputting
-   * the difference between the extrema, it outputs the slope between those points
+   * consideration
+   * the size of those windows.
+   * It's different from the windowPeakMean so that instead of outputting the difference between the extrema, it
+   * outputs
+   * the slope between those points
    *
    * @param word word
    * @param windowSize the size of smoothing window

@@ -28,7 +28,7 @@ object DisplayCommander {
 
   /**
    *
-   * @param args must be in the format: -w word1,word2?,...  -t technique_name -p param1?,param2?,...
+   * @param args must be in the format: -w word1,word2?,...
    */
   def main(args: Array[String]) = {
     val conf = new SparkConf().setAppName("SparkCommander")
@@ -38,15 +38,8 @@ object DisplayCommander {
     val sc = new SparkContext(conf)
 
     parser.parse(args, Config(words = Seq())) match {
-      case Some(Config(words, technique, parameters)) =>
-        val output = createOutput(words)
-
-        val hdfs = new HDFSHandler(sc.hadoopConfiguration)
-        // Create folder for results
-        hdfs.createFolder(output)
-        hdfs.close()
-
-        runList(words, INPUT, output, sc)
+      case Some(Config(words)) =>
+        runList(words, INPUT, createOutput(words), sc)
       case None => // Bad arguments
     }
 
