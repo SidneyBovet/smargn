@@ -7,8 +7,6 @@ import com.decodified.scalassh.{CommandResult, SSH, SshClient, Validated}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
-import techniques.{NaiveComparisons, NaiveInverseComparisons, NaiveShiftComparison}
-import utils.Launcher._
 import utils.{Result, ResultParser, _}
 
 import scala.io.Source
@@ -37,41 +35,30 @@ object Application extends Controller with ResultParser {
     }
   }
 
-  def runNaive(word: String): Action[AnyContent] = {
-    Action {
-      val res = run(word, INPUT, OUTPUT, List(0.2), NaiveComparisons.naiveDifferenceScalingMax)
-      if (res == List()) {
-        Ok(views.html.notSimilarWords(word))
-      } else if (res.head == "ERROR404") {
-        Ok(views.html.notFoundPage(word))
-      } else {
-        Ok(views.html.naive(res))
-      }
-    }
-  }
+  def displayCurve: Action[JsValue] = {
+    // TODO before sending the job to YARN, check if the directory already exists on HDFS
+    Logger.debug("Trying to display a curve")
+    Action(BodyParsers.parse.json) { req =>
+      req.body match {
+        case JsObject(Seq(("words", JsArray(words)))) =>
+          val localFolder = words.map(_.as[String]).mkString("-")
+          val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$localFolder/")
+          if (Files.notExists(resultsPath)) {
+            Files.createDirectory(resultsPath)
+          }
 
-  def runNaiveInverse(word: String): Action[AnyContent] = {
-    Action {
-      val res = Launcher.run(word, INPUT, OUTPUT, List(4.0), NaiveInverseComparisons.naiveInverseDifference)
-      if (res == List()) {
-        Ok(views.html.notSimilarWords(word))
-      } else if (res.head == "ERROR404") {
-        Ok(views.html.notFoundPage(word))
-      } else {
-        Ok(views.html.naive(res))
-      }
-    }
-  }
-
-  def runNaiveShift(word: String): Action[AnyContent] = {
-    Action {
-      val res = run(word, INPUT, OUTPUT, List(0.2), NaiveShiftComparison.naiveDifferenceShift)
-      if (res == List()) {
-        Ok(views.html.notSimilarWords(word))
-      } else if (res.head == "ERROR404") {
-        Ok(views.html.notFoundPage(word))
-      } else {
-        Ok(views.html.naive(res))
+          val hdfsResDir = "/projects/temporal-profiles/results/" + localFolder
+          val res = SSH("icdataportal2") { client =>
+            Logger.debug("Connection to icdataportal2 complete")
+            sparkSubmitDisplayer(words.map(Json.stringify).toList, hdfsResDir)(client).right.flatMap { res =>
+              Logger.debug("Chmod done: " + res.exitCode.get)
+              mergeAndDl(hdfsResDir, "~/data.csv", "./public/results/" + localFolder)(client).right.map { res =>
+                Ok("Data for display has arrived")
+              }
+            }
+          }
+          res.right.get
+        case _ => BadRequest("Json is not in the good format")
       }
     }
   }
@@ -117,7 +104,8 @@ object Application extends Controller with ResultParser {
         case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params))) =>
           // Apply desired technique and get results
           // Create SSH connection to icdataportal2. Uses ~/.scala-ssh/icdataportal2 for authentication
-          // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put in it.
+          // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put
+          // in it.
           val paramsStr = if (params.nonEmpty) s"_${params.mkString("-")}" else ""
           val outputDir = s"${words.mkString("-")}_${name.toLowerCase}$paramsStr"
 
@@ -129,7 +117,6 @@ object Application extends Controller with ResultParser {
             Logger.debug("Connection to icdataportal2 complete")
             val hdfsResDir = "/projects/temporal-profiles/results/" + outputDir
 
-            // TODO before sending the job to YARN, check if the directory already exists on HDFS
             val r = client.exec("hadoop fs -test -d " + hdfsResDir + "/results; echo $?")
             r.right.map { res =>
               Logger.debug("Does " + hdfsResDir + " exist? " + res.stdOutAsString().charAt(0))
@@ -243,25 +230,23 @@ object Application extends Controller with ResultParser {
 
   def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
                  (implicit client: SshClient): Validated[CommandResult] = {
-    {
-      client
-        .exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster --num-executors 25" +
-        " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
-        if (params.nonEmpty) {
-          " -p " + params.mkString(",")
-        } else {
-          ""
-        }
-      } + "\"").right.flatMap { res =>
-        Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
-        //Make the directory usable by others in the group
-        client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)
+    client.exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster " +
+      "--num-executors 25" +
+      " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
+      if (params.nonEmpty) {
+        " -p " + params.mkString(",")
+      } else {
+        ""
       }
+    } + "\"").right.flatMap { res =>
+      Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
+      //Make the directory usable by others in the group
+      client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)
     }
   }
 
   private def mergeAndDl(directory: String, file: String, dlDst: String)(implicit client: SshClient) = {
-    // Download results from HDFS to local on cluster
+    // Download results from HDFS to local on cluster { { {
     client.exec("hadoop fs -getmerge " + directory + " " + file).right.flatMap { res =>
       Logger.debug("get " + file.substring(2) + " done " + res.exitCode.get)
       // Download results from cluster to server
@@ -276,8 +261,8 @@ object Application extends Controller with ResultParser {
 
   private def sparkSubmitDisplayer(words: List[String], hdfsResDir: String)
                                   (client: SshClient): Validated[CommandResult] = {
-    client
-      .exec("bash -c \"source .bashrc; spark-submit --class DisplayCommander --master yarn-cluster --num-executors 25" +
+    client.exec("bash -c \"source .bashrc; spark-submit --class DisplayCommander --master yarn-cluster " +
+      "--num-executors 25" +
       " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + "\"").right.flatMap({ res =>
       //      Logger.debug(res.stdErrAsString())
       Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
