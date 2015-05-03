@@ -28,7 +28,7 @@ object DisplayCommander {
 
   /**
    *
-   * @param args must be in the format: -w word1,word2?,...  -t technique_name -p param1?,param2?,...
+   * @param args must be in the format: -w word1,word2?,...
    */
   def main(args: Array[String]) = {
     val conf = new SparkConf().setAppName("SparkCommander")

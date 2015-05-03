@@ -46,7 +46,7 @@ object Application extends Controller with ResultParser {
     Action(BodyParsers.parse.json) { req =>
       req.body match {
         case JsObject(Seq(("words", JsArray(words)))) =>
-          val localFolder = words.map(Json.stringify).mkString("-")
+          val localFolder = words.toList.map(_.as[String]).mkString("-")
           val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$localFolder/")
           if (Files.notExists(resultsPath)) {
             Files.createDirectory(resultsPath)
@@ -269,7 +269,7 @@ object Application extends Controller with ResultParser {
   private def sparkSubmitDisplayer(words: List[String], hdfsResDir: String)
                                   (client: SshClient): Validated[CommandResult] = {
     client
-      .exec("bash -c \"source .bashrc; spark-submit --class DisplayCommader --master yarn-cluster --num-executors 25" +
+      .exec("bash -c \"source .bashrc; spark-submit --class DisplayCommander --master yarn-cluster --num-executors 25" +
       " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",")).right
       .flatMap({ res => Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
       client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)
