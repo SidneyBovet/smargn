@@ -8,13 +8,17 @@ function adapt_params(selector) {
         //  case T.name:
         //      nb_params = 73;
         //      break;
-        case "Naive":
-        case "Inverse":
-        case "Shift":
-        case "DTW":
         case "Divergence":
             nb_params = 3;
             break;
+	case "Peaks":
+		nb_params = 3;
+		break;
+	case "Naive":
+        case "Inverse":
+        case "Shift":
+        case "DTW":
+      
         default:
             nb_params = 1;
     }
