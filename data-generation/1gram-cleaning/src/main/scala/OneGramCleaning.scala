@@ -9,12 +9,13 @@ import org.apache.hadoop.fs.FSDataOutputStream
 
 object OneGramCleaning {
   def main(args: Array[String]) {
-    if(args.length < 2) {
-      print("You must provide at least two arguments, inputfile path and outputfile path")
+    if(args.length < 3) {
+      print("You must provide at least three arguments, inputfile path and outputfile path, profil outputfile path")
       System.exit(1)
     }
     // threshold value for words
-    val minOcc = if(args.length >= 5) args(4).toInt else 50
+    val minOcc = if(args.length >= 6) args(5).toInt else 100
+
     val sc = new SparkContext(new SparkConf().setAppName("OneGramCleaning"))
     val lines = sc.textFile(args(0))
     val parsedLines = lines.map(line => {
@@ -23,7 +24,6 @@ object OneGramCleaning {
     })
 
     // array of lines that occure more that minOcc
-    //val filteredLines = sumAndLine.filter(_._1 > minOcc).map(_._2).map(_+"\n").collect
     val filteredLines = parsedLines.filter(_._2.sum > minOcc)
 
     // sum over each year
@@ -31,36 +31,34 @@ object OneGramCleaning {
     val acc = Array.fill[Int](yearCount)(0)
     val sumsPerYeas = filteredLines.map(_._2).fold(acc)((a,e) => a.zip(e).map(el=>el._1+el._2))
 
+    /*
     val normalizedLines = filteredLines.map(el =>
-      (el._1, el._2.zip(sumsPerYeas).map(el => el._1.toDouble/el._2.toDouble)))
+      (el._1, el._2.zip(sumsPerYeas).map(el => el._1.toDouble/el._2.toDouble)))*/
 
     // Write cleaned 1grams on HDFS
-    val conf = new Configuration()
-    val fs = FileSystem.get(conf)
-    val out = fs.create(new Path(args(1)))
-    printArray(yearCount,normalizedLines.collect,out)
-    out.close()
-
-    //Compute and write samples
-    if(args.length >= 4) {
-      val sampleList = sc.textFile(args(2)).flatMap(_.split("\\s+")).collect
-      val samples = normalizedLines.filter(x => sampleList.contains(x._1))
-      val out = fs.create(new Path(args(3)))
-      printArray(yearCount,samples.collect,out)
-      out.close()
+    formatLine(filteredLines).saveAsTextFile(args(1))
+    if(args.length >= 7) {
+      val garbageLines = parsedLines.filter(x=> x._2.sum <= minOcc && x._2.sum > minOcc-10)
+      formatLine(garbageLines).saveAsTextFile(args(6))
     }
 
+    val conf = new Configuration()
+    val fs = FileSystem.get(conf)
+    val out = fs.create(new Path(args(2)))
+    out.write(sumsPerYeas.mkString(" ").getBytes("UTF-8"))
+    out.close()
     fs.close()
+
+
+    //Compute and write samples
+    if(args.length >= 5) {
+      val sampleList = sc.textFile(args(3)).flatMap(_.split("\\s+")).collect
+      val samples = filteredLines.filter(x => sampleList.contains(x._1))
+      formatLine(samples).saveAsTextFile(args(4))
+    }
+
     sc.stop()
   }
 
-  def printArray(numYears:Int,a:Array[(String,Array[Double])], out:FSDataOutputStream) = {
-    out.writeInt(numYears)
-    a.foreach(el => {
-      val wordBytes = el._1.getBytes("UTF-8")
-      out.writeInt(wordBytes.length)
-      out.write(wordBytes)
-      el._2.foreach(freq => out.writeDouble((freq)))
-      })
-  }
+  def formatLine(rdd:RDD[(String,Array[Int])]): RDD[String] = rdd.map(x=> x._1+" "+x._2.mkString(" "))
 }
