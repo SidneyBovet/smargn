@@ -14,10 +14,15 @@ function adapt_params(selector) {
         case "SmarterDivergence":
             nb_params = 3;
             break;
-	case "Peaks":
+        case "Peaks":
             nb_params = 4;
             break;
-        case "Naive":
+        case "NaiveDifference":
+            nb_params = 2;
+            break;
+        case "NaiveDivision":
+            nb_params = 1;
+            break;
         case "Inverse":
         case "Shift":
         case "DTW":
