@@ -101,7 +101,7 @@ object NaiveComparisons {
    */
   def naiveDifferenceMetricTopK(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List(15)): Double = {
     val acceptedDifference = parameters.head
-    val zipped = proportionalScalarAverage(word1._2).zip(proportionalScalarAverage(word2._2))
+    val zipped = proportionalScalarAverageSubstraction(word1._2).zip(proportionalScalarAverageSubstraction(word2._2))
     val zippedDif = zipped.map(x => math.abs(x._1 - x._2))
     val trueDif = zippedDif.map(_ <= acceptedDifference).filter(_ == true)
     if (trueDif.length > 0) {
@@ -119,7 +119,7 @@ object NaiveComparisons {
    * @return difference of min element and max element of the "line" (i.e. w1/w2 element)
    */
   def naiveDivisionMetricTopK(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List()): Double = {
-    val zipped = proportionalScalarAverage(word1._2).zip(proportionalScalarAverage(word2._2))
+    val zipped = proportionalScalarAverageSubstraction(word1._2).zip(proportionalScalarAverageSubstraction(word2._2))
     val zippedWithoutZero = zipped.map(x => (x._1 + 1, x._2 + 1))
     val divided = zippedWithoutZero.map(x => math.abs(x._1 / x._2))
     val minMax = findMinAndMax(divided)

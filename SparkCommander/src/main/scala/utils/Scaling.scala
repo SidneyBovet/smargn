@@ -30,14 +30,24 @@ object Scaling {
 
 
   /**
-   * Scale the frequency of the word with the help of its average frequency
+   * Scale the frequency of the word with the help of its average frequency by division
    * @param frequency tuple of word and its frequency
    * @return tuple of word and its average-scaled frequency
    */
-  def proportionalScalarAverage(frequency: (Array[Double])): (Array[Double]) = {
+  def proportionalScalarAverageDivision(frequency: (Array[Double])): (Array[Double]) = {
     val sum = frequency.sum
     frequency.map(x => x / sum)
   }
-  
+
+  /**
+   * Scale the frequency of the word with the help of its average frequency by substraction
+   * @param frequency tuple of word and its frequency
+   * @return tuple of word and its average-scaled frequency
+   */
+  def proportionalScalarAverageSubstraction(frequency: (Array[Double])): (Array[Double]) = {
+    val sum = frequency.sum
+    frequency.map(x => x - sum)
+  }
+
 
 }
