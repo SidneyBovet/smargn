@@ -56,4 +56,22 @@ object ComputationUtilities {
       array.map { x => (x - mean) * (x - mean) }.sum / (array.length - 1)
     }
   }
+
+  /**
+   * @param p1 first point
+   * @param p2 second point
+   * @return euclidean distance between the two points
+   */
+  def euclideanDistance(p1: (Int, Double), p2: (Int, Double)): Double = {
+    Math.sqrt(Math.pow(p1._1 - p2._1, 2) + Math.pow(p1._2 - p2._2, 2))
+  }
+
+  /**
+   * @param p1 first point
+   * @param p2 second point
+   * @return absolute distance between the two points
+   */
+  def distance(p1: Double, p2: Double): Double = {
+    Math.abs(p1 - p2)
+  }
 }
