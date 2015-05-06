@@ -1,13 +1,27 @@
 package techniques
 
+
 import org.apache.spark.rdd.RDD
 import utils.Scaling._
 import utils.ComputationUtilities._
+import utils.TopK._
 
 /**
  * Created by mathieu and ana on 09/04/15.
  */
 object DynamicTimeWrapping {
+
+  def dtwSimpleTopK(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                    parameters: List[Double]): RDD[String] = {
+    val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
+      x._2 < y._2
+    } else {
+      x._1 < y._1
+    }
+
+    data.sparkContext.parallelize(
+      retrieveTopK(parameters.head.toInt, dynamicTimeWrappingMetric, data, testedWord, order, parameters.tail))
+  }
 
   /**
    * Main method for comparison using Dynamic Time Wrapping
@@ -17,7 +31,7 @@ object DynamicTimeWrapping {
    * @return words similar to testedWord
    */
   def dtwComparison(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
-                    parameters: List[Double]): RDD[(String)] = {
+                    parameters: List[Double]): RDD[String] = {
     val threshold = parameters.head
     data.flatMap(x => if (dynamicTimeWrappingMetric(testedWord._2, x._2) <= threshold && !x._1.equals(testedWord._1)) {
       List(x._1)
@@ -35,8 +49,16 @@ object DynamicTimeWrapping {
    * @return words similar to testedWord
    */
   def dtwComparisonScaleMax(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
-                            parameters: List[Double]): RDD[(String)] = {
+                            parameters: List[Double]): RDD[String] = {
     dtwComparison(data.map(proportionalScalarMaxWord), proportionalScalarMaxWord(testedWord), parameters)
+  }
+
+  /**
+   * TopK version of dtwComparisonScaleMax
+   */
+  def dtwComparisonScaleMaxTopK(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                                parameters: List[Double]): RDD[String] = {
+    dtwSimpleTopK(data.map(proportionalScalarMaxWord), proportionalScalarMaxWord(testedWord), parameters)
   }
 
   /**
@@ -46,9 +68,17 @@ object DynamicTimeWrapping {
    * @param parameters first argument is the threshold value, should experiment to find optimal value
    * @return words similar to testedWord
    */
-  def dtwComparisonScaleAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
-                                parameters: List[Double]): RDD[(String)] = {
+  def dtwComparisonScaleAvg(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                            parameters: List[Double]): RDD[String] = {
     dtwComparison(data.map(proportionalScalarAverageWord), proportionalScalarAverageWord(testedWord), parameters)
+  }
+
+  /**
+   * TopK version of dtwComparisonScaleAvg
+   */
+  def dtwComparisonScaleAvgTopK(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                                parameters: List[Double]): RDD[String] = {
+    dtwSimpleTopK(data.map(proportionalScalarAverageWord), proportionalScalarAverageWord(testedWord), parameters)
   }
 
   /**

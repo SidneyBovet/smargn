@@ -73,7 +73,10 @@ object SparkCommander {
           case "divergence" => Divergence.naiveDifferenceDivergence
           case "smarterdivergence" => SubTechniques.smarterDivergence
           case "peaks" => PeakComparison.peakComparisonWithMeanDerivative
-          case "dtw" => DynamicTimeWrapping.dtwComparisonScaleAverage
+          case "dtw" => DynamicTimeWrapping.dtwComparison
+          case "dtwtopk" => DynamicTimeWrapping.dtwSimpleTopK
+          case "dtwscaleavgtopk" => DynamicTimeWrapping.dtwComparisonScaleAvgTopK
+          case "dtwscalemaxtopk" => DynamicTimeWrapping.dtwComparisonScaleMaxTopK
           case _ => NaiveComparisons.naiveDifferenceTopKScalingAverage
         }
 

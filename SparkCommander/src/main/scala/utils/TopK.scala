@@ -1,6 +1,7 @@
 package utils
 
 import org.apache.spark.rdd.RDD
+import utils.Launcher.Metric
 
 import scala.collection.mutable
 
@@ -19,13 +20,12 @@ object TopK {
    * @param order the ordering used by the tree
    * @return top k most similar words to the testedWord
    */
-  def retrieveTopK(k: Integer, metric: ((String, Array[Double]), (String, Array[Double]), List[Double]) => Double,
-                   data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+  def retrieveTopK(k: Integer, metric: Metric, data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                    order: ((String, Double), (String, Double)) => Boolean,
                    metricParameters: List[Double] = List()): Array[String] = {
 
     val myOrdering = Ordering.fromLessThan[(String, Double)](order)
-    val dataMetric = data.map(x => (x._1, metric(x, testedWord, metricParameters))).cache()
+    val dataMetric = data.map(x => (x._1, metric(x._2, testedWord._2, metricParameters))).cache()
 
     // Specify that the mapPartition operation will be executed on each partition separately
     val keepPartitions = true

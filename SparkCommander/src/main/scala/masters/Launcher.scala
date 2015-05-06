@@ -12,6 +12,7 @@ import utils.Grapher._
  */
 object Launcher {
   type Technique = (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[String]
+  type Metric = (Array[Double], Array[Double], List[Double]) => Double
   private val startYear = 1840
   private val endYear = 1998
   private val NB_RES = 10

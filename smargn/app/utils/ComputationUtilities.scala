@@ -57,7 +57,6 @@ object ComputationUtilities {
     }
   }
 
-
   /**
    * @param p1 first point
    * @param p2 second point

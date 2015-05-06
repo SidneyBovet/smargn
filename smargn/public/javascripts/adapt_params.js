@@ -18,6 +18,11 @@ function adapt_params(selector) {
             nb_params = 4;
             break;
         case "NaiveDifference":
+        case "DTW":
+        case "DTWTopK":
+        case "DTWScaleAvgTopK":
+        case "DTWScaleMaxTopK":
+        case "":
             nb_params = 2;
             break;
         case "NaiveDivision":
@@ -25,7 +30,6 @@ function adapt_params(selector) {
             break;
         case "Inverse":
         case "Shift":
-        case "DTW":
         default:
             nb_params = 1;
     }
