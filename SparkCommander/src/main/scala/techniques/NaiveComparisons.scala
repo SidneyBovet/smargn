@@ -94,14 +94,14 @@ object NaiveComparisons {
 
   /**
    *
-   * @param word1 first temporal profile
-   * @param word2 second temporal profile
+   * @param word1Freq first temporal profile
+   * @param word2Freq second temporal profile
    * @param parameters L(0) contains the accepted difference between two array value that we accept,
    * @return sum of differences of each element divided by size of the resulting array (filtered a priori by the accepted difference if too extreme value)
    */
-  def naiveDifferenceMetricTopK(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List(15)): Double = {
+  def naiveDifferenceMetricTopK(word1Freq: (Array[Double]), word2Freq: (Array[Double]), parameters: List[Double] = List(15)): Double = {
     val acceptedDifference = parameters.head
-    val zipped = proportionalScalarAverageSubstraction(word1._2).zip(proportionalScalarAverageSubstraction(word2._2))
+    val zipped = proportionalScalarAverageSubstraction(word1Freq).zip(proportionalScalarAverageSubstraction(word2Freq))
     val zippedDif = zipped.map(x => math.abs(x._1 - x._2))
     val trueDif = zippedDif.map(_ <= acceptedDifference).filter(_ == true)
     if (trueDif.length > 0) {
@@ -114,12 +114,12 @@ object NaiveComparisons {
 
   /**
    *
-   * @param word1 first temporal profile
-   * @param word2 second temporal profile
+   * @param word1Freq first temporal profile
+   * @param word2Freq second temporal profile
    * @return difference of min element and max element of the "line" (i.e. w1/w2 element)
    */
-  def naiveDivisionMetricTopK(word1: (String, Array[Double]), word2: (String, Array[Double]), parameters: List[Double] = List()): Double = {
-    val zipped = proportionalScalarAverageSubstraction(word1._2).zip(proportionalScalarAverageSubstraction(word2._2))
+  def naiveDivisionMetricTopK(word1Freq: (Array[Double]), word2Freq: (Array[Double]), parameters: List[Double] = List()): Double = {
+    val zipped = proportionalScalarAverageSubstraction(word1Freq).zip(proportionalScalarAverageSubstraction(word2Freq))
     val min = findMinAndMax(Array(findMinAndMax(zipped.map(_._1))._1, findMinAndMax(zipped.map(_._2))._1))._1
     val zippedWithoutZero = zipped.map(x => (x._1 + min, x._2 + min))
     val divided = zippedWithoutZero.map(x => math.abs(x._1 / x._2))
