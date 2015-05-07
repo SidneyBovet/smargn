@@ -76,7 +76,6 @@ object SparkCommander {
           case "dtwtopk" => DynamicTimeWrapping.dtwSimpleTopK
           case "dtwscaleavgtopk" => DynamicTimeWrapping.dtwComparisonScaleAvgTopK
           case "dtwscalemaxtopk" => DynamicTimeWrapping.dtwComparisonScaleMaxTopK
-          case _ => NaiveComparisons.naiveDifferenceTopKScalingAverage
         }
 
         runList(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
