@@ -74,7 +74,7 @@ object Launcher {
         // The function reduce takes a binary operator which has to be commutative in order to be parallelizable!
         // in this case, we do not care about the order of the words
         (spark.parallelize(Seq(word + " -> " + similarWords.reduce(_ + " " + _))), testedWords.flatMap(formatter) ++
-          spark.parallelize(similarWordOcc.flatMap(formatter).take(NB_RES * range.size)))
+          similarWordOcc.flatMap(formatter))
       }
     }
   }

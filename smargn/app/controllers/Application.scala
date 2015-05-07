@@ -174,8 +174,8 @@ object Application extends Controller with ResultParser {
                       .map { res =>
                       Logger.debug("results.txt downloaded to " + outputDir)
                       // Remove results and data frorm local account on the cluster
-                      client.exec("rm results.txt data.csv").right
-                        .map { res => Logger.debug("Deleted results.txt and data.csv from local on the cluster")
+                      client.exec("rm results.txt data.csv").right.map { res =>
+                        Logger.debug("Deleted results.txt and data.csv from local on the cluster")
 
                         // Read downloaded result file
                         val resultsStream = Source.fromFile("./public/results/" + outputDir + "/results.txt", "utf-8")
@@ -249,8 +249,7 @@ object Application extends Controller with ResultParser {
   def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
                  (implicit client: SshClient): Validated[CommandResult] = {
     client.exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster " +
-      "--num-executors 25" +
-      " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
+      "--num-executors 25 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
       if (params.nonEmpty) {
         " -p " + params.mkString(",")
       } else {
@@ -280,8 +279,7 @@ object Application extends Controller with ResultParser {
   private def sparkSubmitDisplayer(words: List[String], hdfsResDir: String)
                                   (client: SshClient): Validated[CommandResult] = {
     client.exec("bash -c \"source .bashrc; spark-submit --class DisplayCommander --master yarn-cluster " +
-      "--num-executors 25" +
-      " --executor-cores 2 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + "\"").right.flatMap({ res =>
+      "--num-executors 25 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + "\"").right.flatMap({ res =>
       //      Logger.debug(res.stdErrAsString())
       Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
       client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)

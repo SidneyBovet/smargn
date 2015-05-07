@@ -36,14 +36,13 @@ object SparkCommander {
   private val parser = new OptionParser[Config]("scopt") {
     head("SparkCommander", "1.0")
 
-    opt[Seq[String]]('w', "words") valueName "<word1>,<word2>,..." action
-      { (words, config) => config.copy(words = words)
-      } text "The words you want to search"
+    opt[Seq[String]]('w', "words") valueName "<word1>,<word2>,..." action { (words, config) => config.copy(words = words)
+    } text "The words you want to search"
     opt[String]('t', "technique") action { (technique, config) => config.copy(technique = technique)
     } text "The technique you want to use"
-    opt[Seq[Double]]('p', "parameters") valueName "<param1>,<param2>..." optional() action
-      { (parameters, config) => config.copy(parameters = parameters)
-      } text "Optional parameters for this technique"
+    opt[Seq[Double]]('p', "parameters") valueName "<param1>,<param2>..." optional() action {
+      (parameters, config) => config.copy(parameters = parameters)
+    } text "Optional parameters for this technique"
   }
 
   /**
