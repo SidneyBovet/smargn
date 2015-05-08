@@ -89,7 +89,7 @@ public class Application {
 
       FileSystem fs = path.getFileSystem(conf);
       // Open the stream
-      input = new Scanner(fs.open(path));
+      input = new Scanner(fs.open(path), "UTF-8");
       year = input.next();
 
     }
