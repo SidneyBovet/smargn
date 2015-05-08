@@ -76,6 +76,7 @@ object SparkCommander {
           case "dtwtopk" => DynamicTimeWrapping.dtwSimpleTopK
           case "dtwscaleavgtopk" => DynamicTimeWrapping.dtwComparisonScaleAvgTopK
           case "dtwscalemaxtopk" => DynamicTimeWrapping.dtwComparisonScaleMaxTopK
+          case "peakstopk" => PeakComparison.peaksTopK
           case _ => NaiveComparisons.naiveDifferenceTopKScalingAverage
         }
 
