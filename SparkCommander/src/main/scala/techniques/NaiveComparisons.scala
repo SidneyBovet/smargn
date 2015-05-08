@@ -99,7 +99,7 @@ object NaiveComparisons {
    * @param parameters L(0) contains the accepted difference between two array value that we accept,
    * @return sum of differences of each element divided by size of the resulting array (filtered a priori by the accepted difference if too extreme value)
    */
-  def naiveDifferenceMetricTopK(word1Freq: (Array[Double]), word2Freq: (Array[Double]), parameters: List[Double] = List(15)): Double = {
+  def naiveDifferenceMetricTopK(word1Freq: Array[Double], word2Freq: Array[Double], parameters: List[Double] = List(15)): Double = {
     val acceptedDifference = parameters.head
     val zipped = proportionalScalarAverageSubstraction(word1Freq).zip(proportionalScalarAverageSubstraction(word2Freq))
     val zippedDif = zipped.map(x => math.abs(x._1 - x._2))
