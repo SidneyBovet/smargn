@@ -154,6 +154,7 @@ object PeakComparison {
 
     1 - Math.min(numberOfSimilarPeaks * 1.0 / distinctPeaks1.size, numberOfSimilarPeaks * 1.0 / distinctPeaks2.size)
 
+
   }
 
   def testPeak(word: Array[Double], windowSize: Int, deltaX: Double, deltaY: Double): List[(Int, Double, Double)] = {
@@ -166,6 +167,20 @@ object PeakComparison {
       p2 <- peaksRight
       if p1._1 == size - p2._1 - 1
     } yield (p1._1, p1._2, size - 1 - p2._2)
+
+    peaks
+  }
+
+  def testPeak(word: Array[Double], windowSize: Int, deltaX: Double, deltaY: Double): List[(Int, Double, Double)] = {
+    val peaksLeft = peakMeanDerivative(word, windowSize, deltaX, deltaY)
+    val peaksRight = peakMeanDerivative(word.reverse, windowSize, deltaX, deltaY)
+    val size = word.length
+
+    val peaks = for {
+      p1 <- peaksLeft
+      p2 <- peaksRight
+      if p1._1 == p2._1
+    } yield (p1._1, p1._2, size - p2._2)
 
     peaks
   }
@@ -378,7 +393,7 @@ object PeakComparison {
     var lastAverage = 0.0
     for (i <- start + 1 to frequencies.length - windowSize) {
       val average = frequencies.slice(start, i).sum * 1.0 / (i - start)
-      if (lastAverage <= average) {
+      if (lastAverage < average) {
         lastAverage = average
       } else {
         return i - 1
