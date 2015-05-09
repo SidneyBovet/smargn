@@ -12,8 +12,11 @@ object SparkCommander {
   val INPUT = "hdfs:///projects/temporal-profiles/data-generation/clean-1gram"
   val BASE_PROFILE = "hdfs:///projects/temporal-profiles/data-generation/baseProfile"
 
-  private def createOutput(words: Seq[String], technique: String, params: Seq[Double]): String = {
-    s"hdfs:///projects/temporal-profiles/results/${words.mkString("-")}${
+  private def createOutput(mode: String, words: Seq[String], technique: String, params: Seq[Double]): String = {
+    s"hdfs:///projects/temporal-profiles/results/${
+      if (mode != null) s"${mode}_"
+      else ""
+    }${words.mkString("-")}${
       if (params.nonEmpty) {
         s"_${technique.toLowerCase}_${
           params.mkString("-")
@@ -22,6 +25,7 @@ object SparkCommander {
         ""
       }
     }/"
+
   }
 
   /**
@@ -30,12 +34,15 @@ object SparkCommander {
    * @param technique the technique to use
    * @param parameters the parameter for that technique
    */
-  private case class Config(words: Seq[String] = Seq[String](), technique: String = "",
+  private case class Config(mode: String = "", words: Seq[String] = Seq[String](), technique: String = "",
                             parameters: Seq[Double] = Seq[Double]())
+
 
   private val parser = new OptionParser[Config]("scopt") {
     head("SparkCommander", "1.0")
 
+    opt[String]('m', "mode") optional() action { (mode, config) => config.copy(mode = mode)
+    } text "optional mode of working, for comparing two words"
     opt[Seq[String]]('w', "words") valueName "<word1>,<word2>,..." action { (words, config) => config.copy(words = words)
     } text "The words you want to search"
     opt[String]('t', "technique") action { (technique, config) => config.copy(technique = technique)
@@ -54,9 +61,9 @@ object SparkCommander {
 
     @transient val sc = new SparkContext(conf)
 
-    parser.parse(args, Config(words = Seq(), technique = null, parameters = Seq())) match {
-      case Some(Config(words, technique, parameters)) =>
-        val output = createOutput(words, technique, parameters)
+    parser.parse(args, Config(mode = null, words = Seq(), technique = null, parameters = Seq())) match {
+      case Some(Config(mode, words, technique, parameters)) =>
+        val output = createOutput(mode, words, technique, parameters)
 
         val hdfs = new HDFSHandler(sc.hadoopConfiguration)
         // Create folder for results
@@ -79,7 +86,13 @@ object SparkCommander {
           case _ => NaiveComparisons.naiveDifferenceTopKScalingAverage
         }
 
-        runList(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
+        
+        mode match {
+          case "compare" => runCompare(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
+          case _ => runList(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
+        }
+      //runCompare(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
+
       case None => // Bad arguments
     }
 

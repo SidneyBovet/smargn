@@ -73,6 +73,23 @@ object PeakComparison {
     }
   }
 
+  /**
+   *
+   * @param words List of words which peaks are returned
+   * @param parameters list of parameters for the peak finder
+   * @return for each word is returned the a list of peaks represented in a tuple with meaning (PeakIndex, LeftMinValue, RightMinValue)
+   */
+  def getPeaks(words: RDD[(String, Array[Double])], parameters: List[Double]): RDD[(String, List[(Int, Double, Double)])] = {
+    // val proportionSimilarities = parameters.head
+    val windowSize = parameters.head.toInt
+    val deltaX = parameters(1).toInt
+    val deltaY = if (parameters.size < 3) 3 else parameters(2).toInt
+    words.map(x => (x._1, peakMeanDerivative(x, windowSize, deltaX, deltaY).map(y => (y._1 + 1840, y._2, y._3)).sortBy(_._1)))
+
+
+  }
+
+
   /** *******************************************************************************************************
     * Metrics
     * ******************************************************************************************************* */
@@ -102,6 +119,7 @@ object PeakComparison {
                      , delta: Double = -1): Double = {
     peakMMetric(windowPeakMean, word1, word2, windowSize, delta)
   }
+
 
   def peakMeanDerivativeMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 3, deltaX: Int = 5, deltaY: Int = 3): Double = {
 
@@ -264,14 +282,14 @@ object PeakComparison {
    *
    * @param word word the size of the smoothing window
    * @param windowSize
-   * @param deltaX from 5 to 210
+   * @param slope from 5 to 210
    * @param deltaY from 2 to 5
    * @return list of peaks: (Year, left slope, right slope). This list may contain duplicate years and should be
    *         filtered
    *         before any usage
    */
   def peakMeanDerivative(word: (String, Array[Double]), windowSize: Int,
-                         deltaX: Double = 5, deltaY: Double = 3): List[(Int, Double, Double)] = {
+                         slope: Double = 1, deltaY: Double = 3): List[(Int, Double, Double)] = {
     val frequencies = word._2
     var result = List[(Int, Double, Double)]()
 
@@ -289,13 +307,18 @@ object PeakComparison {
         val indexOfMinAscending = ascendingWindow.slice(0, indexOfMaxAscendingInWindow + 1).indexOf(minAscending) + i
 
         //check if the detected window is of size 1 or the detaX is too large
-        if (minAscending != frequencies(indexOfMaxAscending) && indexOfMaxAscending - indexOfMinAscending <= deltaX && frequencies(indexOfMaxAscending) > deltaY * frequencies(indexOfMinAscending)) {
+        val dyLeft = frequencies(indexOfMaxAscending) / frequencies(indexOfMinAscending);
+        val dxLeft = indexOfMaxAscending - indexOfMinAscending
+        if (minAscending != frequencies(indexOfMaxAscending) && dyLeft * dyLeft > dxLeft
+          && frequencies(indexOfMaxAscending) > deltaY * frequencies(indexOfMinAscending)) {
           val descendingWindow = frequencies
             .slice(indexOfMaxAscending, findDescendingAverageWindow(frequencies, indexOfMaxAscending, windowSize) + 1)
           //check is the detected window is of size 1
           if (descendingWindow.size > 1) {
             val indexOfMinDescending = descendingWindow.indexOf(descendingWindow.min) + indexOfMaxAscending
-            if (indexOfMinDescending - indexOfMaxAscending <= deltaX && frequencies(indexOfMaxAscending) > deltaY * frequencies(indexOfMinAscending)) {
+            val dyRight = frequencies(indexOfMaxAscending) / frequencies(indexOfMinDescending);
+            val dxRight = indexOfMinDescending - indexOfMaxAscending
+            if (dyRight * dyRight > dxRight && frequencies(indexOfMaxAscending) > deltaY * frequencies(indexOfMinAscending)) {
               result = (indexOfMaxAscending, indexOfMinAscending * 1.0, indexOfMinDescending * 1.0) :: result
             }
             i = indexOfMinDescending

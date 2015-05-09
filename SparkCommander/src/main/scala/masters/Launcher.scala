@@ -4,6 +4,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import utils.Formatting._
 import utils.Grapher._
+import techniques.PeakComparison
 
 
 /**
@@ -12,6 +13,10 @@ import utils.Grapher._
  */
 object Launcher {
   type Technique = (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[String]
+  
+  //type of techniques that compare the words given in the list
+  type CompareTechnique = ((String, Array[Double]), (String, Array[Double]), List[Double]) => List[(String, String, Double)]
+
   type Metric = (Array[Double], Array[Double], List[Double]) => Double
   private val startYear = 1840
   private val endYear = 1998
@@ -35,6 +40,26 @@ object Launcher {
     // Write results to /projects/temporal-profile/results/<outputdir>/data/
     graphData.saveAsTextFile(outputFile + "data/")
   }
+
+  def runCompare(words: Seq[String], inputDir: String, baseProfileFile: String, outputFile: String,
+                 parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
+                 range: Range = startYear to endYear): Unit = {
+
+    // Getting results for all words
+    val data = spark.textFile(inputDir)
+    val baseProfile = spark.textFile(baseProfileFile).take(1)(0).split(" ").map(_.toInt)
+
+    //Formatting part
+    val formattedData = dataFormatter(data, baseProfile)
+    // testedWords is the line with the words we look for and its occurrences
+    //val profiles = words.map(x => searchWordFormatter(formattedData, List(x)))
+    val profiles = searchWordFormatter(formattedData, words.toList)
+    val peaks = PeakComparison.getPeaks(profiles, parameters)
+    peaks.saveAsTextFile(outputFile + "peaks/")
+
+
+  }
+
 
   private def run(word: String, data: RDD[String], baseProfile: Array[Int], outputFile: String,
                   parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
