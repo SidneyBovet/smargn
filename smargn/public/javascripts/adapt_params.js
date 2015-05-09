@@ -14,6 +14,7 @@ function adapt_params(selector) {
         case "SmarterDivergence":
             nb_params = 3;
             break;
+        case "PeaksTopK":
         case "Peaks":
             nb_params = 4;
             break;

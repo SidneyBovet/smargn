@@ -2,8 +2,22 @@ package techniques
 
 import org.apache.spark.rdd.RDD
 import utils.ComputationUtilities._
+import utils.TopK._
 
 object PeakComparison {
+
+
+  def peaksTopK(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
+                parameters: List[Double]): RDD[String] = {
+    val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
+      x._2 < y._2
+    } else {
+      x._1 < y._1
+    }
+
+    data.sparkContext.parallelize(
+      retrieveTopK(parameters.head.toInt, peakMeanDerivativeMetric, data, testedWord, order, parameters.tail))
+  }
 
   /**
    * Compute the similar words using the derivative peak metric
@@ -61,11 +75,11 @@ object PeakComparison {
                                        parameters: List[Double]): RDD[(String)] = {
     val proportionSimilarities = parameters.head
     val windowSize = parameters(1).toInt
-    val deltaX = parameters(2).toInt
-    val deltaY = if (parameters.size < 4) 3 else parameters(3).toInt
+    val deltaX = parameters(2)
+    val deltaY = if (parameters.size < 4) 3 else parameters(3)
 
     data.flatMap { x =>
-      if (peakMeanDerivativeMetric(testedWord, x, windowSize, deltaX, deltaY) < proportionSimilarities) {
+      if (peakMeanDerivativeMetric(testedWord._2, x._2, List(windowSize, deltaX, deltaY)) < proportionSimilarities) {
         List(x._1)
       } else {
         List()
@@ -84,7 +98,7 @@ object PeakComparison {
     val windowSize = parameters.head.toInt
     val deltaX = parameters(1).toInt
     val deltaY = if (parameters.size < 3) 3 else parameters(2).toInt
-    words.map(x => (x._1, peakMeanDerivative(x, windowSize, deltaX, deltaY).map(y => (y._1 + 1840, y._2, y._3)).sortBy(_._1)))
+    words.map(x => (x._1, peakMeanDerivative(x._2, windowSize, deltaX, deltaY).map(y => (y._1 + 1840, y._2, y._3)).sortBy(_._1)))
 
 
   }
@@ -121,8 +135,10 @@ object PeakComparison {
   }
 
 
-  def peakMeanDerivativeMetric(word1: (String, Array[Double]), word2: (String, Array[Double]), windowSize: Int = 3, deltaX: Int = 5, deltaY: Int = 3): Double = {
-
+  def peakMeanDerivativeMetric(word1: Array[Double], word2: Array[Double], params: List[Double] = List(3, 5, 3)): Double = {
+    val windowSize = params.head.toInt
+    val deltaX = params(1)
+    val deltaY = params(2)
     val distinctPeaks1 = peakMeanDerivative(word1, windowSize, deltaX, deltaY)
     val distinctPeaks2 = peakMeanDerivative(word2, windowSize, deltaX, deltaY)
 
@@ -282,15 +298,15 @@ object PeakComparison {
    *
    * @param word word the size of the smoothing window
    * @param windowSize
-   * @param slope from 5 to 210
    * @param deltaY from 2 to 5
    * @return list of peaks: (Year, left slope, right slope). This list may contain duplicate years and should be
    *         filtered
    *         before any usage
    */
-  def peakMeanDerivative(word: (String, Array[Double]), windowSize: Int,
-                         slope: Double = 1, deltaY: Double = 3): List[(Int, Double, Double)] = {
-    val frequencies = word._2
+
+  def peakMeanDerivative(word: Array[Double], windowSize: Int,
+                         deltaX: Double = 5, deltaY: Double = 3): List[(Int, Double, Double)] = {
+    val frequencies = word
     var result = List[(Int, Double, Double)]()
 
     var i = 0

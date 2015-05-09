@@ -248,8 +248,9 @@ object Application extends Controller with ResultParser {
 
   def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
                  (implicit client: SshClient): Validated[CommandResult] = {
+    Logger.debug(name.toLowerCase)
     client.exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster " +
-      "--num-executors 25 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name + {
+      "--num-executors 25 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name.toLowerCase + {
       if (params.nonEmpty) {
         " -p " + params.mkString(",")
       } else {

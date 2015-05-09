@@ -90,8 +90,7 @@ object Launcher {
 
         val formattedDataKey = formattedData.groupBy(_._1)
         val similarWordsKey = similarWords.groupBy(x => x)
-        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap { case (k, (wo, w)) => wo
-        }
+        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap { case (k, (wo, w)) => wo }
 
         // Format for printing
         val formatter = formatTuple(range) _
