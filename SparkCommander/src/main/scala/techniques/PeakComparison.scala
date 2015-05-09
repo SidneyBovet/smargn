@@ -98,7 +98,7 @@ object PeakComparison {
     val windowSize = parameters.head.toInt
     val deltaX = parameters(1).toInt
     val deltaY = if (parameters.size < 3) 3 else parameters(2).toInt
-    words.map(x => (x._1, peakMeanDerivative(x._2, windowSize, deltaX, deltaY).map(y => (y._1 + 1840, y._2, y._3)).sortBy(_._1)))
+    words.map(x => (x._1, testPeak(x._2, windowSize, deltaX, deltaY).map(y => (y._1 + 1840, y._2 + 1840, y._3 + 1840)).sortBy(_._1)))
 
 
   }
@@ -139,8 +139,8 @@ object PeakComparison {
     val windowSize = params.head.toInt
     val deltaX = params(1)
     val deltaY = params(2)
-    val distinctPeaks1 = peakMeanDerivative(word1, windowSize, deltaX, deltaY)
-    val distinctPeaks2 = peakMeanDerivative(word2, windowSize, deltaX, deltaY)
+    val distinctPeaks1 = testPeak(word1, windowSize, deltaX, deltaY)
+    val distinctPeaks2 = testPeak(word2, windowSize, deltaX, deltaY)
 
     if (distinctPeaks1.size == 0 || distinctPeaks2.size == 0) {
       return 1.0
@@ -153,8 +153,21 @@ object PeakComparison {
     } yield p1).size
 
     1 - Math.min(numberOfSimilarPeaks * 1.0 / distinctPeaks1.size, numberOfSimilarPeaks * 1.0 / distinctPeaks2.size)
-  }
 
+  }
+  def testPeak(word: Array[Double], windowSize: Int, deltaX: Double, deltaY: Double ): List[(Int, Double, Double)] = {
+    val peaksLeft = peakMeanDerivative(word, windowSize, deltaX, deltaY)
+    val peaksRight = peakMeanDerivative(word.reverse, windowSize, deltaX, deltaY)
+    val size = word.length
+
+    val peaks = for {
+      p1 <- peaksLeft
+      p2 <- peaksRight
+      if p1._1 == p2._1
+    } yield (p1._1, p1._2, size - p2._2 )
+
+    peaks
+  }
   /**
    * Helper function that applies the given definition of the peak to the data
    *
@@ -363,7 +376,7 @@ object PeakComparison {
     var lastAverage = 0.0
     for (i <- start + 1 to frequencies.length - windowSize) {
       val average = frequencies.slice(start, i).sum * 1.0 / (i - start)
-      if (lastAverage <= average) {
+      if (lastAverage < average) {
         lastAverage = average
       } else {
         return i - 1
@@ -384,8 +397,7 @@ object PeakComparison {
     var lastAverage = frequencies(start)
     for (i <- start + 1 to frequencies.length - windowSize) {
       val average = frequencies.slice(start, i).sum * 1.0 / (i - start)
-
-      if (lastAverage >= average) {
+      if (lastAverage > average) {
         lastAverage = average
       } else {
         return i - 1
