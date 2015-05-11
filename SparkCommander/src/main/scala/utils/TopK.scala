@@ -35,22 +35,27 @@ object TopK {
       var i = 0
       val tree = mutable.TreeSet.empty(myOrdering)
       while (it.hasNext && i < k) {
-        tree.add(it.next())
-        i += 1
+        val current = it.next()
+        if (current._1 != testedWord._1) {
+          tree.add(it.next())
+          i += 1
+        }
       }
       while (it.hasNext) {
         val elem = it.next()
-        val last = tree.last
-        if (elem._2 < last._2) {
-          tree.remove(last)
-          tree.add(elem)
+        if (elem._1 != testedWord._1) {
+          val last = tree.last
+          if (elem._2 < last._2) {
+            tree.remove(last)
+            tree.add(elem)
+          }
         }
       }
       tree.iterator
     }, keepPartitions)
 
     // Collect the results of each partition and take the k best elements
-    partialTopK.takeOrdered(k)(myOrdering).map(_._1)
+    partialTopK.takeOrdered(k)(myOrdering).sorted(myOrdering).map(_._1)
   }
 }
 
