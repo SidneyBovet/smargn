@@ -121,7 +121,7 @@ object NaiveComparisons {
   def naiveDivisionMetricTopK(word1Freq: (Array[Double]), word2Freq: (Array[Double]), parameters: List[Double] = List()): Double = {
     val zipped = proportionalScalarAverageSubstraction(word1Freq).zip(proportionalScalarAverageSubstraction(word2Freq))
     val min = findMinAndMax(Array(findMinAndMax(zipped.map(_._1))._1, findMinAndMax(zipped.map(_._2))._1))._1
-    val zippedWithoutZero = zipped.map(x => (x._1 + min, x._2 + min))
+    val zippedWithoutZero = zipped.map(x => (x._1 + min + 1, x._2 + min + 1))
     val divided = zippedWithoutZero.map(x => math.abs(x._1 / x._2))
     val minMax = findMinAndMax(divided)
     minMax._2 - minMax._1
