@@ -57,9 +57,10 @@ object TestCases {
     val simWords = count(result, similarWords)
     val diffWords = count(result, differentWords)
     val simRatio = simWords.toDouble / similarWords.size.toDouble
-    val diffRatio = diffWords.toDouble / similarWords.size.toDouble
+    val diffRatio = diffWords.toDouble / differentWords.size.toDouble
 
-    (simRatio + (1 - diffRatio)) / 2
+    //(simRatio + (1 - diffRatio)) / 2
+    simRatio
   }
 
   // Iterates over all the possible parameters and output the best combination
