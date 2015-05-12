@@ -35,8 +35,8 @@ object Scaling {
    * @return tuple of word and its average-scaled frequency
    */
   def proportionalScalarAverageDivision(frequency: (Array[Double])): (Array[Double]) = {
-    val sum = frequency.sum
-    frequency.map(x => x / sum)
+    val avg = frequency.sum / frequency.length
+    frequency.map(x => x / avg)
   }
 
   /**
@@ -45,8 +45,8 @@ object Scaling {
    * @return tuple of word and its average-scaled frequency
    */
   def proportionalScalarAverageSubstraction(frequency: (Array[Double])): (Array[Double]) = {
-    val sum = frequency.sum
-    frequency.map(x => x - sum)
+    val avg = frequency.sum / frequency.length
+    frequency.map(x => x - avg)
   }
 
 
