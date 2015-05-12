@@ -6,6 +6,9 @@ import utils.Formatting._
 import utils.Grapher._
 import techniques.PeakComparison
 
+import org.apache.hadoop.fs.Path
+import utils.TestCases._
+
 
 /**
  * Created by Joanna on 4/7/15.
@@ -60,6 +63,31 @@ object Launcher {
 
   }
 
+
+  def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
+    val outputDir = "hdfs:///projects/temporal-profiles/results/testCases"
+    val hdfs = new HDFSHandler(sc.hadoopConfiguration)
+
+    // Create folder for result
+    hdfs.createFolder(outputDir)
+
+
+    val data = sc.textFile(inputDir)
+    val baseProfile = sc.textFile(baseProfileFile).take(1)(0).split(" ").map(_.toInt)
+    val formattedData = dataFormatter(data, baseProfile)
+
+
+    val res: Array[Array[(String, Double, List[Double])]] = runTestsAll(sc, formattedData)
+
+
+    val resPath = new Path(outputDir + "/results.txt")
+
+
+    hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c) => s"$a, $b, ${c.mkString(" ")}" }).toList)
+
+
+    hdfs.close()
+  }
 
   private def run(word: String, data: RDD[String], baseProfile: Array[Int], outputFile: String,
                   parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
