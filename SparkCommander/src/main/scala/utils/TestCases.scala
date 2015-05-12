@@ -4,9 +4,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import utils.Launcher.Technique
 
-import techniques.NaiveComparisons._
-import techniques.NaiveInverseComparisons._
-import techniques.NaiveShiftComparison._
+import techniques._
 
 /**
  * Created by fabien and mathieu on 4/28/15.
@@ -101,14 +99,24 @@ object TestCases {
     getBestParams(data, testedWord, similarWords, differentWords, Nil, bounds, similarityTechnique)
   }
 
-  // TODO: Add the remaining techniques
   // Gets the technique associated with that name
   def getTechnique(name: String): Technique = {
     name.toLowerCase match {
-      case "naiveinverse" => naiveInverseDifference
-      case "naivedifferenceshift" => naiveDifferenceShift
-      case _ => naiveDifference
-    }
+          // Add your technique methods here. All lowercase for the name pliz
+          case "naivedifference" => NaiveComparisons.naiveDifferenceTopKScalingAverage
+          case "naivedivision" => NaiveComparisons.naiveDivisionTopKScalingAverage
+          case "inverse" => NaiveComparisons.naiveInverseDifference
+          case "shift" => NaiveComparisons.naiveDifferenceScalingAverageWithShifting
+          case "divergence" => Divergence.naiveDifferenceDivergence
+          case "smarterdivergence" => SubTechniques.smarterDivergence
+          case "peaks" => PeakComparison.peakComparisonWithMeanDerivative
+          case "dtw" => DynamicTimeWrapping.dtwComparison
+          case "dtwtopk" => DynamicTimeWrapping.dtwSimpleTopK
+          case "dtwscaleavgtopk" => DynamicTimeWrapping.dtwComparisonScaleAvgTopK
+          case "dtwscalemaxtopk" => DynamicTimeWrapping.dtwComparisonScaleMaxTopK
+          case "peakstopk" => PeakComparison.peaksTopK
+          case _ => NaiveComparisons.naiveDifferenceTopKScalingAverage
+        }
   }
 
 
