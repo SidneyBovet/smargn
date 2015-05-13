@@ -16,7 +16,7 @@ function adapt_params(selector) {
             break;
         case "PeaksTopK":
         case "Peaks":
-            nb_params = 4;
+            nb_params = 3;
             break;
         case "NaiveDifference":
         case "DTW":
