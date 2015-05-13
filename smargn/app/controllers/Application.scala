@@ -125,7 +125,7 @@ object Application extends Controller with ResultParser {
           // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put
           // in it.
           val paramsStr = if (params.nonEmpty) s"_${params.mkString("-")}" else ""
-          val outputDir = s"${words.mkString("-")}_${name.toLowerCase}$paramsStr"
+          val outputDir = s"${words.mkString("-")}_${name.toLowerCase}$paramsStr".hashCode
 
           val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$outputDir/")
           if (Files.notExists(resultsPath)) {

@@ -14,7 +14,7 @@ object Formatting {
    */
   def dataFormatter(data: RDD[(String)], baseProfile: Array[Int]): RDD[(String, Array[Double])] = {
     data.map(line => line.split("\\s")).map(
-      (i: Array[String]) => (i.head, i.tail.map(y => y.toDouble).zip(baseProfile).map(x => x._1 / (x._2).toDouble)))
+      (i: Array[String]) => (i.head, i.tail.map(y => y.toDouble).zip(baseProfile).map(x => x._1 / x._2.toDouble)))
   }
 
   /**
@@ -29,4 +29,8 @@ object Formatting {
     }
   }
 
+  private def slice[T](l: Array[T], range: Range): Array[T] = {
+    val t: Array[T] = l.zip(Launcher.startYear to Launcher.endYear).filter(y => range.contains(y._2)).map { case (occ, r) => occ }
+    t
+  }
 }

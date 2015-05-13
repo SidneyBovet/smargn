@@ -21,9 +21,8 @@ object Launcher {
   type CompareTechnique = ((String, Array[Double]), (String, Array[Double]), List[Double]) => List[(String, String, Double)]
 
   type Metric = (Array[Double], Array[Double], List[Double]) => Double
-  private val startYear = 1840
-  private val endYear = 1998
-  private val NB_RES = 10
+  val startYear = 1840
+  val endYear = 1998
   val NSW = "NOSIMILARWORDS"
   val NOTFOUND = "ERROR404"
 
@@ -64,7 +63,7 @@ object Launcher {
   }
 
 
-  def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
+  def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String, range: Range = startYear to endYear): Unit = {
     val outputDir = "hdfs:///projects/temporal-profiles/results/testCases"
     val hdfs = new HDFSHandler(sc.hadoopConfiguration)
 
@@ -84,9 +83,6 @@ object Launcher {
 
 
     hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c) => s"$a, $b, ${c.mkString(" ")}" }).toList)
-
-
-    hdfs.close()
   }
 
   private def run(word: String, data: RDD[String], baseProfile: Array[Int], outputFile: String,
