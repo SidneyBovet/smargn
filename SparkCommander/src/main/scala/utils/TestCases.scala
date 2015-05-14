@@ -21,13 +21,17 @@ object TestCases {
   // contains techniques and parameters bound: name lowerBound1,upperBound1,nbSteps1 lowerBound2,upperBound2,nbSteps2 for each parameter
   val inputParams = "hdfs:///projects/temporal-profiles/Tests/params"
 
+
+
+  def printLog(log: List[String], msg: String): List[String] = msg::log
+
   // Parses the test cases in the file inputCases
   def parseTestCases(spark: SparkContext): Array[(String, List[String], List[String])] = {
     val testCases = spark.textFile(inputCases)
 
     testCases.map(line => {
       val tmp = line.split("\\s")
-      (tmp(0), tmp(1).split("\\s").toList, tmp(2).split("\\s").toList)
+      (tmp(0), tmp(1).split(",").toList, tmp(2).split(",").toList)
     }).collect()
   }
 
@@ -45,33 +49,50 @@ object TestCases {
   }
 
   def count(result: RDD[(String)], wordList: List[String]): Int = {
-    var value = 0
-    wordList.foreach(word => result.foreach(x => if (x == word) {
-      value += 1
-    }))
-    value
+
+    result.mapPartitions(it => {
+      var value=0
+      while(it.hasNext) {
+        if(wordList.contains(it.next())) {
+          value += 1
+        }
+      }
+      (value::Nil).iterator
+    },true).collect().sum
+
   }
 
   // Evaluates a technique with some fixed parameters
   def test(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), similarWords: List[String],
-           differentWords: List[String], parameters: List[Double], similarityTechnique: Technique): Double = {
+           differentWords: List[String], parameters: List[Double], similarityTechnique: Technique): (Double, List[String]) = {
+    //var log = List[String]()
 
-    logger.debug("Trying with parameters "+parameters+".")
+    //log = printLog(log,"Trying with parameters "+parameters+".")
     val result: RDD[(String)] = similarityTechnique(data, testedWord, parameters)
+    //log = printLog(log,result.count() + " Matching words:")
+
+    //result.collect().foreach(x => log=printLog(log,"word: "+x))
+
+    //log = printLog(log, similarWords.size + " similar words: ")
+
+    //similarWords.foreach(x => log=printLog(log,"word: "+x))
 
     val simWords = count(result, similarWords)
     val diffWords = count(result, differentWords)
+
+    //log = printLog(log, simWords + " match(es)")
+
     val simRatio = simWords.toDouble / similarWords.size.toDouble
     val diffRatio = diffWords.toDouble / differentWords.size.toDouble
 
     //(simRatio + (1 - diffRatio)) / 2
-    simRatio
+    (simRatio,Nil)
   }
 
   // Iterates over all the possible parameters and output the best combination
   def getBestParams(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), similarWords: List[String],
                     differentWords: List[String], params: List[Double], bounds: List[(Double, Double, Double)],
-                    similarityTechnique: Technique): (Double, List[Double]) = {
+                    similarityTechnique: Technique): (Double, List[Double], List[String]) = {
     bounds match {
       case x :: xs => {
         val step = x._3
@@ -82,7 +103,7 @@ object TestCases {
             similarityTechnique)
         }
         else {
-          var best = (0.0, List[Double]())
+          var best = (0.0, List[Double](),List[String]())
 
           for (y <- Range.Double.inclusive(x._1, x._2, step)) {
           //for (y <- x._1 to(x._2, (x._2 - x._1) / step)) {
@@ -96,13 +117,16 @@ object TestCases {
         }
 
       }
-      case Nil => (test(data, testedWord, similarWords, differentWords, params, similarityTechnique), params)
+      case Nil => {
+        val testProut = test(data, testedWord, similarWords, differentWords, params, similarityTechnique)
+        (testProut._1, params, testProut._2)
+      }
     }
   }
 
   def testParameters(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                      similarWords: List[String], differentWords: List[String], bounds: List[(Double, Double, Double)],
-                     similarityTechnique: Technique): (Double, List[Double]) = {
+                     similarityTechnique: Technique): (Double, List[Double], List[String]) = {
     getBestParams(data, testedWord, similarWords, differentWords, Nil, bounds, similarityTechnique)
   }
 
@@ -136,7 +160,7 @@ object TestCases {
    * @return optimal parameters for each technique and each test cases
    */
   def runTestsAll(spark: SparkContext,
-                  data: RDD[(String, Array[Double])]): Array[Array[(String, Double, List[Double])]] = {
+                  data: RDD[(String, Array[Double])]): Array[Array[(String, Double, List[Double], List[String])]] = {
 
     val techniques = parseTechniques(spark)
     val testCases = parseTestCases(spark)
@@ -148,7 +172,7 @@ object TestCases {
 
   def runTests(spark: SparkContext, data: RDD[(String, Array[Double])], technique: Technique,
                techniqueName: String, techniqueParams: (List[(Double, Double, Double)]),
-               testCases: Array[(String, List[String], List[String])] = null): Array[(String, Double, List[Double])] = {
+               testCases: Array[(String, List[String], List[String])] = null): Array[(String, Double, List[Double], List[String])] = {
 
 
     val test = testCases match {
@@ -165,7 +189,7 @@ object TestCases {
         technique)
 
 
-      (testName, result._1, result._2)
+      (testName, result._1, result._2, result._3)
     })
   }
 }
