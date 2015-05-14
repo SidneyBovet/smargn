@@ -60,8 +60,6 @@ object SubTechniques {
 
       unionWord = unionWord.union(similarityTechnique(dataReduced, testedWordReduced, parameters)).distinct()
     }
-
-
     unionWord
   }
 
@@ -108,7 +106,17 @@ object SubTechniques {
   }
 
 
-  // Curve MUST be smoothed otherwise it won't work
+  /**
+   * Evaluates if the distance between two curves is, at each step, decreasing and, at a point t, starts
+   * to increase again. In order to reduce the noise and easy the work of the function, tested curves must be
+   * smoothed at a mid-hight value (i.e >= 10)
+   * @param zipDataTestedWord collection of (word, (frequencyInputWord, frequencyTestedWord)) to look into
+   * @param maxNumberOfOutsidersDecreasing as we test if the distance between the two curves decrease, we allow some
+   *                                       value to increase (as a false negative).
+   * @param maxNumberOfOutsidersIncreasing as we test if the distance between the two curves increase, we allow some
+   *                                       value to decrease (as a false negative).
+   * @return a boolean indicating if the two curves follow the shape : converge-equal-diverge
+   */
   def testEvolutionOfDifference(zipDataTestedWord: (String, Array[(Double, Double)]), maxNumberOfOutsidersDecreasing: Int = 7, maxNumberOfOutsidersIncreasing: Int = 7): Boolean = {
     val differences = zipDataTestedWord._2.map(x => math.abs(x._1 - x._2))
     var current: Double = differences.head
@@ -118,7 +126,6 @@ object SubTechniques {
     var init = true
     var decreasingTesting = true
     val log = true
-
 
     for (x <- differences) {
       // must have a leat one "intersection" of the curves
@@ -164,7 +171,18 @@ object SubTechniques {
     true
   }
 
-  // In the function the curves will be smoothed!
+
+  /**
+   * Init function to Evaluate if the distance between two curves is, at each step, decreasing and, at a point t, starts
+   * to increase again. In order to reduce the noise and easy the work of the function, tested curves must be
+   * smoothed at a mid-hight value (i.e >= 10)
+   * @param data collection of word, frequency to tuple to look into
+   * @param testedWord word that we want to find its similar word
+   * @param parameters L(0) contains the maxNumber of decreasing outsiders accepted.
+   *                   L(1) contains the maxNumber of increasing outsiders accepted.
+   *                   L(2) contains the smoothing window value
+   * @return words that follow the shape : converge-equal-diverge
+   */
   def smarterDivergence(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
     val maxNumberOfOutsiders = parameters.head // good to use 7
     val maxNumberOfOutsidersIncreasing = parameters(1) // good to use 7
@@ -180,26 +198,6 @@ object SubTechniques {
     // take a tuple (word, (point1TestValue1,point1TestValue2),(point2TestValue1,point2TestValue1),...) and first map to (word, true) if they do the divergence
     zipDataTestedWord.map(x => (x._1, testEvolutionOfDifference(x, maxNumberOfOutsiders.toInt, maxNumberOfOutsidersIncreasing.toInt))).filter(x => x._2).map(_._1)
   }
-
-
-  //  //  WORK IN PROGRESS
-  //  def testConvergence(zipDataTestedWord: (String, Array[(Double, Double)]), minimumConvergenceWindow: Double = 7.0): Boolean = {
-  //    val arrToTest = zipDataTestedWord._2
-  //    var middleIndex: Int = arrToTest.length / 2
-  //    var initialIndexAddLeft: Int = minimumConvergenceWindow.toInt / 2
-  //    var initialIndexAddRight: Int = minimumConvergenceWindow.toInt - initialIndexAddLeft
-  //    var rightIndex: Int = 0
-  //    var leftIndex: Int = 0
-  //    if (minimumConvergenceWindow > 1.0) {
-  //      rightIndex = middleIndex + initialIndexAddRight
-  //      leftIndex = middleIndex - initialIndexAddLeft
-  //    }
-  //    else {
-  //      rightIndex = middleIndex
-  //      leftIndex = middleIndex - 1
-  //    }
-  //    true
-  //  }
 
 
   /**
