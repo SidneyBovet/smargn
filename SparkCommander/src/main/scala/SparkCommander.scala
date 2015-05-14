@@ -4,6 +4,11 @@ import techniques._
 import utils.{Launcher, SubTechniques, HDFSHandler}
 import utils.Launcher._
 
+/*
+ * Contributors:
+ *  - Valentin Rutz: createOutput, parser (not mode), main (not mode or compare)
+ */
+
 /**
  * From Valentin with love on 21/04/15.
  */
