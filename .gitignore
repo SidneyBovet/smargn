@@ -1,6 +1,7 @@
 # bins
 *.class
 *.log
+*.rdb
 
 #Mac OSX specific
 *.DS_Store
