@@ -1,5 +1,6 @@
 package utils
 
+import org.apache.log4j.Logger
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import utils.Launcher.Technique
@@ -10,6 +11,9 @@ import techniques._
  * Created by fabien and mathieu on 4/28/15.
  */
 object TestCases {
+
+  val logger = Logger.getLogger(TestCases.getClass.getName)
+
   // TODO: use the files as input test cases and parameters bounds
   // contains test cases of the form: wordToTest similar1,similar2,... nonSimilar1,nonSimilar2,...
   val inputCases = "hdfs:///projects/temporal-profiles/Tests/testCases"
@@ -52,6 +56,7 @@ object TestCases {
   def test(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), similarWords: List[String],
            differentWords: List[String], parameters: List[Double], similarityTechnique: Technique): Double = {
 
+    logger.debug("Trying with parameters "+parameters+".")
     val result: RDD[(String)] = similarityTechnique(data, testedWord, parameters)
 
     val simWords = count(result, similarWords)
@@ -79,7 +84,8 @@ object TestCases {
         else {
           var best = (0.0, List[Double]())
 
-          for (y <- x._1 to(x._2, (x._2 - x._1) / step)) {
+          for (y <- Range.Double.inclusive(x._1, x._2, step)) {
+          //for (y <- x._1 to(x._2, (x._2 - x._1) / step)) {
             val res = getBestParams(data, testedWord, similarWords, differentWords, params ++ (y :: Nil), xs,
               similarityTechnique)
             if (res._1 > best._1) {
@@ -151,10 +157,15 @@ object TestCases {
     }
 
     test.map(t => {
+      val testName = techniqueName+"_"+t._1
+
+      logger.debug("Starting optimization for \""+techniqueName+"\".")
+
       val result = testParameters(data, data.filter(x => x._1.equals(t._1)).first(), t._2, t._3, techniqueParams,
         technique)
 
-      (techniqueName+"_"+t._1, result._1, result._2)
+
+      (testName, result._1, result._2)
     })
   }
 }
