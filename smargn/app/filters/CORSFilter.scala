@@ -4,8 +4,9 @@ import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-/**
- *
+/*
+ * Contributors:
+ *  - Valentin Rutz
  */
 class CORSFilter extends EssentialFilter {
   /**

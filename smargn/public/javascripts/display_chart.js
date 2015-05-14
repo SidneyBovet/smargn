@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * Created by Valentin on 26/03/15.
  */

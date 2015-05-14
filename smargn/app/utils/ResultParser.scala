@@ -2,6 +2,11 @@ package utils
 
 import scala.util.parsing.combinator._
 
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * Created by Valentin on 21/04/15.
  */

@@ -4,7 +4,6 @@ import org.scalatest.ShouldMatchers
 import techniques.NaiveShiftComparison._
 import techniques.NaiveInverseComparisons._
 import techniques.Divergence._
-import utils.SubTechniques._
 
 class SubTechniquesTest extends SparkTestUtils with ShouldMatchers {
 

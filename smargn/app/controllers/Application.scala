@@ -11,6 +11,11 @@ import utils.{Result, ResultParser, _}
 
 import scala.io.Source
 
+/*
+ * Contributors:
+ *  - Valentin Rutz: all
+ */
+
 object Application extends Controller with ResultParser {
 
   private val INPUT = "input/"
