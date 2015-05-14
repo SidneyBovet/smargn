@@ -1,7 +1,6 @@
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 import techniques.NaiveComparisons._
-import utils.Scaling._
 import org.apache.spark.rdd.RDD
 
 

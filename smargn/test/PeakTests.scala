@@ -1,7 +1,6 @@
 import org.apache.spark.rdd.RDD
 import org.scalatest._
 import techniques.PeakComparison._
-import utils.Formatting._
 
 class PeakTests extends SparkTestUtils with ShouldMatchers {
 
