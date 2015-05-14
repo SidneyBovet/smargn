@@ -3,6 +3,11 @@ import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
 import SparkCommander._
 
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * From Valentin with love on 03/05/15.
  */

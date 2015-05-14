@@ -9,6 +9,10 @@ import techniques.PeakComparison
 import org.apache.hadoop.fs.Path
 import utils.TestCases._
 
+/*
+ * Contributors:
+ *  - Valentin Rutz: run, runList
+ */
 
 /**
  * Created by Joanna on 4/7/15.

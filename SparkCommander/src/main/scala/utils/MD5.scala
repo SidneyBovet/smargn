@@ -1,5 +1,10 @@
 package utils
 
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * From Valentin with love on 13/05/15.
  */

@@ -4,6 +4,11 @@ import org.apache.spark.SparkContext
 import utils.Formatting._
 import utils.Grapher._
 
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * From Valentin with love on 03/05/15.
  */
