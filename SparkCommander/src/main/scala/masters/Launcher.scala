@@ -11,14 +11,15 @@ import utils.TestCases._
 
 
 /**
- * Created by Joanna on 4/7/15.
+ * Created by Joanna on 4/7/15, modified by almost all the team.
  * Main launcher of the program
  */
 object Launcher {
   type Technique = (RDD[(String, Array[Double])], (String, Array[Double]), List[Double]) => RDD[String]
-  
+
   //type of techniques that compare the words given in the list
-  type CompareTechnique = ((String, Array[Double]), (String, Array[Double]), List[Double]) => List[(String, String, Double)]
+  type CompareTechnique = ((String, Array[Double]), (String, Array[Double]), List[Double]) => List[(String, String,
+    Double)]
 
   type Metric = (Array[Double], Array[Double], List[Double]) => Double
   private val startYear = 1840
@@ -44,6 +45,17 @@ object Launcher {
     graphData.saveAsTextFile(outputFile + "data/")
   }
 
+  /**
+   *
+   * @param words the words to be compared
+   * @param inputDir the HDFS directory containing all the temporal profiles
+   * @param baseProfileFile the file containing the base profile (all words written per year)
+   * @param outputFile where the result should be stored (HDFS)
+   * @param parameters parameters for the technique, size may vary according to technique
+   * @param similarityTechnique the technique to be used for the comparison
+   * @param spark the [[SparkContext]] to be used for this task
+   * @param range (optional) the year range on which to perform the search
+   */
   def runCompare(words: Seq[String], inputDir: String, baseProfileFile: String, outputFile: String,
                  parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
                  range: Range = startYear to endYear): Unit = {
@@ -60,9 +72,7 @@ object Launcher {
     val peaks = PeakComparison.getPeaks(profiles, parameters)
     peaks.saveAsTextFile(outputFile + "peaks/")
 
-
   }
-
 
   def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
     val outputDir = "hdfs:///projects/temporal-profiles/results/testCases"

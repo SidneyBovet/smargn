@@ -7,6 +7,9 @@ import org.apache.hadoop.fs.Path
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.FSDataOutputStream
 
+/**
+  * @author Florian Junker & Sidney Bovet
+  */
 object OneGramCleaning {
   def main(args: Array[String]) {
     if(args.length < 3) {

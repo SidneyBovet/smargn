@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Script that runs all the data generation pipeline
+#
+# Authors: Florian Junker & Sidney Bovet
+
 echo "Starting the whole data generation pipeline..."
 
 inputPath="/projects/temporal-profiles/data-generation/input"
