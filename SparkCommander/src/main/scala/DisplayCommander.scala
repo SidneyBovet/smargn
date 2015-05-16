@@ -2,12 +2,12 @@ import masters.Displayer._
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
 import SparkCommander._
+import utils.MD5
 
 /*
  * Contributors:
  *  - Valentin Rutz
  */
-
 /**
  * From Valentin with love on 03/05/15.
  */
@@ -24,9 +24,9 @@ object DisplayCommander {
   private val parser = new OptionParser[Config]("scopt") {
     head("DisplayerCommander", "1.0")
 
-    opt[Seq[String]]('w', "words") valueName "<word1>,<word2>,..." action {
-      (words, config) => config.copy(words = words)
-    } text "The words you want to search"
+    opt[Seq[String]]('w', "words") valueName "<word1>,<word2>,..." action
+      { (words, config) => config.copy(words = words)
+      } text "The words you want to search"
   }
 
   /**
@@ -34,9 +34,7 @@ object DisplayCommander {
    * @param args must be in the format: -w word1,word2?,...
    */
   def main(args: Array[String]) = {
-    val conf = new SparkConf().setAppName("SparkCommander")
-      .setMaster("yarn-cluster")
-      .set("num-executors", "25")
+    val conf = new SparkConf().setAppName("SparkCommander").setMaster("yarn-cluster").set("num-executors", "25")
 
     val sc = new SparkContext(conf)
 
