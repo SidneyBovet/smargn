@@ -24,13 +24,26 @@ function send_words() {
         }
     }
 
+    var startYear = $("#startyear").val();
+    if(startYear == undefined) {
+        startYear = "1840";
+    }
+    var endYear = $("#endyear").val();
+    if(endYear == undefined) {
+        endYear = "1998";
+    }
+
     $.ajax({
         type: "POST",
         url: "/smargn",
         data: JSON.stringify({
             "words": words,
             "technique": technique,
-            "parameters": parameters
+            "parameters": parameters,
+            "range": {
+                "start": startYear,
+                "end": endYear
+            }
         }),
         success: function (data) {
             console.log(data);
