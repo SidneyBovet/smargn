@@ -47,7 +47,6 @@ object Application extends Controller with ResultParser {
   }
 
   def displayCurve: Action[JsValue] = {
-    // TODO before sending the job to YARN, check if the directory already exists on HDFS
     Logger.debug("Trying to display a curve")
     Action(BodyParsers.parse.json) { req =>
       req.body match {
@@ -80,6 +79,7 @@ object Application extends Controller with ResultParser {
               }
             }
           }
+          rmLocalCopies(localFolder)
           res.right.get.right.get
         case _ => BadRequest("Json is not in the good format")
       }
