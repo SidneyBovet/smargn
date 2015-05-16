@@ -27,8 +27,8 @@ function adapt_params(selector) {
             nb_params = 2;
             break;
         case "NaiveDivision":
-            nb_params = 1;
-            break;
+        case "NaiveDifferenceSquared":
+        case "NaiveDivisionVar":
         case "Inverse":
         case "Shift":
         default:

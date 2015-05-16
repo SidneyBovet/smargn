@@ -77,15 +77,16 @@ object Launcher {
     val formattedData = dataFormatter(data, baseProfile)
 
 
-    val res: Array[Array[(String, Double, List[Double])]] = runTestsAll(sc, formattedData)
+    val res: Array[Array[(String, Double, List[Double], List[String])]] = runTestsAll(sc, formattedData)
 
 
     val resPath = new Path(outputDir + "/results.txt")
+    //val logPath = new Path(outputDir + "/logs.txt")
 
 
-    hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c) => s"$a, $b, ${c.mkString(" ")}" }).toList)
+    hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c, d) => s"$a, $b, ${c.mkString(" ")}" }).toList)
 
-
+    //hdfs.appendToFile(logPath)(res.flatMap(x => x.flatMap(y => y._4)).toList.reverse)
     hdfs.close()
   }
 
