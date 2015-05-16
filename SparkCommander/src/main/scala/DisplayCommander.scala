@@ -13,7 +13,7 @@ import SparkCommander._
  */
 object DisplayCommander {
   private def createOutput(words: Seq[String]): String =
-    "hdfs:///projects/temporal-profiles/results/" + words.mkString("-") + "/"
+    "hdfs:///projects/temporal-profiles/results/" + utils.MD5.hash(words.mkString("-")) + "/"
 
   /**
    * Arguments parsing representation class

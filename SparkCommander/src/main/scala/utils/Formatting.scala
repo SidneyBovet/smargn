@@ -28,9 +28,4 @@ object Formatting {
     formattedData.filter { case (w, o) => words.contains(w)
     }
   }
-
-  private def slice[T](l: Array[T], range: Range): Array[T] = {
-    val t: Array[T] = l.zip(Launcher.startYear to Launcher.endYear).filter(y => range.contains(y._2)).map { case (occ, r) => occ }
-    t
-  }
 }
