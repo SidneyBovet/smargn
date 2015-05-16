@@ -52,7 +52,7 @@ object Application extends Controller with ResultParser {
     Action(BodyParsers.parse.json) { req =>
       req.body match {
         case JsObject(Seq(("words", JsArray(words)))) =>
-          val localFolder = words.map(_.as[String]).mkString("-")
+          val localFolder = MD5.hash(words.map(_.as[String]).mkString("-"))
           val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$localFolder/")
           if (Files.notExists(resultsPath)) {
             Files.createDirectory(resultsPath)
@@ -88,9 +88,10 @@ object Application extends Controller with ResultParser {
 
   def getCSV(search: String): Action[AnyContent] = {
     Action {
-      Logger.debug("Retrieving data for display on search: " + search)
-      val dataCSVFile = new File("./public/results/" + search + "/complete_data.csv")
-      val dataCSV = Source.fromFile("./public/results/" + search + "/data.csv").getLines().toList
+      val resultPath = MD5.hash(search)
+      Logger.debug("Retrieving data for display on search: " + resultPath)
+      val dataCSVFile = new File("./public/results/" + resultPath + "/complete_data.csv")
+      val dataCSV = Source.fromFile("./public/results/" + resultPath + "/data.csv").getLines().toList
       val file = Ok.sendFile(if (dataCSV == Nil) {
         printToFile(dataCSVFile) { p => p.println(FIRST_LINE) }
         dataCSVFile
@@ -99,9 +100,9 @@ object Application extends Controller with ResultParser {
         printToFile(dataCSVFile) { p => (FIRST_LINE :: dataCSV).foreach(p.println) }
         dataCSVFile
       } else {
-        new File("./public/results/" + search + "/data.csv")
+        new File("./public/results/" + resultPath + "/data.csv")
       })
-      rmLocalCopies(search)
+      rmLocalCopies(resultPath)
       file
     }
   }
@@ -124,13 +125,14 @@ object Application extends Controller with ResultParser {
         case Nil =>
           Logger.error(Json.prettyPrint(req.body))
           BadRequest("Json is not in the required format")
-        case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params))) =>
+        case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params)),
+                  ("range", Range_(range))) =>
           // Apply desired technique and get results
           // Create SSH connection to icdataportal2. Uses ~/.scala-ssh/icdataportal2 for authentication
           // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put
           // in it.
           val paramsStr = if (params.nonEmpty) s"_${params.mkString("-")}" else ""
-          val outputDir = s"${words.mkString("-")}_${name.toLowerCase}$paramsStr".hashCode
+          val outputDir = MD5.hash(s"${words.mkString("-")}_${name.toLowerCase}$paramsStr")
 
           val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$outputDir/")
           if (Files.notExists(resultsPath)) {
@@ -170,7 +172,7 @@ object Application extends Controller with ResultParser {
                 // At each step, exit code 0 means success. All others mean failure.
                 // See http://support.attachmate.com/techdocs/2116.html for more details on exit codes
                 Logger.debug(s"Send job to YARN $hdfsResDir")
-                sparkSubmit(words, name, params, hdfsResDir)(client).right.map { res =>
+                sparkSubmit(words, name, params, range, hdfsResDir)(client).right.map { res =>
                   Logger.debug("chmod done: " + res.exitCode.get)
                   mergeAndDl(hdfsResDir + "/results", "~/results.txt", "./public/results/" + outputDir)(client).right
                     .map { res =>
@@ -209,9 +211,13 @@ object Application extends Controller with ResultParser {
   private def bodyToJson(body: JsValue): List[(String, Result)] = {
     body match {
       case JsObject(Seq(("words", JsArray(words)), ("technique", JsString(technique)),
-      ("parameters", JsArray(params: Seq[JsString])))) =>
+      ("parameters", JsArray(params: Seq[JsString])),
+      ("range", JsObject(Seq(("start", JsString(startYear)), ("end", JsString(endYear))))))) =>
+        Logger.debug(""+startYear)
+        Logger.debug(""+endYear)
         // parsing array to list of words, technique name and parameters
-        List(("words", Words(words)), ("technique", Name(technique)), ("parameters", Parameters(params)))
+        List(("words", Words(words)), ("technique", Name(technique)),
+             ("parameters", Parameters(params)), ("range", Range_(startYear.toInt, endYear.toInt)))
       case _ => Nil
     }
   }
@@ -251,11 +257,12 @@ object Application extends Controller with ResultParser {
     }
   }
 
-  def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
+  def sparkSubmit(words: List[String], name: String, params: List[Double], range: Range, hdfsResDir: String)
                  (implicit client: SshClient): Validated[CommandResult] = {
     Logger.debug(name.toLowerCase)
     client.exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster " +
-      "--num-executors 25 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name.toLowerCase + {
+      "--num-executors 25 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name.toLowerCase +
+      " -r " + range.start + "," + range.end + {
       if (params.nonEmpty) {
         " -p " + params.mkString(",")
       } else {
