@@ -3,7 +3,7 @@ package utils
 import org.apache.spark.rdd.RDD
 
 /**
- * Created by Joanna on 4/7/15.
+ * @author Joanna Salathé & Sidney Bovet
  * Formatting functions to parse the words
  */
 object Formatting {

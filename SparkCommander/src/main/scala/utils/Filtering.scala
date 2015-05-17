@@ -4,10 +4,10 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 /**
- * Created with love by sidney.
- *
  * Useful methods to detect interesting temporal profiles.
  * Look at the 'interestingWords' method for a complete example.
+ * 
+ * @author Sidney Bovet
  */
 object Filtering {
   /**
@@ -21,7 +21,7 @@ object Filtering {
       .map(k => (k._1, k._2.tail.map(_.toInt)))
   }
 
-  /**
+  /** Detects outlying points, i.e. points far from the array's mean
    *
    * @param a The array to compute the mean of
    * @return The mean of the array a

@@ -5,7 +5,7 @@ import utils.Formatting._
 import utils.Grapher._
 
 /**
- * From Valentin with love on 03/05/15.
+ * @author Valentin Rutz & Sidney Bovet
  */
 object Displayer {
   private val startYear = 1840
