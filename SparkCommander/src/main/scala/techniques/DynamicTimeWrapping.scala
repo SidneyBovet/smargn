@@ -70,7 +70,7 @@ object DynamicTimeWrapping {
    */
   def dtwComparisonScaleAvg(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                             parameters: List[Double]): RDD[String] = {
-    dtwComparison(data.map(proportionalScalarAverageWord), proportionalScalarAverageWord(testedWord), parameters)
+    dtwComparison(data.map(x => (x._1, proportionalScalarAverageSubstraction(x._2))), (testedWord._1, proportionalScalarAverageSubstraction(testedWord._2)), parameters)
   }
 
   /**
@@ -78,7 +78,7 @@ object DynamicTimeWrapping {
    */
   def dtwComparisonScaleAvgTopK(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                                 parameters: List[Double]): RDD[String] = {
-    dtwSimpleTopK(data.map(proportionalScalarAverageWord), proportionalScalarAverageWord(testedWord), parameters)
+    dtwSimpleTopK(data.map(x => (x._1, proportionalScalarAverageSubstraction(x._2))), (testedWord._1, proportionalScalarAverageSubstraction(testedWord._2)), parameters)
   }
 
   /**
