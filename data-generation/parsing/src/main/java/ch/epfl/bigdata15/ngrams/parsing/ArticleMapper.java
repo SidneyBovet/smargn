@@ -71,8 +71,9 @@ public class ArticleMapper extends Mapper<Text, Path, Text, Text> {
     	word = word.replaceAll("[^\\p{L}']", "");
     	int newBegin = 0;
     	int newEnd = word.length();
-    	while(newBegin < newEnd && (word.charAt(newBegin) == '\'' || word.charAt(newBegin) == '-')) {
-    		newBegin++;
+    	while(newBegin < newEnd && (word.charAt(newBegin) == '\'' || word.charAt(newBegin) == '-') ||
+    			(newBegin+1 < newEnd && word.charAt(newBegin+1) == '\'')) {    		
+		newBegin++;
     	}
     	newEnd--;
     	while(newEnd > newBegin && (word.charAt(newEnd) == '\'' || word.charAt(newEnd) == '-')) {
