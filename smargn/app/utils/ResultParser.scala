@@ -32,7 +32,7 @@ trait ResultParser extends RegexParsers {
 
   // Darn you accents!
   def word: Parser[String] = {
-    "[\\p{L}']+".r ^^ { case w => w.toString }
+    "[\\p{L}0-9']+".r ^^ { case w => w.toString }
   }
 
   def error: Parser[String] = NSW | NOTFOUND

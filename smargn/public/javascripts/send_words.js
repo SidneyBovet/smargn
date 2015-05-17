@@ -15,7 +15,7 @@ function send_words() {
         }
     }
 
-    var technique = $("#technique_selector").val();
+    var technique = $("#technique_selector").val().toLowerCase();
     var parameters = [];
     for (i = 1; i <= $("#input_params > .input-group").length; i++) {
         var param = $("#parameter" + i).val();
