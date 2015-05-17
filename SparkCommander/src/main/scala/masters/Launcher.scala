@@ -100,6 +100,10 @@ object Launcher {
     hdfs.close()
   }
 
+  def runPreprocessing(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
+
+  }
+
   private def run(word: String, data: RDD[String], baseProfile: Array[Int], outputFile: String,
                   parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
                   range: Range = startYear to endYear): (RDD[String], RDD[String]) = {

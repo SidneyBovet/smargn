@@ -93,6 +93,7 @@ object SparkCommander {
         mode match {
           case "compare" => runCompare(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
           case "findparams" => runParamsFinding(sc, INPUT, BASE_PROFILE)
+          case "preprocessing" => runPreprocessing(sc, INPUT, BASE_PROFILE)
           case _ => runList(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
         }
       //runCompare(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
