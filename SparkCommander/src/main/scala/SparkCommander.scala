@@ -3,6 +3,7 @@ import scopt.OptionParser
 import techniques._
 import utils.{Launcher, SubTechniques, HDFSHandler}
 import utils.Launcher._
+import utils.MD5.hash
 
 /*
  * Contributors:
@@ -17,12 +18,12 @@ object SparkCommander {
   val INPUT = "hdfs:///projects/temporal-profiles/data-generation/clean-1gram"
   val BASE_PROFILE = "hdfs:///projects/temporal-profiles/data-generation/baseProfile"
 
-  private def createOutput(mode: String, words: Seq[String], technique: String, params: Seq[Double]): String = {
+  private def createOutput(mode: String, words: Seq[String], technique: String, params: Seq[Double], range: Range): String = {
     "hdfs:///projects/temporal-profiles/results/" +
       (if (mode != null) mode + "_" else "") +
-      utils.MD5.hash(words.mkString("-") + "_" + technique.toLowerCase +
-      (if (params.nonEmpty) "_" + params.mkString("-") else "")) +
-    "/"
+      hash(words.mkString("-") + "_" + technique.toLowerCase + "_" + range.start + "-" + range.end +
+        (if (params.nonEmpty) "_" + params.mkString("-") else "")) +
+      "/"
   }
 
 
@@ -32,8 +33,8 @@ object SparkCommander {
    * @param technique the technique to use
    * @param parameters the parameter for that technique
    */
-  private case class Config(mode: String = "", words: Seq[String] = Seq[String](), technique: String = "",
-                            range: Range = Launcher.startYear to Launcher.endYear, parameters: Seq[Double] = Seq[Double]())
+  private case class Config(mode: String = "", words: Seq[String] = Seq(), technique: String = "",
+                            range: Range = Launcher.startYear to Launcher.endYear, parameters: Seq[Double] = Seq())
 
 
   private val parser = new OptionParser[Config]("scopt") {
@@ -46,11 +47,11 @@ object SparkCommander {
     opt[String]('t', "technique") action { (technique, config) => config.copy(technique = technique)
     } text "The technique you want to use"
     opt[Seq[Int]]('r', "range") valueName "startOfRange,endOfRange" action {
-      (range, config) => config.copy(range = range.head to range(1))
+      case (Seq(start, end), config) => config.copy(range = start to end)
     }
-    opt[Seq[Double]]('p', "parameters") valueName "<param1>,<param2>..." optional() action
-      { (parameters, config) => config.copy(parameters = parameters)
-      } text "Optional parameters for this technique"
+    opt[Seq[Double]]('p', "parameters") valueName "<param1>,<param2>..." optional() action {
+      (parameters, config) => config.copy(parameters = parameters)
+    } text "Optional parameters for this technique"
   }
 
   /**
@@ -65,7 +66,7 @@ object SparkCommander {
     parser.parse(args, Config(mode = null, words = Seq(), technique = null,
       range = Launcher.startYear to Launcher.endYear, parameters = Seq())) match {
       case Some(Config(mode, words, technique, range, parameters)) =>
-        val output = createOutput(mode, words, technique, parameters)
+        val output = createOutput(mode, words, technique, parameters, range)
 
         val hdfs = new HDFSHandler(sc.hadoopConfiguration)
         // Create folder for results
@@ -87,7 +88,6 @@ object SparkCommander {
           case "dtwscaleavgtopk" => DynamicTimeWrapping.dtwComparisonScaleAvgTopK
           case "dtwscalemaxtopk" => DynamicTimeWrapping.dtwComparisonScaleMaxTopK
           case "peakstopk" => PeakComparison.peaksTopK
-
         }
 
 

@@ -2,7 +2,7 @@ import masters.Displayer._
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
 import SparkCommander._
-import utils.MD5
+import utils.MD5.hash
 
 /*
  * Contributors:
@@ -13,7 +13,7 @@ import utils.MD5
  */
 object DisplayCommander {
   private def createOutput(words: Seq[String]): String =
-    "hdfs:///projects/temporal-profiles/results/" + utils.MD5.hash(words.mkString("-")) + "/"
+    "hdfs:///projects/temporal-profiles/results/" + hash(words.mkString("-")) + "/"
 
   /**
    * Arguments parsing representation class
