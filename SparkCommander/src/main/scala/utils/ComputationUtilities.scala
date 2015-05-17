@@ -2,7 +2,8 @@ package utils
 
 /**
  * Created by Joanna on 4/7/15.
- * Utilities useful for computing statistics on the words
+ * @author Joanna Salathé &
+ *         Utilities useful for computing statistics on the words
  */
 object ComputationUtilities {
 

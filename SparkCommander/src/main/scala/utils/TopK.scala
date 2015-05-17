@@ -7,7 +7,8 @@ import scala.collection.mutable
 
 /**
  * Created by Joanna on 4/26/15.
- * Helper for retrieving TopK word
+ * @author Mathieu Monney & Joanna Salathé
+ *         Helper for retrieving TopK word
  */
 object TopK {
 
@@ -15,9 +16,9 @@ object TopK {
    * order the similar words based on the result of the metric in a tree of size k and return its elements
    * @param k number of similar words we want to retrieve
    * @param metric metric used to order the similar words
-   * @param data collection of word, frequency to tuple to look into
-   * @param testedWord word that we want to find its similar word
-   * @param order the ordering used by the tree
+   * @param data data collection of words with their frequency
+   * @param testedWord word that we want to find its similar words
+   * @param order the ordering used to order the words
    * @return top k most similar words to the testedWord
    */
   def retrieveTopK(k: Integer, metric: Metric, data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),

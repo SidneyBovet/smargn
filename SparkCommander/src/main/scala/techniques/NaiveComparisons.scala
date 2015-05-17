@@ -8,7 +8,8 @@ import utils.ComputationUtilities._
 
 /**
  * Created by Joanna on 4/7/15.
- * Naive similarity functions that compute the similar words list of a given word based on comparison techniques
+ * @author Joanna Salathé
+ *         Naive similarity functions that compute the similar words list of a given word based on comparison techniques
  */
 object NaiveComparisons {
 

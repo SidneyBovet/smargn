@@ -2,7 +2,8 @@ package utils
 
 /**
  * Created by Joanna on 4/7/15.
- * Functions used to scale the curves before applying any similarity functions
+ * @author Joanna Salathé
+ *         Functions used to scale the curves before applying any similarity functions
  */
 object Scaling {
 

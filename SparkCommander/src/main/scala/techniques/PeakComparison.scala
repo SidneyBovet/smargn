@@ -6,6 +6,7 @@ import utils.TopK._
 
 /**
  * This object contains the peak definitions and the metrics that use them. (with all the helpers)
+ * @author Zhivka Gucevska mainly and help from Joanna Salathé at the beginning and Ana Manasovska at the end of the project
  */
 object PeakComparison {
 

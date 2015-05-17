@@ -4,17 +4,23 @@ import org.apache.spark.rdd.RDD
 import utils.ComputationUtilities._
 import utils.Scaling._
 import utils.TopK._
-import org.apache.log4j.Logger
 
 
 /**
  * Created by Joanna on 10.05.15.
+ * @author Joanna Salathé
+ *         Similarity functions that compute the similar words list of a given word based on simple linear regression
  */
 object LinearRegDivision {
-  val log = Logger.getLogger(getClass.getName)
 
+  /**
+   * Compare a word,frequency tuple with a collection of word, frequency tuples to find similar words by using its dedicated metric linearRegDivisionMetricTopK
+   * @param data data collection of words with their frequency
+   * @param testedWord word that we want to find its similar words
+   * @param parameters L(0) contains the number of similar words we want to find,
+   * @return words that are similar
+   */
   def linearRegDivisionTopKScalingAverage(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), parameters: List[Double]): RDD[(String)] = {
-    log.info("FIND ME parametersLinearRegDivison " + parameters.toString())
     val k = parameters.head
     val order = (x: (String, Double), y: (String, Double)) => if (x._2 != y._2) {
       x._2 < y._2
@@ -23,6 +29,12 @@ object LinearRegDivision {
     data.sparkContext.parallelize(retrievedWords)
   }
 
+  /**
+   * Metric that takes into account the straightness of the ratio line (i.e element of the first list divided by elements of the second) between the two arrays of words
+   * @param word1Freq first temporal profile
+   * @param word2Freq second temporal profile
+   * @return slope of the ration line computed with the help of simple linear regression technique
+   */
   //http://en.wikipedia.org/wiki/Simple_linear_regression
   def linearRegDivisionMetricTopK(word1Freq: (Array[Double]), word2Freq: (Array[Double]), parameters: List[Double] = List()): Double = {
     val zipped = proportionalScalarAverageSubstraction(word1Freq).zip(proportionalScalarAverageSubstraction(word2Freq))
