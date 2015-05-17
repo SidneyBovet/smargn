@@ -79,7 +79,6 @@ object Application extends Controller with ResultParser {
               }
             }
           }
-          rmLocalCopies(localFolder)
           res.right.get.right.get
         case _ => BadRequest("Json is not in the good format")
       }
