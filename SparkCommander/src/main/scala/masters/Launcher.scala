@@ -4,7 +4,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import utils.Formatting._
 import utils.Grapher._
-import techniques.PeakComparison
+import techniques.{DynamicTimeWrapping, Divergence, NaiveComparisons, PeakComparison}
 
 import org.apache.hadoop.fs.Path
 import utils.TestCases._
@@ -31,16 +31,62 @@ object Launcher {
   val endYear = 1998
   val NSW = "NOSIMILARWORDS"
   val NOTFOUND = "ERROR404"
+  val SYNONYMS_INPUT = "hdfs:///projects/temporal-profiles/data-generation/synonyms"
+
+
+  def tech(technique: String): Technique = technique match {
+    // Add your technique methods here. All lowercase for the name pliz
+    case "naivedifference" => NaiveComparisons.naiveDifferenceTopKScalingAverage
+    case "naivedivision" => NaiveComparisons.naiveDivisionTopKScalingAverage
+    case "naivedifferencesquared" => NaiveComparisons.naiveDifferenceSquaredTopKScalingAverage
+    case "naivedivisionvar" => NaiveComparisons.naiveDivisionVarianceTopKScalingAverage
+    case "inverse" => NaiveComparisons.naiveInverseDifference
+    case "shift" => NaiveComparisons.naiveDifferenceScalingAverageWithShifting
+    case "divergence" => Divergence.naiveDifferenceDivergence
+    case "smarterdivergence" => SubTechniques.smarterDivergence
+    case "peaks" => PeakComparison.peakComparisonWithMeanDerivative
+    case "dtw" => DynamicTimeWrapping.dtwComparison
+    case "dtwtopk" => DynamicTimeWrapping.dtwSimpleTopK
+    case "dtwscaleavgtopk" => DynamicTimeWrapping.dtwComparisonScaleAvgTopK
+    case "dtwscalemaxtopk" => DynamicTimeWrapping.dtwComparisonScaleMaxTopK
+    case "peakstopk" => PeakComparison.peaksTopK
+  }
+
+  def filterBySynonyms(data: RDD[(String, Array[Double])], similarityTechnique: String,
+                       word: String, spark: SparkContext): RDD[(String, Array[Double])] = {
+
+    if (similarityTechnique == "smarterdivergence") {
+      // Load the list of synonyms
+      val synonymsCollection = spark.textFile(SYNONYMS_INPUT)
+      // Format list of synonyms (word, Array(synonyms)) and get only the interesting word
+      val synonyms = synonymsCollection.map(line => {
+        val splittedLine = line.split(",")
+        (splittedLine.head, splittedLine)
+      }).filter(_._1 == word).map(_._2).collect()
+      if (synonyms.length <= 0) {
+        spark.emptyRDD[(String, Array[Double])]
+      } else {
+        data.filter(word => synonyms.head.contains(word._1));
+      }
+    } else {
+      data
+    }
+  }
 
   def runList(words: Seq[String], inputDir: String, baseProfileFile: String, outputFile: String,
-              parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
+              parameters: List[Double], similarityTechnique: String, spark: SparkContext,
               range: Range = startYear to endYear): Unit = {
 
     // Getting results for all words
     val data = spark.textFile(inputDir)
     val baseProfile = spark.textFile(baseProfileFile).take(1)(0).split(" ").map(_.toInt)
+
+    //Formatting part
+    val formattedData = dataFormatter(data, baseProfile)
+
     val (res, gData) = words.map { w =>
-      run(w, data, baseProfile, outputFile, parameters, similarityTechnique, spark, range)
+      val filteredData = filterBySynonyms(formattedData, similarityTechnique, w, spark)
+      run(w, filteredData, outputFile, parameters, tech(similarityTechnique), spark, range)
     }.unzip
     val (results, graphData) = (res.reduce(_ ++ _), gData.reduce(_ ++ _))
     // Write results to /projects/temporal-profile/results/<outputdir>/results/
@@ -61,7 +107,7 @@ object Launcher {
    * @param range (optional) the year range on which to perform the search
    */
   def runCompare(words: Seq[String], inputDir: String, baseProfileFile: String, outputFile: String,
-                 parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
+                 parameters: List[Double], similarityTechnique: String, spark: SparkContext,
                  range: Range = startYear to endYear): Unit = {
 
     // Getting results for all words
@@ -85,7 +131,7 @@ object Launcher {
    * @param inputDir the HDFS directory containing all the temporal profiles
    * @param baseProfileFile the file containing the base profile (all words written per year)
    */
-  def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit =  {
+  def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
     val outputDir = "hdfs:///projects/temporal-profiles/results/testCases"
     val hdfs = new HDFSHandler(sc.hadoopConfiguration)
 
@@ -105,7 +151,7 @@ object Launcher {
     //val logPath = new Path(outputDir + "/logs.txt")
 
 
-    hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c, d) => s"$a, $b, ${c.mkString(" ")}" }).toList)
+    hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c, d) => s"$a, $b, ${c.mkString(" ")}"}).toList)
 
     //hdfs.appendToFile(logPath)(res.flatMap(x => x.flatMap(y => y._4)).toList.reverse)
   }
@@ -129,19 +175,15 @@ object Launcher {
     preprocess(sc, inputDir, baseProfileFile, outputFile)
 
 
-
-
   }
 
-  private def run(word: String, data: RDD[String], baseProfile: Array[Int], outputFile: String,
+  private def run(word: String, data: RDD[(String, Array[Double])], outputFile: String,
                   parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
                   range: Range = startYear to endYear): (RDD[String], RDD[String]) = {
     val emptyRDD: RDD[String] = spark.emptyRDD[String]
 
-    //Formatting part
-    val formattedData = dataFormatter(data, baseProfile)
     // testedWords is the line with the words we look for and its occurrences
-    val testedWords = searchWordFormatter(formattedData, List(word))
+    val testedWords = searchWordFormatter(data, List(word))
 
     if (testedWords.count == 0) {
       (spark.parallelize(Seq(word + " -> " + NOTFOUND)), emptyRDD)
@@ -149,7 +191,7 @@ object Launcher {
       val testedWord = testedWords.first()
 
       //apply the similarity technique
-      val similarWords = similarityTechnique(formattedData, testedWord, parameters)
+      val similarWords = similarityTechnique(data, testedWord, parameters)
 
       if (similarWords.count() == 0) {
         (spark.parallelize(Seq(word + " -> " + NSW)), emptyRDD)
@@ -160,9 +202,9 @@ object Launcher {
         // instead of doing the job twice
         import org.apache.spark.SparkContext._
 
-        val formattedDataKey = formattedData.groupBy(_._1)
+        val formattedDataKey = data.groupBy(_._1)
         val similarWordsKey = similarWords.groupBy(x => x)
-        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap { case (k, (wo, w)) => wo }
+        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap { case (k, (wo, w)) => wo}
 
         // Format for printing
         val formatter = formatTuple(range) _

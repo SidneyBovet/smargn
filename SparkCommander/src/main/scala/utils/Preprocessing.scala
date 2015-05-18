@@ -17,14 +17,14 @@ object Preprocessing {
   val inputParams = "hdfs:///projects/temporal-profiles/preprocessing/params.txt"
 
   // Parses the boundaries for each techniques
-  def parseParams(spark: SparkContext): Array[(Technique, String,  List[Double])] = {
+  def parseParams(spark: SparkContext): Array[(String, List[Double])] = {
     val params = spark.textFile(inputParams)
 
     params.map(line => {
       val lineSplit = line.split("\\s")
 
 
-      (getTechnique(lineSplit.head),lineSplit.head,lineSplit.tail.toList.map(x => x.toDouble))
+      (lineSplit.head, lineSplit.tail.toList.map(x => x.toDouble))
 
     }).collect()
   }
@@ -45,31 +45,6 @@ object Preprocessing {
 
   }
 
-  //TODO maybe put this function in a util file somewhere since it is used by different parts
-  // Gets the technique associated with that name
-  def getTechnique(name: String): Technique = {
-    name.toLowerCase match {
-      // Add your technique methods here. All lowercase for the name pliz
-      case "naivedifference" => NaiveComparisons.naiveDifferenceTopKScalingAverage
-      case "naivedivision" => NaiveComparisons.naiveDivisionTopKScalingAverage
-      case "inverse" => NaiveComparisons.naiveInverseDifference
-      case "shift" => NaiveComparisons.naiveDifferenceScalingAverageWithShifting
-      case "divergence" => Divergence.naiveDifferenceDivergence
-      case "smarterdivergence" => SubTechniques.smarterDivergence
-      case "peaks" => PeakComparison.peakComparisonWithMeanDerivative
-      case "dtw" => DynamicTimeWrapping.dtwComparison
-      case "dtwtopk" => DynamicTimeWrapping.dtwSimpleTopK
-      case "dtwscaleavgtopk" => DynamicTimeWrapping.dtwComparisonScaleAvgTopK
-      case "dtwscalemaxtopk" => DynamicTimeWrapping.dtwComparisonScaleMaxTopK
-      case "peakstopk" => PeakComparison.peaksTopK
-      case _ => NaiveComparisons.naiveDifferenceTopKScalingAverage
-    }
-  }
-
-
-
-
-
 
   def preprocess(spark: SparkContext, inputDir: String, baseProfileFile: String, outputFile: String): Unit = {
     val params = parseParams(spark)
@@ -87,13 +62,10 @@ object Preprocessing {
 
     words.foreach(word => {
       params.foreach(tech => {
-        runList(List(word), inputDir, baseProfileFile, createOutput(null, List(word), tech._2, tech._3),
-          tech._3, tech._1, spark)
+        runList(List(word), inputDir, baseProfileFile, createOutput(null, List(word), tech._1, tech._2),
+          tech._2, tech._1, spark)
       })
     })
-
-
-
 
 
   }
