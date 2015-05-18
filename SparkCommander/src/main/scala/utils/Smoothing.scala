@@ -4,8 +4,9 @@ import org.apache.spark.rdd.RDD
 
 
 /**
- * Created by johngaspoz and Fabien on 15.04.2015.
- *
+ * Smoothing function
+ * @param arr the list of point to smooth
+ * @param window the size of the smoothing window
  */
 object Smoothing {
 
