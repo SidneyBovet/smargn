@@ -75,6 +75,12 @@ object Launcher {
 
   }
 
+  /**
+   * Runs the tuning of the metrics
+   * @param sc the [[SparkContext]] to be used for this task
+   * @param inputDir the HDFS directory containing all the temporal profiles
+   * @param baseProfileFile the file containing the base profile (all words written per year)
+   */
   def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
 
     val outputDir = "hdfs:///projects/temporal-profiles/results/testCases"
