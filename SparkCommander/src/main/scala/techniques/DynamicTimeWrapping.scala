@@ -81,6 +81,11 @@ object DynamicTimeWrapping {
     dtwSimpleTopK(data.map(x => (x._1, proportionalScalarAverageSubstraction(x._2))), (testedWord._1, proportionalScalarAverageSubstraction(testedWord._2)), parameters)
   }
 
+  def dtwMetricScaleAvg(word1: Array[Double], word2: Array[Double], parameters: List[Double]): Double = {
+    dynamicTimeWrappingMetric(proportionalScalarAverageSubstraction(word1), proportionalScalarAverageSubstraction(word2), parameters)
+  }
+
+
   /**
    * Compares two temporal profiles using Dynamic Time Wrapping.
    * @param word1 first temporal profile
