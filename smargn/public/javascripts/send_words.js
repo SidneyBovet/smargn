@@ -25,11 +25,11 @@ function send_words() {
     }
 
     var startYear = $("#startyear").val();
-    if(startYear == undefined) {
+    if (startYear == undefined) {
         startYear = "1840";
     }
     var endYear = $("#endyear").val();
-    if(endYear == undefined) {
+    if (endYear == undefined) {
         endYear = "1998";
     }
 
@@ -46,7 +46,7 @@ function send_words() {
             }
         }),
         success: function (data) {
-            console.log(data);
+            console.log(data.hash);
             var alerts = $("#errormsg");
             alerts.empty();
             if (data.notindata.length != 0) {
@@ -77,6 +77,8 @@ function send_words() {
                     }
                 }
             }
+            $("#hashRes").html(data.hash)
+            console.log($("#hashRes").html())
         },
         error: function (xhr) {
             $("body").html(xhr.responseText);
