@@ -61,13 +61,13 @@ object Application extends Controller with ResultParser {
           val res = SSH("icdataportal2") { client =>
             Logger.debug("Connection to icdataportal2 complete")
 
-            val r = client.exec("hadoop fs -test -d " + hdfsResDir + "/results; echo $?")
+            val r = client.exec("hadoop fs -test -d " + hdfsResDir + "; echo $?")
             r.right.map { res =>
               Logger.debug("Does " + hdfsResDir + " exist? " + res.stdOutAsString().charAt(0))
               if (res.stdOutAsString().charAt(0) == '0') {
                 // Read from HDFS
                 mergeAndDl(hdfsResDir, "~/data.csv", "./public/results/" + localFolder)(client).right.map { res =>
-                  Ok("Data for display has arrived")
+                  Ok(localFolder)
                 }
               } else {
                 sparkSubmitDisplayer(words.map(Json.stringify).toList, hdfsResDir, localFolder)(client).right
