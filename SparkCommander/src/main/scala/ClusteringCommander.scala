@@ -8,6 +8,13 @@ import utils.HDFSHandler
 /**
  * Created by ana on 18.5.15.
  */
+/** *
+  * This file performs clustering on all of the words with similarity obtained from the chosen metric
+  * The clustering is not connected to UI and is the job is submitted directly from the cluster
+  * The number of clusters k is given as input
+  * The results are saved in a text file on hdfs, in the folder "clustering". Each line of the file represents
+  * the sequence number of the cluster and the words that belong to it.
+  */
 object ClusteringCommander {
   type Metric = (Array[Double], Array[Double], List[Double]) => Double
 
@@ -20,7 +27,7 @@ object ClusteringCommander {
     // val logger = Logger.getLogger(Launcher.getClass.getName)
     val tech = "dtwScaled"
     val metric: Metric = DynamicTimeWrapping.dtwMetricScaleAvg
-    val params = List[Double]()
+    val params = List[Double](5.0)
 
 
     val outputDir = "hdfs:///projects/temporal-profiles/results/clustering"
@@ -63,7 +70,8 @@ object ClusteringCommander {
     val assignmentsStr = assignments
       .map { case (k, v) =>
       s"$k -> ${v.map(l => IdtoWord(l)).mkString("[", ",", "]")}"
-    }.mkString(",")
+    }.mkString("\n")
+
     val sizesStr = assignments.map {
       _._2.size
     }.sorted.mkString("\n")
