@@ -2,6 +2,11 @@ package utils
 
 import play.api.libs.json._
 
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * Created by Valentin on 19/04/15.
  */
@@ -14,7 +19,7 @@ case class Words(words: List[String]) extends Result {
 }
 
 object Words {
-  def apply(words: Seq[JsValue]) = new Words(words)
+  def apply(words: Seq[JsValue]): Words = new Words(words)
 }
 
 
@@ -25,5 +30,11 @@ case class Parameters(params: List[Double]) extends Result {
 }
 
 object Parameters {
-  def apply(params: Seq[JsString]) = new Parameters(params)
+  def apply(params: Seq[JsString]): Parameters = new Parameters(params)
+}
+
+case class Range_(range: Range) extends Result
+
+object Range_ {
+  def apply(startY: Int, endY:Int): Range_ = new Range_(startY to endY)
 }

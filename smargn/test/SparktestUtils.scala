@@ -10,8 +10,6 @@ object SparkTest extends org.scalatest.Tag("com.bd.test.tags.SparkTest")
 
 trait SparkTestUtils extends FunSuite {
 
-  import utils.Formatting._
-
   var sc: SparkContext = _
 
   /**

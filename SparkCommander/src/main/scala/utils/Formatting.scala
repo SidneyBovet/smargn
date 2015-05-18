@@ -14,7 +14,7 @@ object Formatting {
    */
   def dataFormatter(data: RDD[(String)], baseProfile: Array[Int]): RDD[(String, Array[Double])] = {
     data.map(line => line.split("\\s")).map(
-      (i: Array[String]) => (i.head, i.tail.map(y => y.toDouble).zip(baseProfile).map(x => x._1 / (x._2).toDouble)))
+      (i: Array[String]) => (i.head, i.tail.map(y => y.toDouble).zip(baseProfile).map(x => x._1 / x._2.toDouble)))
   }
 
   /**
@@ -28,5 +28,4 @@ object Formatting {
     formattedData.filter { case (w, o) => words.contains(w)
     }
   }
-
 }

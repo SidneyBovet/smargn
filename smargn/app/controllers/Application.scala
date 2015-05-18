@@ -7,10 +7,15 @@ import com.decodified.scalassh.{CommandResult, SSH, SshClient, Validated}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
+import utils.MD5.hash
 import utils.{Result, ResultParser, _}
 
 import scala.io.Source
 
+/*
+ * Contributors:
+ *  - Valentin Rutz: all
+ */
 object Application extends Controller with ResultParser {
 
   private val INPUT = "input/"
@@ -42,12 +47,11 @@ object Application extends Controller with ResultParser {
   }
 
   def displayCurve: Action[JsValue] = {
-    // TODO before sending the job to YARN, check if the directory already exists on HDFS
     Logger.debug("Trying to display a curve")
     Action(BodyParsers.parse.json) { req =>
       req.body match {
         case JsObject(Seq(("words", JsArray(words)))) =>
-          val localFolder = words.map(_.as[String]).mkString("-")
+          val localFolder = MD5.hash(words.map(_.as[String]).mkString("-"))
           val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$localFolder/")
           if (Files.notExists(resultsPath)) {
             Files.createDirectory(resultsPath)
@@ -66,10 +70,11 @@ object Application extends Controller with ResultParser {
                   Ok("Data for display has arrived")
                 }
               } else {
-                sparkSubmitDisplayer(words.map(Json.stringify).toList, hdfsResDir)(client).right.flatMap { res =>
+                sparkSubmitDisplayer(words.map(Json.stringify).toList, hdfsResDir, localFolder)(client).right
+                  .flatMap { res =>
                   Logger.debug("Chmod done: " + res.exitCode.get)
                   mergeAndDl(hdfsResDir, "~/data.csv", "./public/results/" + localFolder)(client).right.map { res =>
-                    Ok("Data for display has arrived")
+                    Ok(localFolder)
                   }
                 }
               }
@@ -83,9 +88,11 @@ object Application extends Controller with ResultParser {
 
   def getCSV(search: String): Action[AnyContent] = {
     Action {
-      Logger.debug("Retrieving data for display on search: " + search)
-      val dataCSVFile = new File("./public/results/" + search + "/complete_data.csv")
-      val dataCSV = Source.fromFile("./public/results/" + search + "/data.csv").getLines().toList
+      Logger.debug(search)
+      val resultPath = search
+      Logger.debug("Retrieving data for display on search: " + resultPath)
+      val dataCSVFile = new File("./public/results/" + resultPath + "/complete_data.csv")
+      val dataCSV = Source.fromFile("./public/results/" + resultPath + "/data.csv").getLines().toList
       val file = Ok.sendFile(if (dataCSV == Nil) {
         printToFile(dataCSVFile) { p => p.println(FIRST_LINE) }
         dataCSVFile
@@ -94,9 +101,9 @@ object Application extends Controller with ResultParser {
         printToFile(dataCSVFile) { p => (FIRST_LINE :: dataCSV).foreach(p.println) }
         dataCSVFile
       } else {
-        new File("./public/results/" + search + "/data.csv")
+        new File("./public/results/" + resultPath + "/data.csv")
       })
-      rmLocalCopies(search)
+      rmLocalCopies(resultPath)
       file
     }
   }
@@ -119,13 +126,14 @@ object Application extends Controller with ResultParser {
         case Nil =>
           Logger.error(Json.prettyPrint(req.body))
           BadRequest("Json is not in the required format")
-        case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params))) =>
+        case List(("words", Words(words)), ("technique", Name(name)), ("parameters", Parameters(params)),
+        ("range", Range_(range))) =>
           // Apply desired technique and get results
           // Create SSH connection to icdataportal2. Uses ~/.scala-ssh/icdataportal2 for authentication
           // Have a look at https://github.com/sirthias/scala-ssh#host-config-file-format to know what to put
           // in it.
           val paramsStr = if (params.nonEmpty) s"_${params.mkString("-")}" else ""
-          val outputDir = s"${words.mkString("-")}_${name.toLowerCase}$paramsStr"
+          val outputDir = MD5.hash(s"${words.mkString("-")}_${name.toLowerCase}_${range.start}-${range.end}$paramsStr")
 
           val resultsPath = FileSystems.getDefault.getPath(s"./public/results/$outputDir/")
           if (Files.notExists(resultsPath)) {
@@ -155,7 +163,7 @@ object Application extends Controller with ResultParser {
                       val resultsStr = resultsStream.getLines().toList
                       resultsStream.close()
                       // Send back results to the browser
-                      Ok(resultsToJson(stdOutToMap(resultsStr)))
+                      Ok(resultsToJson(stdOutToMap(resultsStr), outputDir))
                     }
                   }
                 }.right.get.right.get.right.get
@@ -165,7 +173,7 @@ object Application extends Controller with ResultParser {
                 // At each step, exit code 0 means success. All others mean failure.
                 // See http://support.attachmate.com/techdocs/2116.html for more details on exit codes
                 Logger.debug(s"Send job to YARN $hdfsResDir")
-                sparkSubmit(words, name, params, hdfsResDir)(client).right.map { res =>
+                sparkSubmit(words, name, params, range, hdfsResDir, outputDir)(client).right.map { res =>
                   Logger.debug("chmod done: " + res.exitCode.get)
                   mergeAndDl(hdfsResDir + "/results", "~/results.txt", "./public/results/" + outputDir)(client).right
                     .map { res =>
@@ -182,7 +190,7 @@ object Application extends Controller with ResultParser {
                         val resultsStr = resultsStream.getLines().toList
                         resultsStream.close()
                         // Send back results to the browser
-                        Ok(resultsToJson(stdOutToMap(resultsStr)))
+                        Ok(resultsToJson(stdOutToMap(resultsStr), outputDir))
                       }
                     }
                   } // up up down down left right left right B A start
@@ -203,10 +211,15 @@ object Application extends Controller with ResultParser {
    */
   private def bodyToJson(body: JsValue): List[(String, Result)] = {
     body match {
-      case JsObject(Seq(("words", JsArray(words)), ("technique", JsString(technique)),
-      ("parameters", JsArray(params: Seq[JsString])))) =>
+      case JsObject(
+      Seq(("words", JsArray(words)), ("technique", JsString(technique)), ("parameters", JsArray(params: Seq[JsString])),
+      ("range", JsObject(Seq(("start", JsString(startYear)), ("end", JsString(endYear))))))) =>
+        Logger.debug("" + startYear)
+        Logger.debug("" + endYear)
+        Logger.debug(words.map(_.as[String]).mkString(" ") + "-" + technique + "-" + params.mkString(" "))
         // parsing array to list of words, technique name and parameters
-        List(("words", Words(words)), ("technique", Name(technique)), ("parameters", Parameters(params)))
+        List(("words", Words(words)), ("technique", Name(technique.toLowerCase)), ("parameters", Parameters(params)),
+          ("range", Range_(startYear.toInt, endYear.toInt)))
       case _ => Nil
     }
   }
@@ -224,7 +237,7 @@ object Application extends Controller with ResultParser {
    *         - Words that were not in the data (lNID)
    *         - Words that had similar words together with their results (lRES)
    */
-  private def resultsToJson(results: Map[String, List[String]]): JsValue = {
+  private def resultsToJson(results: Map[String, List[String]], hash: String): JsValue = {
     // Compute words with no result, words not in the data and results for each words
     //    Logger.debug("Results are: " + results)
     val (nsw, nid, res) = results.foldLeft((List[String](), List[String](), Map[String, List[String]]()))
@@ -234,7 +247,7 @@ object Application extends Controller with ResultParser {
     }
 
     Json.obj("nosimilarwords" -> Json.toJson(nsw), "notindata" -> Json.toJson(nid), "results" ->
-      Json.toJson(res))
+      Json.toJson(res), "hash" -> Json.toJson(hash))
   }
 
   private def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
@@ -246,11 +259,13 @@ object Application extends Controller with ResultParser {
     }
   }
 
-  def sparkSubmit(words: List[String], name: String, params: List[Double], hdfsResDir: String)
-                 (implicit client: SshClient): Validated[CommandResult] = {
+  def sparkSubmit(words: List[String], name: String, params: List[Double], range: Range, hdfsResDir: String,
+                  hash: String)(implicit client: SshClient): Validated[CommandResult] = {
     Logger.debug(name.toLowerCase)
     client.exec("bash -c \"source .bashrc; spark-submit --class SparkCommander --master yarn-cluster " +
-      "--num-executors 25 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + " -t " + name.toLowerCase + {
+      "--num-executors 25 SparkCommander-assembly-1.0.jar -h " + hash + " -w " + words.mkString(",") + " -t " +
+      name.toLowerCase +
+      " -r " + range.start + "," + range.end + {
       if (params.nonEmpty) {
         " -p " + params.mkString(",")
       } else {
@@ -259,12 +274,12 @@ object Application extends Controller with ResultParser {
     } + "\"").right.flatMap { res =>
       Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
       //Make the directory usable by others in the group
-      client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)
+      client.exec("hadoop fs -chmod -R 775 " + hdfsResDir)
     }
   }
 
   private def mergeAndDl(directory: String, file: String, dlDst: String)(implicit client: SshClient) = {
-    // Download results from HDFS to local on cluster { { {
+    // Download results from HDFS to local on cluster
     client.exec("hadoop fs -getmerge " + directory + " " + file).right.flatMap { res =>
       Logger.debug("get " + file.substring(2) + " done " + res.exitCode.get)
       // Download results from cluster to server
@@ -277,13 +292,14 @@ object Application extends Controller with ResultParser {
     Process("rm -R ./public/results/" + folder).run
   }
 
-  private def sparkSubmitDisplayer(words: List[String], hdfsResDir: String)
+  private def sparkSubmitDisplayer(words: List[String], hdfsResDir: String, hash: String)
                                   (client: SshClient): Validated[CommandResult] = {
     client.exec("bash -c \"source .bashrc; spark-submit --class DisplayCommander --master yarn-cluster " +
-      "--num-executors 25 SparkCommander-assembly-1.0.jar -w " + words.mkString(",") + "\"").right.flatMap({ res =>
+      "--num-executors 25 SparkCommander-assembly-1.0.jar -h " + hash + " -w " + words.mkString(",") + "\"").right
+      .flatMap({ res =>
       //      Logger.debug(res.stdErrAsString())
       Logger.debug("Job " + hdfsResDir + " finished: " + res.exitCode.get)
-      client.exec("hadoop fs -chmod -R 775 hdfs://" + hdfsResDir)
+      client.exec("hadoop fs -chmod -R 775 " + hdfsResDir)
     })
   }
 }

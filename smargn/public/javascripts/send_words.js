@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * Created by Valentin on 15/04/15.
  */
@@ -10,7 +15,7 @@ function send_words() {
         }
     }
 
-    var technique = $("#technique_selector").val();
+    var technique = $("#technique_selector").val().toLowerCase();
     var parameters = [];
     for (i = 1; i <= $("#input_params > .input-group").length; i++) {
         var param = $("#parameter" + i).val();
@@ -19,16 +24,29 @@ function send_words() {
         }
     }
 
+    var startYear = $("#startyear").val();
+    if (startYear == undefined) {
+        startYear = "1840";
+    }
+    var endYear = $("#endyear").val();
+    if (endYear == undefined) {
+        endYear = "1998";
+    }
+
     $.ajax({
         type: "POST",
         url: "/smargn",
         data: JSON.stringify({
             "words": words,
             "technique": technique,
-            "parameters": parameters
+            "parameters": parameters,
+            "range": {
+                "start": startYear,
+                "end": endYear
+            }
         }),
         success: function (data) {
-            console.log(data);
+            console.log(data.hash);
             var alerts = $("#errormsg");
             alerts.empty();
             if (data.notindata.length != 0) {
@@ -59,6 +77,8 @@ function send_words() {
                     }
                 }
             }
+            $("#hashRes").html(data.hash)
+            console.log($("#hashRes").html())
         },
         error: function (xhr) {
             $("body").html(xhr.responseText);

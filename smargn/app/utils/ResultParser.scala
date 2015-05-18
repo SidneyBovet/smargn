@@ -2,6 +2,11 @@ package utils
 
 import scala.util.parsing.combinator._
 
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * Created by Valentin on 21/04/15.
  */
@@ -27,7 +32,7 @@ trait ResultParser extends RegexParsers {
 
   // Darn you accents!
   def word: Parser[String] = {
-    "[\\p{L}']+".r ^^ { case w => w.toString }
+    "[\\p{L}0-9']+".r ^^ { case w => w.toString }
   }
 
   def error: Parser[String] = NSW | NOTFOUND

@@ -1,10 +1,13 @@
 @main("BD15-Smargn") {
+    <!-- Contributors: Valentin Rutz -->
+
     <script src="@routes.Assets.at("javascripts/send_words.js")" type ="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/adapt_params.js")" type ="text/javascript"></script>
     <div class="row container-fluid">
         <div class="col-md-12 page-header">
             <h1>Smargn <small>research tool for stuff</small></h1>
         </div>
+
         <div class="col-md-4 text-center" id="words">
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="word1" id="word1">
@@ -56,10 +59,17 @@
                     </select>
                 </div>
             </form>
+            <div class="input-group range">
+                <input type="text" class="form-control" placeholder="Start year" id="startyear" value="1840">
+            </div>
+            <div class="input-group range">
+                <input type="text" class="form-control" placeholder="End year" id="endyear" value="1998">
+            </div>
         </div>
 
         <div class="col-md-4">
             <div id="errormsg"></div>
+            <div id="hashRes"></div>
             <div id="results">
                 <ul class="list-group">
                 </ul>

@@ -1,5 +1,4 @@
 import org.scalatest._
-import utils.TopK
 
 /**
  * Created by joanna on 26.04.15.

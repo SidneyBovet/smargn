@@ -5,6 +5,11 @@ import java.io.{InputStream, PrintWriter}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 
+/*
+ * Contributors:
+ *  - Valentin Rutz
+ */
+
 /**
  * Created by Valentin on 21/04/15.
  */

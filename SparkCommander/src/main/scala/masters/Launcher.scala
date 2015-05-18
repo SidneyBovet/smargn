@@ -10,6 +10,10 @@ import org.apache.hadoop.fs.Path
 import utils.TestCases._
 import utils.Preprocessing._
 
+/*
+ * Contributors:
+ *  - Valentin Rutz: run, runList
+ */
 
 /**
  * Created by Joanna on 4/7/15, modified by almost all the team.
@@ -23,9 +27,8 @@ object Launcher {
     Double)]
 
   type Metric = (Array[Double], Array[Double], List[Double]) => Double
-  private val startYear = 1840
-  private val endYear = 1998
-  private val NB_RES = 10
+  val startYear = 1840
+  val endYear = 1998
   val NSW = "NOSIMILARWORDS"
   val NOTFOUND = "ERROR404"
 
@@ -75,14 +78,14 @@ object Launcher {
 
   }
 
+
   /**
    * Runs the tuning of the metrics
    * @param sc the [[SparkContext]] to be used for this task
    * @param inputDir the HDFS directory containing all the temporal profiles
    * @param baseProfileFile the file containing the base profile (all words written per year)
    */
-  def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
-
+  def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit =  {
     val outputDir = "hdfs:///projects/temporal-profiles/results/testCases"
     val hdfs = new HDFSHandler(sc.hadoopConfiguration)
 
@@ -105,7 +108,6 @@ object Launcher {
     hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c, d) => s"$a, $b, ${c.mkString(" ")}" }).toList)
 
     //hdfs.appendToFile(logPath)(res.flatMap(x => x.flatMap(y => y._4)).toList.reverse)
-    hdfs.close()
   }
 
   def runPreprocessing(sc: SparkContext, inputDir: String, baseProfileFile: String, outputFile: String): Unit = {
