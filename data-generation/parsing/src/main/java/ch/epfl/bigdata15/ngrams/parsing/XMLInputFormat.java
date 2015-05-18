@@ -13,6 +13,13 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
+/**
+ * This input format will give to the mapper the year of occurence in the key
+ * and the file path in value. This means every article in the file given in value
+ * is written the year given in key. Thus we do not need to read metadata
+ * 
+ * @author Zhivka Gucevska & Florian Junker
+ */
 public class XMLInputFormat extends FileInputFormat<Text, Path> {
     public RecordReader<Text, Path> createRecordReader(
             InputSplit split, TaskAttemptContext context) {
@@ -49,6 +56,7 @@ public class XMLInputFormat extends FileInputFormat<Text, Path> {
         public void initialize(InputSplit inputSplit, TaskAttemptContext context)
                 throws IOException, InterruptedException {
 
+        	//We read the input information
             FileSplit split = (FileSplit) inputSplit;
             Configuration conf = context.getConfiguration();
             Path path = split.getPath();
@@ -63,6 +71,9 @@ public class XMLInputFormat extends FileInputFormat<Text, Path> {
                 return false;
             }
 
+            // For the current input file set 
+            // Key : Year of writting
+            // Value : Path of file containning articles
             String name = files[nextId].getPath().getName();
             key = new Text(name.substring(name.length() - 8, name.length() - 4));
             value = files[nextId].getPath();

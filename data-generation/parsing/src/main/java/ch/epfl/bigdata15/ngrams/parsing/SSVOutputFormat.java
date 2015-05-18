@@ -10,6 +10,13 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+/**
+ * Write a file for each year at least a word occur.
+ * Each file start with the year and then is a list of word that appear
+ * this year separated by space (with repetition)
+ * 
+ * @author Zhivka Gucevska & Florian Junker
+ */
 public class SSVOutputFormat extends FileOutputFormat<Text, Text> {
     public SSVRecordWriter getRecordWriter(TaskAttemptContext context) {
         return new SSVRecordWriter(context);
