@@ -40,6 +40,7 @@ object Launcher {
     case "naivedivision" => NaiveComparisons.naiveDivisionTopKScalingAverage
     case "naivedifferencesquared" => NaiveComparisons.naiveDifferenceSquaredTopKScalingAverage
     case "naivedivisionvar" => NaiveComparisons.naiveDivisionVarianceTopKScalingAverage
+    case "smarterdivergence" => SubTechniques.smarterDivergence
     case "peaks" => PeakComparison.peakComparisonWithMeanDerivative
     case "dtw" => DynamicTimeWrapping.dtwComparison
     case "dtwtopk" => DynamicTimeWrapping.dtwSimpleTopK
