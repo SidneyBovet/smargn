@@ -14,11 +14,13 @@ function display_chart() {
     d3.csv(dataCSV, function (data) {
         // Make graph visible
         $("#chartContainer").css("visibility", "visible");
-        var svg = dimple.newSvg("#chartContainer", 590, 400);
+        var svg = dimple.newSvg("#chartContainer", 1200, 720);
         var myChart = new dimple.chart(svg, data);
-        myChart.setBounds(60, 30, 505, 305);
-        var x = myChart.addCategoryAxis("x", "Year");
-        x.addOrderRule("Date");
+        myChart.setBounds(30, 30, "100%", "100%");
+        myChart.setMargins(70, 30, 30, 120);
+        var x = myChart.addTimeAxis("x", "Year", null, "%Y");
+        x.timePeriod = d3.time.years;
+        x.timeInterval = 10;
         var y = myChart.addMeasureAxis("y", "Occurrences");
         y.showGridlines = true;
         myChart.addSeries("Word", dimple.plot.line);
