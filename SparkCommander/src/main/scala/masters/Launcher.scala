@@ -8,6 +8,7 @@ import techniques.PeakComparison
 
 import org.apache.hadoop.fs.Path
 import utils.TestCases._
+import utils.Preprocessing._
 
 
 /**
@@ -75,6 +76,7 @@ object Launcher {
   }
 
   def runParamsFinding(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
+
     val outputDir = "hdfs:///projects/temporal-profiles/results/testCases"
     val hdfs = new HDFSHandler(sc.hadoopConfiguration)
 
@@ -100,7 +102,26 @@ object Launcher {
     hdfs.close()
   }
 
-  def runPreprocessing(sc: SparkContext, inputDir: String, baseProfileFile: String): Unit = {
+  def runPreprocessing(sc: SparkContext, inputDir: String, baseProfileFile: String, outputFile: String): Unit = {
+
+    /*val outputDir = "hdfs:///projects/temporal-profiles/results/preProcessing"
+    val hdfs = new HDFSHandler(sc.hadoopConfiguration)
+
+    // Create folder for result
+    hdfs.createFolder(outputDir)
+
+    //139006 words
+    val data = sc.textFile(inputDir)
+
+    val testPath = new Path(outputDir + "/test.txt")
+
+    hdfs.appendToFile(testPath)(List(data.count()+" words"))
+    hdfs.close()*/
+
+    preprocess(sc, inputDir, baseProfileFile, outputFile)
+
+
+
 
   }
 
