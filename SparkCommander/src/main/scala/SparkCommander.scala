@@ -77,30 +77,11 @@ object SparkCommander {
         // Create folder for results
         hdfs.createFolder(output)
 
-        val tech: Technique = technique match {
-          // Add your technique methods here. All lowercase for the name pliz
-          case "naivedifference" => NaiveComparisons.naiveDifferenceTopKScalingAverage
-          case "naivedivision" => NaiveComparisons.naiveDivisionTopKScalingAverage
-          case "naivedifferencesquared" => NaiveComparisons.naiveDifferenceSquaredTopKScalingAverage
-          case "naivedivisionvar" => NaiveComparisons.naiveDivisionVarianceTopKScalingAverage
-          case "inverse" => NaiveComparisons.naiveInverseDifference
-          case "shift" => NaiveComparisons.naiveDifferenceScalingAverageWithShifting
-          case "divergence" => Divergence.naiveDifferenceDivergence
-          case "smarterdivergence" => SubTechniques.smarterDivergence
-          case "peaks" => PeakComparison.peakComparisonWithMeanDerivative
-          case "dtw" => DynamicTimeWrapping.dtwComparison
-          case "dtwtopk" => DynamicTimeWrapping.dtwSimpleTopK
-          case "dtwscaleavgtopk" => DynamicTimeWrapping.dtwComparisonScaleAvgTopK
-          case "dtwscalemaxtopk" => DynamicTimeWrapping.dtwComparisonScaleMaxTopK
-          case "peakstopk" => PeakComparison.peaksTopK
-        }
-
-
         mode match {
-          case "compare" => runCompare(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
+          case "compare" => runCompare(words, INPUT, BASE_PROFILE, output, parameters.toList, technique, sc)
           case "findparams" => runParamsFinding(sc, INPUT, BASE_PROFILE)
-          case "preprocessing" => runPreprocessing(sc, INPUT, BASE_PROFILE)
-          case _ => runList(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)
+          case "preprocessing" => runPreprocessing(sc, INPUT, BASE_PROFILE, output)
+          case _ => runList(words, INPUT, BASE_PROFILE, output, parameters.toList, technique, sc)
         }
         hdfs.close()
       //runCompare(words, INPUT, BASE_PROFILE, output, parameters.toList, tech, sc)

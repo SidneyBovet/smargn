@@ -22,10 +22,20 @@ object TestCases {
   val inputParams = "hdfs:///projects/temporal-profiles/Tests/params"
 
 
-
+  /**
+   * This function was used for debugging because we didn't manage to log stuff inside of the map of a RDD
+   * @param log The list containing previous log entries
+   * @param msg The message to add to the log
+   * @return The Updated log
+   */
   def printLog(log: List[String], msg: String): List[String] = msg::log
 
-  // Parses the test cases in the file inputCases
+
+  /**
+   * Read and parse the test cases from an input file
+   * @param spark The spark context
+   * @return An array containing the test cases
+   */
   def parseTestCases(spark: SparkContext): Array[(String, List[String], List[String])] = {
     val testCases = spark.textFile(inputCases)
 
@@ -35,7 +45,11 @@ object TestCases {
     }).collect()
   }
 
-  // Parses the boundaries for each techniques
+  /**
+   * Read and parse the technique that we will use for the tuning
+   * @param spark The spark context
+   * @return An array with the techniques and their parameters
+   */
   def parseTechniques(spark: SparkContext): Array[(Technique, String,  List[(Double, Double, Double)])] = {
     val params = spark.textFile(inputParams)
 
@@ -48,6 +62,12 @@ object TestCases {
     }).map(x => (getTechnique(x._1), x._1, x._2.map(y => (y._1.toDouble, y._2.toDouble, y._3.toDouble)))).collect()
   }
 
+  /**
+   * Counts how many words from the given test case appear in the result of a technique
+   * @param result The result of a technique
+   * @param wordList A list of word from the test cases
+   * @return How many words are contained in both lists
+   */
   def count(result: RDD[(String)], wordList: List[String]): Int = {
 
     result.mapPartitions(it => {
@@ -62,7 +82,16 @@ object TestCases {
 
   }
 
-  // Evaluates a technique with some fixed parameters
+  /**
+   * runs a technique with the given parameters
+   * @param data The data set containing all the words
+   * @param testedWord The word to test
+   * @param similarWords The list of similar words
+   * @param differentWords The list of different words
+   * @param parameters The parameters for the technique
+   * @param similarityTechnique The technique we want to use
+   * @return A double between 0 and 1 that tells how well the technique matches the test caes
+   */
   def test(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), similarWords: List[String],
            differentWords: List[String], parameters: List[Double], similarityTechnique: Technique): (Double, List[String]) = {
     //var log = List[String]()
@@ -89,7 +118,19 @@ object TestCases {
     //(simRatio,Nil)
   }
 
-  // Iterates over all the possible parameters and output the best combination
+
+  /**
+   * Recursive function to iterate over the parameters of a metric. This function shouldn't be called directly,
+   * one should use testParameters instead.
+   * @param data The data set containing all the words
+   * @param testedWord The word to test
+   * @param similarWords The list of similar words
+   * @param differentWords The list of different words
+   * @param params The list of fixed parameters (that were chosen by the previous iteration of the function)
+   * @param bounds The bounds for the remaining parameters
+   * @param similarityTechnique The technique we want to use
+   * @return The parameters that outputs the best value
+   */
   def getBestParams(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]), similarWords: List[String],
                     differentWords: List[String], params: List[Double], bounds: List[(Double, Double, Double)],
                     similarityTechnique: Technique): (Double, List[Double], List[String]) = {
@@ -124,13 +165,28 @@ object TestCases {
     }
   }
 
+  /**
+   * Iterate the technique over all the possible parameters and returns a list containing the best parameters.
+   * This is a wrapper for the getBestParams function.
+   * @param data The data set containing all the words
+   * @param testedWord The word to test
+   * @param similarWords The list of similar words
+   * @param differentWords The list of different words
+   * @param bounds The bounds for the parameters
+   * @param similarityTechnique The technique we want to use
+   * @return The parameters that outputs the best value
+   */
   def testParameters(data: RDD[(String, Array[Double])], testedWord: (String, Array[Double]),
                      similarWords: List[String], differentWords: List[String], bounds: List[(Double, Double, Double)],
                      similarityTechnique: Technique): (Double, List[Double], List[String]) = {
     getBestParams(data, testedWord, similarWords, differentWords, Nil, bounds, similarityTechnique)
   }
 
-  // Gets the technique associated with that name
+  /**
+   * Maps a technique name with the actual technique
+   * @param name Name of the technique
+   * @return The technique corresponding to this name
+   */
   def getTechnique(name: String): Technique = {
     name.toLowerCase match {
           // Add your technique methods here. All lowercase for the name pliz
@@ -157,7 +213,7 @@ object TestCases {
    * parameters for each technique and each test case.
    * @param spark SparkContext used to read the config files
    * @param data collection of word, frequency to tuple to look into
-   * @return optimal parameters for each technique and each test cases
+   * @return optimal parameters for each technique and each test case
    */
   def runTestsAll(spark: SparkContext,
                   data: RDD[(String, Array[Double])]): Array[Array[(String, Double, List[Double], List[String])]] = {
@@ -170,6 +226,16 @@ object TestCases {
 
   }
 
+  /**
+   * Same as runTestsAll, but for a single technique.
+   * @param spark SparkContext used to read the config files
+   * @param data collection of word, frequency to tuple to look into
+   * @param technique the actual technique
+   * @param techniqueName the name of the technique (used in the result file)
+   * @param techniqueParams the bounds of the parameters
+   * @param testCases the test case (1 word to test, 1 list of similar words and 1 list of different words)
+   * @return optimal parameters for each test case
+   */
   def runTests(spark: SparkContext, data: RDD[(String, Array[Double])], technique: Technique,
                techniqueName: String, techniqueParams: (List[(Double, Double, Double)]),
                testCases: Array[(String, List[String], List[String])] = null): Array[(String, Double, List[Double], List[String])] = {
