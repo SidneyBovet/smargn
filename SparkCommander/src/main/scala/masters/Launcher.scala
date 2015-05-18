@@ -73,6 +73,17 @@ object Launcher {
     }
   }
 
+  /**
+   * Runs the technique on each words, gathers the results and writes to HDFS
+   * @param words the words on which we apply the technique
+   * @param inputDir path to input data
+   * @param baseProfileFile base profile of temporal profiles for scaling
+   * @param outputFile output directory for results
+   * @param parameters parameters for the technique
+   * @param similarityTechnique technique to apply
+   * @param spark Spark context
+   * @param range range of years
+   */
   def runList(words: Seq[String], inputDir: String, baseProfileFile: String, outputFile: String,
               parameters: List[Double], similarityTechnique: String, spark: SparkContext,
               range: Range = startYear to endYear): Unit = {
@@ -151,7 +162,7 @@ object Launcher {
     //val logPath = new Path(outputDir + "/logs.txt")
 
 
-    hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c, d) => s"$a, $b, ${c.mkString(" ")}"}).toList)
+    hdfs.appendToFile(resPath)(res.flatMap(x => x.map { case (a, b, c, d) => s"$a, $b, ${c.mkString(" ")}" }).toList)
 
     //hdfs.appendToFile(logPath)(res.flatMap(x => x.flatMap(y => y._4)).toList.reverse)
   }
@@ -177,6 +188,16 @@ object Launcher {
 
   }
 
+  /**
+   * Runs the technique on the word
+   * @param word the words on which we apply the technique
+   * @param data input data
+   * @param outputFile output directory for results
+   * @param parameters parameters for the technique
+   * @param similarityTechnique technique to apply
+   * @param spark Spark context
+   * @param range range of years
+   */
   private def run(word: String, data: RDD[(String, Array[Double])], outputFile: String,
                   parameters: List[Double], similarityTechnique: Technique, spark: SparkContext,
                   range: Range = startYear to endYear): (RDD[String], RDD[String]) = {
@@ -204,7 +225,7 @@ object Launcher {
 
         val formattedDataKey = data.groupBy(_._1)
         val similarWordsKey = similarWords.groupBy(x => x)
-        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap { case (k, (wo, w)) => wo}
+        val similarWordOcc = formattedDataKey.join(similarWordsKey).flatMap { case (k, (wo, w)) => wo }
 
         // Format for printing
         val formatter = formatTuple(range) _
