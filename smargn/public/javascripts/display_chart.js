@@ -14,7 +14,7 @@ function display_chart() {
     d3.csv(dataCSV, function (data) {
         // Make graph visible
         $("#chartContainer").css("visibility", "visible");
-        var svg = dimple.newSvg("#chartContainer", 1200, 720);
+        var svg = dimple.newSvg("#chartContainer", "100%", 720);
         var myChart = new dimple.chart(svg, data);
         myChart.setBounds(30, 30, "100%", "100%");
         myChart.setMargins(70, 30, 30, 120);

@@ -7,7 +7,6 @@ import com.decodified.scalassh.{CommandResult, SSH, SshClient, Validated}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
-import utils.MD5.hash
 import utils.{Result, ResultParser, _}
 
 import scala.io.Source
