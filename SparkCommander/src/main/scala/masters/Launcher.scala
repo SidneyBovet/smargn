@@ -49,6 +49,11 @@ object Launcher {
     case "peakstopk" => PeakComparison.peaksTopK
   }
 
+  /*
+   * Filter the data to be only synonyms of the given word
+   * This is use only with the "smarterdivergence" that detect the crossing of curves
+   * Hence, we can detect a synonym word that replace another
+   */
   def filterBySynonyms(data: RDD[(String, Array[Double])], similarityTechnique: String,
                        word: String, spark: SparkContext): RDD[(String, Array[Double])] = {
 
